@@ -22,6 +22,23 @@ module Rebrand
     devise/LICENSE
   ].freeze
 
+  # Upstream names that must survive verbatim because they are not product
+  # names: upstream's own domain names and Slack workspace. Rewriting these
+  # produces nonsense like `laiss-cms-cms.com`, and they are external URLs, not
+  # identifiers. They are matched before any replacement row runs and restored
+  # afterwards.
+  PROTECTED = [
+    "alchemy-cms.com",
+    "alchemy-cms.slack.com",
+    "guides.alchemy-cms.com",
+    "app.alchemy-cms.com",
+    "slackin.alchemy-cms.com",
+    "stackoverflow.com/questions/tagged/alchemy-cms",
+    "join.slack.com/t/alchemy-cms"
+  ].freeze
+
+  PLACEHOLDER = "\u0000REBRAND_PROTECTED_%d\u0000"
+
   # Never rewritten or scanned. Build output is regenerated from source, so
   # rewriting it would only create churn that the next build discards.
   #
@@ -72,6 +89,22 @@ module Rebrand
         Regexp.new("(?<![A-Za-z0-9_])#{escaped}(?![A-Za-z0-9_])")
       when "prefix"
         Regexp.new("(?<![A-Za-z0-9_])#{escaped}")
+      when "filename"
+        # Filenames are not identifiers: Rails migration files are named
+        # `20230121212637_alchemy_six_point_one.rb` and Rails derives the class
+        # name from the part after the timestamp, so the token sits directly
+        # after an underscore. The identifier rule correctly refuses to match
+        # there (`2023_..._alchemy_six...` is one long identifier), which is why
+        # a dedicated mode is needed rather than loosening "prefix".
+        Regexp.new(escaped)
+      when "embedded"
+        # `Alchemy` occurring inside a CamelCase identifier, as in
+        # `AddSearchableToAlchemyPages` or `CreateAlchemyUsers`. A boundary-anchored
+        # rule cannot see these: the preceding character is a letter and the
+        # following one is uppercase. The lookarounds keep this from touching
+        # snake_case names, where `alchemy` is always lowercase and never
+        # followed by an uppercase letter (`current_alchemy_user`).
+        Regexp.new("(?<=[a-z0-9])#{escaped}(?=[A-Z])")
       else
         raise ArgumentError, "row #{id}: unknown mode #{mode.inspect}"
       end
@@ -134,11 +167,16 @@ module Rebrand
     end
 
     # Count matches of every row across all in-scope files.
-    # Returns {row_id => {count:, files: Set}}.
+    #
+    # Filename-mode rows are excluded: they only ever apply to path segments
+    # (see transform_segment). Counting them against file *content* would report
+    # false leftovers for identifiers the prefix rule correctly leaves alone,
+    # such as `current_alchemy_user`.
     def tally(content_by_file = nil)
       content_by_file ||= tracked_files.to_h { |path| [path, read(path)] }
+      content_rows = rows.reject { |row| row.mode == "filename" }
 
-      rows.to_h do |row|
+      content_rows.to_h do |row|
         pattern = row.regexp
         files = Set.new
         count = 0
@@ -173,9 +211,59 @@ module Rebrand
     end
 
     # Rewrite one file's content by applying every row in order.
+    #
+    # Rows in "filename" mode are skipped here: they exist to rename migration
+    # files like `20230121212637_alchemy_six_point_one.rb`, whose token sits
+    # after a timestamp underscore. Applying them to file *content* would also
+    # rewrite identifiers that the stricter "prefix" rule deliberately leaves
+    # alone, so content and path rewriting use separate row sets.
     def transform(content)
-      ordered_rows.reduce(content) do |acc, row|
+      shield, restore = shield_protected(content)
+      out = ordered_rows.reject { |row| row.mode == "filename" }.reduce(shield) do |acc, row|
         acc.gsub(row.regexp, row.to)
+      end
+      restore.call(out)
+    end
+
+    # Replace protected upstream names with placeholders that no replacement row
+    # can match, then put them back. Without this, `alchemy-cms.com` becomes
+    # `laiss-cms-cms.com` (the `alchemy_cms` row rewrites the inner slug), and
+    # `alchemy-cms.slack.com` breaks the same way.
+    def shield_protected(content)
+      found = {}
+      shielded = PROTECTED.each_with_index.reduce(content) do |acc, (token, index)|
+        next acc unless acc.include?(token)
+
+        key = format(PLACEHOLDER, index)
+        found[key] = token
+        acc.gsub(token, key)
+      end
+
+      restorer = ->(text) { found.reduce(text) { |acc, (key, token)| acc.gsub(key, token) } }
+      [shielded, restorer]
+    end
+
+    # Mask protected names without restoring them. Used by verify so it does not
+    # report deliberately-preserved upstream domains as missed renames.
+    def mask_protected(content)
+      shield_protected(content).first
+    end
+
+    # Rewrite a single path segment (a directory name or a file basename).
+    # Filename-mode rows participate here, which is the only place they apply.
+    def transform_segment(segment)
+      ordered_segments.reduce(segment) do |acc, row|
+        acc.gsub(row.regexp, row.to)
+      end
+    end
+
+    # Content rows first, then filename-only rows: a migration file needs both
+    # (`alchemy_six_point_one` and the leading `alchemy_` prefix).
+    def ordered_segments
+      @ordered_segments ||= begin
+        content_rows = ordered_rows.reject { |row| row.mode == "filename" }
+        file_rows = ordered_rows.select { |row| row.mode == "filename" }
+        content_rows + file_rows
       end
     end
 
@@ -202,8 +290,13 @@ module Rebrand
       duplicate_ids = loaded.map(&:id).tally.select { |_, n| n > 1 }.keys
       raise "mapping.yml has duplicate ids: #{duplicate_ids.join(", ")}" if duplicate_ids.any?
 
-      duplicate_sources = loaded.map(&:from).tally.select { |_, n| n > 1 }.keys
-      raise "mapping.yml has duplicate from tokens: #{duplicate_sources.join(", ")}" if duplicate_sources.any?
+      # The same token may legitimately appear twice when it applies in
+      # different contexts — `alchemy_` is both an identifier prefix and a
+      # migration-filename prefix — so uniqueness is per (from, mode).
+      duplicate_sources = loaded.map { |row| [row.from, row.mode] }.tally.select { |_, n| n > 1 }.keys
+      if duplicate_sources.any?
+        raise "mapping.yml has duplicate from+mode tokens: #{duplicate_sources.map { |f, m| "#{f} (#{m})" }.join(", ")}"
+      end
 
       loaded.each do |row|
         raise "row #{row.id}: empty from" if row.from.to_s.empty?

@@ -19,6 +19,7 @@
 #   script/rebrand/verify
 #   script/rebrand/verify --quiet     # only the verdict line
 require_relative "lib"
+require_relative "rename_paths"
 
 # Forms that must never appear. Each entry is [pattern, why, expected].
 #
@@ -50,7 +51,9 @@ def main(argv)
   problems = 0
 
   # --- check 1: leftovers ---------------------------------------------------
-  tally = Rebrand.tally
+  # Protected upstream domains are masked first: they legitimately contain the
+  # upstream token and are deliberately left verbatim (see Rebrand::PROTECTED).
+  tally = Rebrand.tally(Rebrand.tracked_files.to_h { |path| [path, Rebrand.mask_protected(Rebrand.read(path))] })
   leftovers = tally.reject { |_, entry| entry[:count].zero? }
 
   if leftovers.any?
@@ -59,7 +62,7 @@ def main(argv)
       row = Rebrand.row_by_id(id)
       printf("\n  [%s] %s -> %s: %d occurrence(s) in %d file(s)\n",
         id, row.from, row.to, entry[:count], entry[:files].size)
-      Rebrand.locations(row).each { |line| puts "    #{line}" }
+      entry[:files].first(5).each { |path| puts "    #{path}" }
     end
     puts
     problems += leftovers.size
@@ -92,7 +95,26 @@ def main(argv)
     puts "OK    no case/separator drift in replacement tokens (#{DRIFT_RULES.size} rules)"
   end
 
-  # --- check 3: allowlist is intact ----------------------------------------
+  # --- check 3: path segments still carrying upstream tokens ----------------
+  # Content checks cannot see these: a migration filename's token sits after a
+  # timestamp underscore, which the identifier rules deliberately ignore.
+  stale_paths = RenamePaths.plan
+
+  if stale_paths.any?
+    puts "FAIL — paths still carry upstream tokens:"
+    stale_paths.first(20).each do |entry|
+      from = entry[:from] || entry[:sources]
+      to = entry[:to] || entry[:target]
+      puts "    #{entry[:type]}: #{from} -> #{to}"
+    end
+    puts "    ... #{stale_paths.size - 20} more" if stale_paths.size > 20
+    puts
+    problems += stale_paths.size
+  elsif !quiet
+    puts "OK    no path names carry upstream tokens"
+  end
+
+  # --- check 4: allowlist is intact ----------------------------------------
   missing = Rebrand::LICENSE_ALLOWLIST.reject { |path| File.exist?(File.join(Rebrand::ROOT, path)) }
   if missing.any?
     puts "FAIL — allowlisted licence file(s) missing: #{missing.join(", ")}"

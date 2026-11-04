@@ -58,12 +58,14 @@ t = SelfTest.new
 
 puts "mapping.yml"
 
-t.check("loads with unique ids and sources") do
+t.check("loads with unique ids and from+mode pairs") do
   ids = Rebrand.rows.map(&:id)
   t.expect_equal(ids.uniq.size, ids.size, "duplicate ids")
-  sources = Rebrand.rows.map(&:from)
-  t.expect_equal(sources.uniq.size, sources.size, "duplicate from tokens")
-  t.expect(Rebrand.rows.size >= 12, "expected at least 12 rows, got #{Rebrand.rows.size}")
+  # `alchemy_` appears twice on purpose: once as an identifier prefix and once
+  # as a migration-filename prefix, which match in different contexts.
+  pairs = Rebrand.rows.map { |row| [row.from, row.mode] }
+  t.expect_equal(pairs.uniq.size, pairs.size, "duplicate from+mode pairs")
+  t.expect(Rebrand.rows.size >= 20, "expected at least 20 rows, got #{Rebrand.rows.size}")
 end
 
 t.check("no replacement contains an upstream token (idempotence precondition)") do
@@ -157,6 +159,83 @@ t.check("word boundaries leave longer identifiers alone") do
   t.expect_equal(Rebrand.transform("alchemy2"), "alchemy2")
   # But a real snake prefix is still rewritten.
   t.expect_equal(Rebrand.transform("alchemy_page"), "laiss_cms_page")
+end
+
+# Compound CamelCase constants have no word boundary after `Alchemy`, so the
+# bare rule (correctly) skips them and they need explicit rows. This was found
+# the hard way: the renamed suite failed to load with
+# `uninitialized constant LaissCms::UpdateChecks::AlchemyApp`.
+t.check("compound CamelCase constants are covered by explicit rows") do
+  {
+    "AlchemyApp" => "LaissCmsApp",
+    "AlchemySixPointOne" => "LaissCmsSixPointOne",
+    "AlchemyPageNode" => "LaissCmsPageNode",
+    "AlchemyNodeTree" => "LaissCmsNodeTree",
+    "AlchemyNodeFolder" => "LaissCmsNodeFolder",
+    "AlchemyMenuNode" => "LaissCmsMenuNode",
+    "AlchemySitemap" => "LaissCmsSitemap"
+  }.each do |from, to|
+    t.expect_equal(Rebrand.transform(from), to)
+  end
+end
+
+t.check("no Alchemy-prefixed CamelCase constant is left unmatched") do
+  # Anything the transform leaves untouched is a gap in the table.
+  survivors = Rebrand.rows
+    .map(&:from)
+    .then { |_| %w[AlchemyApp AlchemyPageNode AlchemyNodeTree AlchemyNodeFolder AlchemyMenuNode AlchemySitemap] }
+    .reject { |name| Rebrand.transform(name) != name }
+  t.expect(survivors.empty?, "unmatched compound constants: #{survivors.join(", ")}")
+end
+
+# `Alchemy` embedded mid-identifier, which no boundary rule can reach.
+t.check("Alchemy embedded in CamelCase identifiers is renamed") do
+  {
+    "AddSearchableToAlchemyPages" => "AddSearchableToLaissCmsPages",
+    "CreateAlchemyUsers" => "CreateLaissCmsUsers",
+    "AddAlchemyRolesToAlchemyUsers" => "AddLaissCmsRolesToLaissCmsUsers",
+    "AddIndexesToAlchemyPictures" => "AddIndexesToLaissCmsPictures"
+  }.each { |from, to| t.expect_equal(Rebrand.transform(from), to) }
+end
+
+t.check("compound snake_case identifiers are renamed consistently") do
+  # `current_alchemy_user` is a real engine method (defined in
+  # controller_actions.rb), so its definition and every call site must move
+  # together. The inner-snake rule is what reaches it, because the `alchemy_`
+  # is preceded by `current_`.
+  t.expect_equal(Rebrand.transform("current_alchemy_user"), "current_laiss_cms_user")
+  t.expect_equal(Rebrand.transform("def current_alchemy_user"), "def current_laiss_cms_user")
+  t.expect_equal(Rebrand.transform("current_alchemy_user_name"), "current_laiss_cms_user_name")
+  # Join tables and generated index names, the other two shapes.
+  t.expect_equal(
+    Rebrand.transform('create_table "alchemy_elements_alchemy_pages"'),
+    'create_table "laiss_cms_elements_laiss_cms_pages"'
+  )
+  t.expect_equal(Rebrand.transform("index_alchemy_pages_on_lft"), "index_laiss_cms_pages_on_lft")
+end
+
+t.check("upstream domains are protected, not mangled") do
+  # `alchemy-cms.com` must not become `laiss-cms-cms.com`.
+  {
+    "https://alchemy-cms.com" => "https://alchemy-cms.com",
+    "https://guides.alchemy-cms.com/how" => "https://guides.alchemy-cms.com/how",
+    "https://alchemy-cms.slack.com" => "https://alchemy-cms.slack.com"
+  }.each { |from, to| t.expect_equal(Rebrand.transform(from), to) }
+  # But a path segment after the domain is still renamed.
+  t.expect_equal(
+    Rebrand.transform("https://alchemy-cms.com/alchemy_cms"),
+    "https://alchemy-cms.com/laiss_cms"
+  )
+end
+
+# The ERB/JS data-attribute contract: `data-alchemy-element` (kebab) is read as
+# `dataset.alchemyElement` (camel). Both sides must move together or the preview
+# silently stops working with no failing test.
+t.check("data-attribute contracts stay in step") do
+  t.expect_equal(Rebrand.transform("data-alchemy-element"), "data-laiss-cms-element")
+  t.expect_equal(Rebrand.transform("dataset.alchemyElement"), "dataset.laissCmsElement")
+  t.expect_equal(Rebrand.transform("data-alchemy-hotkey"), "data-laiss-cms-hotkey")
+  t.expect_equal(Rebrand.transform("dataset.alchemyHotkey"), "dataset.laissCmsHotkey")
 end
 
 t.check("empty and token-free input is untouched") do

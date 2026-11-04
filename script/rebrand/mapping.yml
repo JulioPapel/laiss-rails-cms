@@ -49,12 +49,105 @@
   kind: constant
   expect: "LaissCms::"
 
+# Compound CamelCase constants. The bare `Alchemy` row cannot match these: the
+# following character is an uppercase letter, so there is no word boundary, and
+# the row is deliberately boundary-anchored so it does not eat identifiers it
+# does not own. Each is listed explicitly rather than loosening that rule.
+# Found by loading the renamed suite, which failed on
+# `uninitialized constant LaissCms::UpdateChecks::AlchemyApp`.
+- id: alchemy_app_class
+  from: AlchemyApp
+  to: LaissCmsApp
+  mode: word
+  kind: constant
+  expect: LaissCmsApp
+
+- id: alchemy_six_point_one_class
+  from: AlchemySixPointOne
+  to: LaissCmsSixPointOne
+  mode: word
+  kind: constant
+  expect: LaissCmsSixPointOne
+
+# JavaScript custom-element backing classes: the JS mirror of the `alchemy-*`
+# tag prefix. They live in app/javascript and are asserted by the vitest suite.
+- id: alchemy_js_page_node
+  from: AlchemyPageNode
+  to: LaissCmsPageNode
+  mode: word
+  kind: constant
+  expect: LaissCmsPageNode
+
+- id: alchemy_js_node_tree
+  from: AlchemyNodeTree
+  to: LaissCmsNodeTree
+  mode: word
+  kind: constant
+  expect: LaissCmsNodeTree
+
+- id: alchemy_js_node_folder
+  from: AlchemyNodeFolder
+  to: LaissCmsNodeFolder
+  mode: word
+  kind: constant
+  expect: LaissCmsNodeFolder
+
+- id: alchemy_js_menu_node
+  from: AlchemyMenuNode
+  to: LaissCmsMenuNode
+  mode: word
+  kind: constant
+  expect: LaissCmsMenuNode
+
+- id: alchemy_js_sitemap
+  from: AlchemySitemap
+  to: LaissCmsSitemap
+  mode: word
+  kind: constant
+  expect: LaissCmsSitemap
+
 - id: alchemy_const_bare
   from: Alchemy
   to: LaissCms
   mode: word
   kind: constant
   expect: LaissCms
+
+# `Alchemy` embedded inside a CamelCase identifier: migration and other class
+# names such as `AddSearchableToAlchemyPages`, `CreateAlchemyUsers`,
+# `AddAlchemyRolesToAlchemyUsers`. A boundary rule cannot match these (letter
+# before, uppercase after), and enumerating them individually does not scale as
+# new migrations arrive, so this rule handles the shape in general. It cannot
+# touch snake_case (`current_alchemy_user`): there the token is lowercase and is
+# never followed by an uppercase letter.
+- id: alchemy_const_embedded
+  from: Alchemy
+  to: LaissCms
+  mode: embedded
+  kind: constant
+  expect: LaissCms
+
+# DOM data-attribute contracts, camelCase side.
+#
+# The ERB writes `data-alchemy-element="7"`; the JS reads
+# `element.dataset.alchemyElement`. Renaming only the ERB side would leave the
+# JS reading a key that no longer exists, silently breaking the live preview and
+# the hotkey handler with no test failure. These two rows exist to keep both
+# sides of that contract in step: `data-laiss-cms-element` maps to
+# `dataset.laissCmsElement`.
+- id: alchemy_dataset_element
+  from: alchemyElement
+  to: laissCmsElement
+  mode: word
+  kind: identifier
+  expect: laissCmsElement
+
+- id: alchemy_dataset_hotkey
+  from: alchemyHotkey
+  to: laissCmsHotkey
+  mode: word
+  kind: identifier
+  expect: laissCmsHotkey
 
 # --- 3. Gem names and snake identifiers -------------------------------------
 - id: alchemy_cms_gem
@@ -100,7 +193,45 @@
   kind: identifier
   expect: laiss_cms_
 
+# Migration filenames carry the token after a timestamp underscore:
+# `20230121212637_alchemy_six_point_one.rb`. Rails derives the migration class
+# from the post-timestamp name, so the file must be renamed in step with the
+# class or `db:migrate` raises `uninitialized constant`. The "prefix" rule
+# cannot match here because that position precedes an identifier character, so
+# this row exists only for path segments (see Rebrand.transform_segment).
+- id: alchemy_filename_prefix
+  from: alchemy_
+  to: laiss_cms_
+  mode: filename
+  kind: filename
+  expect: laiss_cms_
+
+# Compound snake_case identifiers, where `alchemy_` follows another underscore:
+# `alchemy_elements_alchemy_pages` (the elements/pages join table),
+# `index_alchemy_pages_on_lft` (index names Rails generates), and
+# `user_alchemy_roles` (a column on the host's users table). The anchored
+# "prefix" rule cannot see these because the preceding character is `_`.
+#
+# This is the only rule with no anchoring at all, so it is deliberately last:
+# the anchored rules rewrite every ordinary leading `alchemy_` first, and this
+# catches what remains inside a larger identifier.
+- id: alchemy_inner_snake
+  from: alchemy_
+  to: laiss_cms_
+  mode: literal
+  kind: identifier
+  expect: laiss_cms_
+
 # --- 5. Environment variables ----------------------------------------------
+# The two-token form must run before the generic prefix, otherwise
+# ALCHEMY_CMS_PATH becomes LAISS_CMS_CMS_PATH (the "cms" appears twice).
+- id: alchemy_cms_env
+  from: ALCHEMY_CMS_
+  to: LAISS_CMS_
+  mode: prefix
+  kind: env
+  expect: LAISS_CMS_
+
 - id: alchemy_env_prefix
   from: ALCHEMY_
   to: LAISS_CMS_

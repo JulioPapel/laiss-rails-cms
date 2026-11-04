@@ -23,7 +23,9 @@ def main(argv)
     return 2
   end
 
-  before = Rebrand.tally
+  before = Rebrand.tally(
+    Rebrand.tracked_files.to_h { |path| [path, Rebrand.mask_protected(Rebrand.read(path))] }
+  )
   total = before.values.sum { |entry| entry[:count] }
 
   puts "Mapping: #{Rebrand::MAPPING_PATH}"
@@ -71,7 +73,9 @@ def main(argv)
     changed += 1
   end
 
-  after = Rebrand.tally
+  after = Rebrand.tally(
+    Rebrand.tracked_files.to_h { |path| [path, Rebrand.mask_protected(Rebrand.read(path))] }
+  )
   remaining = after.values.sum { |entry| entry[:count] }
 
   puts "Rewrote #{changed} file(s)."
