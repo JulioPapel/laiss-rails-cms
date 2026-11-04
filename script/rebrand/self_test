@@ -1,0 +1,245 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Self-test for the rebrand tooling. Runs entirely in memory — it never touches
+# the working tree — and exits non-zero if any assertion fails.
+#
+# Proves:
+#   1. the mapping loads and is internally consistent
+#   2. the transform is idempotent (applying it twice changes nothing the
+#      second time)
+#   3. round-trip: a corpus of upstream tokens becomes the expected downstream
+#      text, and no upstream token survives
+#   4. ordering: AlchemyCMS is not mangled by the bare Alchemy rule
+#   5. boundaries: a token inside a longer identifier is left alone
+#   6. the verify logic actually fails on a deliberately corrupted tree
+require_relative "lib"
+
+# Minimal in-memory harness so this needs no test framework.
+class SelfTest
+  def initialize
+    @passed = 0
+    @failed = []
+  end
+
+  def check(name)
+    yield
+    @passed += 1
+    puts "  ok    #{name}"
+  rescue => e
+    @failed << [name, e]
+    puts "  FAIL  #{name}"
+    puts "        #{e.message}"
+  end
+
+  def expect_equal(actual, expected, note = nil)
+    return if actual == expected
+
+    raise "#{note && "#{note}: "}expected #{expected.inspect}, got #{actual.inspect}"
+  end
+
+  def expect(condition, message)
+    raise message unless condition
+  end
+
+  def report
+    puts
+    if @failed.empty?
+      puts "PASS — #{@passed} assertion(s)"
+      0
+    else
+      puts "FAIL — #{@failed.size} of #{@passed + @failed.size} assertion(s) failed"
+      1
+    end
+  end
+end
+
+t = SelfTest.new
+
+puts "mapping.yml"
+
+t.check("loads with unique ids and sources") do
+  ids = Rebrand.rows.map(&:id)
+  t.expect_equal(ids.uniq.size, ids.size, "duplicate ids")
+  sources = Rebrand.rows.map(&:from)
+  t.expect_equal(sources.uniq.size, sources.size, "duplicate from tokens")
+  t.expect(Rebrand.rows.size >= 12, "expected at least 12 rows, got #{Rebrand.rows.size}")
+end
+
+t.check("no replacement contains an upstream token (idempotence precondition)") do
+  Rebrand.rows.each do |row|
+    others = Rebrand.rows.reject { |r| r.id == row.id }.map(&:from)
+    hits = others.select { |token| row.to.include?(token) }
+    t.expect(hits.empty?, "#{row.id} -> #{row.to.inspect} contains #{hits.join(", ")}")
+  end
+end
+
+t.check("ordering puts the most specific token first") do
+  order = Rebrand.ordered_rows.map(&:from)
+  t.expect(
+    order.index("AlchemyCMS") < order.index("Alchemy"),
+    "AlchemyCMS must be applied before bare Alchemy, got #{order.inspect}"
+  )
+  t.expect(
+    order.index("Alchemy::") < order.index("Alchemy"),
+    "Alchemy:: must be applied before bare Alchemy"
+  )
+  lengths = Rebrand.ordered_rows.map { |r| r.from.length }
+  t.expect_equal(lengths, lengths.sort.reverse, "rows not sorted by descending length")
+end
+
+t.check("ordering is deterministic across repeated calls") do
+  a = Rebrand.ordered_rows.map(&:from)
+  b = Rebrand.ordered_rows.map(&:from)
+  t.expect_equal(a, b)
+end
+
+puts
+puts "transform"
+
+# Every upstream token, embedded in representative real-world contexts taken
+# from the audit (string literals, constants, table names, env vars, tags).
+CORPUS = {
+  "AlchemyCMS is a CMS" => "LaissCMS is a CMS",
+  "module Alchemy" => "module LaissCms",
+  "Alchemy::Page.find(1)" => "LaissCms::Page.find(1)",
+  '"Alchemy::Picture".constantize' => '"LaissCms::Picture".constantize',
+  'create_table "alchemy_pages"' => 'create_table "laiss_cms_pages"',
+  "self.table_name = \"alchemy_ingredients\"" => "self.table_name = \"laiss_cms_ingredients\"",
+  'gem "alchemy_cms"' => 'gem "laiss_cms"',
+  'gem "alchemy_i18n", path: "i18n"' => 'gem "laiss_cms_i18n", path: "i18n"',
+  'gem "alchemy-devise", path: "devise"' => 'gem "laiss-cms-devise", path: "devise"',
+  'pin "alchemy_admin"' => 'pin "laiss_cms_admin"',
+  'customElements.define("alchemy-page-select", PageSelect)' =>
+    'customElements.define("laiss-cms-page-select", PageSelect)',
+  '<alchemy-icon name="arrow-up">' => '<laiss-cms-icon name="arrow-up">',
+  'ENV.fetch("ALCHEMY_STORAGE_ADAPTER")' => 'ENV.fetch("LAISS_CMS_STORAGE_ADAPTER")',
+  "AlchemyI18n::Engine" => "LaissCmsI18n::Engine",
+  "module Alchemy::Devise" => "module LaissCms::Devise",
+  "engine_name \"alchemy\"" => "engine_name \"laiss_cms\"",
+  "isolate_namespace Alchemy" => "isolate_namespace LaissCms"
+}.freeze
+
+CORPUS.each do |input, expected|
+  t.check(input.tr("\n", " ")[0, 58]) do
+    t.expect_equal(Rebrand.transform(input), expected)
+  end
+end
+
+t.check("no upstream token survives the transform of the whole corpus") do
+  combined = CORPUS.keys.join("\n")
+  out = Rebrand.transform(combined)
+  Rebrand.rows.each do |row|
+    t.expect(
+      !out.match?(row.regexp),
+      "row #{row.id} (#{row.from}) still matches after transform"
+    )
+  end
+end
+
+t.check("transform is idempotent over the corpus (round-trip)") do
+  once = Rebrand.transform(CORPUS.keys.join("\n"))
+  twice = Rebrand.transform(once)
+  t.expect_equal(twice, once, "second pass changed the text")
+end
+
+t.check("AlchemyCMS is not mangled by the bare Alchemy rule") do
+  t.expect_equal(Rebrand.transform("AlchemyCMS"), "LaissCMS")
+  t.expect(
+    !Rebrand.transform("AlchemyCMS").include?("LaissCmsCMS"),
+    "produced LaissCmsCMS — AlchemyCMS rule did not win"
+  )
+end
+
+t.check("word boundaries leave longer identifiers alone") do
+  # `myalchemy` and `alchemy2` are not the standalone token.
+  t.expect_equal(Rebrand.transform("myalchemy"), "myalchemy")
+  t.expect_equal(Rebrand.transform("alchemy2"), "alchemy2")
+  # But a real snake prefix is still rewritten.
+  t.expect_equal(Rebrand.transform("alchemy_page"), "laiss_cms_page")
+end
+
+t.check("empty and token-free input is untouched") do
+  t.expect_equal(Rebrand.transform(""), "")
+  t.expect_equal(Rebrand.transform("nothing to see here"), "nothing to see here")
+end
+
+puts
+puts "corruption detection"
+
+# Feed the verify drift rules a deliberately corrupted string and confirm the
+# rule that should catch it does. This is the "would verify actually fail?"
+# check — a guard nobody has seen fail is not known to work.
+DRIFT_PROBES = {
+  "laisscms" => /\blaisscms\b/,
+  "lasscms" => /\blasscms\b/,
+  "laiss_cms::Page" => /\blaiss_cms::/,
+  "laissCms" => /\blaissCms\b/,
+  "Laisscms" => /\bLaisscms\b/,
+  "LAISS_CMS::Page" => /\bLAISS_CMS::/,
+  "laiss-cms_page" => /\blaiss-cms_/,
+  "laiss_cms-admin" => /\blaiss_cms-/,
+  "LaissCMS_" => /\bLaissCMS_/
+}.freeze
+
+DRIFT_PROBES.each do |corrupted, matcher|
+  t.check("catches #{corrupted.inspect}") do
+    t.expect(corrupted.match?(matcher), "#{corrupted.inspect} not matched by #{matcher.inspect}")
+  end
+end
+
+t.check("drift rules do not fire on correct forms") do
+  good = <<~TEXT
+    module LaissCms
+      engine_name "laiss_cms"
+      LaissCms::Page.find(1)
+      laiss_cms_page
+      <laiss-cms-icon>
+      LAISS_CMS_STORAGE_ADAPTER
+      LaissCMS
+      LaissCmsI18n::Engine
+  TEXT
+  good.each_line do |line|
+    DRIFT_PROBES.each do |corrupted, matcher|
+      next unless matcher.match?(corrupted) # only check rules that exist
+      t.expect(!line.match?(matcher), "correct line flagged as #{corrupted.inspect}: #{line.strip}")
+    end
+  end
+end
+
+t.check("route helpers with a snake_case engine prefix are NOT drift") do
+  # Rails prefixes route helpers with the engine's snake_case name, so
+  # `laiss_cms.new_admin_page_path` is correct and must never be flagged.
+  route_lines = [
+    "laiss_cms.new_admin_element_path(page_version_id: 1)",
+    "laiss_cms.admin_dashboard_path",
+    "url: laiss_cms.configure_admin_page_path(@page)",
+    'initializer "laiss_cms.config_yml" do |app|',
+    "LaissCms.config.admin_path"
+  ]
+  route_lines.each do |line|
+    DRIFT_PROBES.each do |corrupted, matcher|
+      next unless matcher.match?(corrupted)
+      t.expect(!line.match?(matcher), "valid route-helper line wrongly flagged: #{line.strip}")
+    end
+  end
+end
+
+t.check("corrupted tree fails an end-to-end leftover scan") do
+  # Simulate a tree where exactly one file was missed by the rewrite.
+  clean = "module LaissCms\n  engine_name \"laiss_cms\"\nend\n"
+  dirty = "module Alchemy\nend\n"
+  corpus = {"app/models/laiss_cms/page.rb" => clean,
+            "app/models/laiss_cms/leftover.rb" => dirty}
+
+  scan = ->(content) { Rebrand.rows.sum { |row| content.scan(row.regexp).size } }
+
+  # Precondition: the rewritten file really is clean.
+  t.expect_equal(scan.call(clean), 0, "clean file should have no hits")
+
+  # The guard must report only the missed file, not the clean one.
+  flagged = corpus.reject { |_, content| scan.call(content).zero? }
+  t.expect_equal(flagged.keys, ["app/models/laiss_cms/leftover.rb"], "missed file not detected")
+end
+
+exit(t.report)

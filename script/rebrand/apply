@@ -1,0 +1,83 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Apply the canonical naming table to the working tree.
+#
+# Dry-run by default: prints what would change and exits 0. Pass --write to
+# modify files. The transform is idempotent — a second run over an already
+# rebranded tree reports zero changes, which is what the self-test asserts.
+#
+#   script/rebrand/apply             # dry run
+#   script/rebrand/apply --write     # apply
+#   script/rebrand/apply --verbose   # per-file change counts in dry run
+require_relative "lib"
+
+def main(argv)
+  write = argv.include?("--write")
+  verbose = argv.include?("--verbose")
+
+  unknown = argv - %w[--write --verbose]
+  unless unknown.empty?
+    warn "unknown option(s): #{unknown.join(" ")}"
+    warn "usage: script/rebrand/apply [--write] [--verbose]"
+    return 2
+  end
+
+  before = Rebrand.tally
+  total = before.values.sum { |entry| entry[:count] }
+
+  puts "Mapping: #{Rebrand::MAPPING_PATH}"
+  puts "Rows:    #{Rebrand.rows.size} (#{Rebrand.ordered_rows.map(&:from).join(" > ")})"
+  puts "Files:   #{Rebrand.tracked_files.size} in scope"
+  puts "Mode:    #{write ? "WRITE" : "dry-run"}"
+  puts
+
+  if total.zero?
+    puts "No upstream tokens found — tree is already rebranded."
+    return 0
+  end
+
+  puts "Upstream tokens present (would be replaced):"
+  before.each do |id, entry|
+    next if entry[:count].zero?
+
+    printf("  %-24s %6d  in %d file(s)\n", id, entry[:count], entry[:files].size)
+  end
+  printf("  %-24s %6d\n", "TOTAL", total)
+  puts
+
+  unless write
+    if verbose
+      puts "Files that would change:"
+      changed = Rebrand.tracked_files.select do |path|
+        content = Rebrand.read(path)
+        Rebrand.transform(content) != content
+      end
+      changed.each { |path| puts "  #{path}" }
+      puts
+    end
+
+    puts "Dry run only — nothing was written. Re-run with --write to apply."
+    return 0
+  end
+
+  changed = 0
+  Rebrand.tracked_files.each do |path|
+    content = Rebrand.read(path)
+    updated = Rebrand.transform(content)
+    next if updated == content
+
+    Rebrand.write(path, updated)
+    changed += 1
+  end
+
+  after = Rebrand.tally
+  remaining = after.values.sum { |entry| entry[:count] }
+
+  puts "Rewrote #{changed} file(s)."
+  puts "Remaining upstream tokens: #{remaining}"
+  puts "Note: file and directory names are handled separately by rename_paths.rb." if remaining.zero?
+  remaining.zero? ? 0 : 1
+end
+
+exit(main(ARGV)) if $PROGRAM_NAME == __FILE__

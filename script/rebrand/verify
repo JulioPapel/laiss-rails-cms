@@ -1,0 +1,111 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Guard: fail the build if the rebrand is incomplete or inconsistent.
+#
+# Two independent checks, reported separately:
+#
+#   1. LEFTOVERS — any upstream token still present outside the three LICENSE
+#      allowlist files. This is the "you missed a spot" check.
+#
+#   2. DRIFT — the replacement tokens appear in a casing or separator form the
+#      naming policy does not allow (e.g. `laisscms` for `LaissCMS`, or
+#      `laiss_cms::` where a namespace `LaissCms::` was meant). This catches the
+#      damage a careless bulk replace does, which a leftover check would miss
+#      because the upstream name is already gone.
+#
+# Exits 1 if anything is wrong, 0 when the tree is clean.
+#
+#   script/rebrand/verify
+#   script/rebrand/verify --quiet     # only the verdict line
+require_relative "lib"
+
+# Forms that must never appear. Each entry is [pattern, why, expected].
+#
+# Deliberately narrow: `laiss_cms.foo_path` is CORRECT, not drift — Rails route
+# helpers are prefixed with the engine's snake_case name (upstream:
+# `alchemy.admin_element_path`), so a bare `laiss_cms.` must not be flagged.
+DRIFT_RULES = [
+  [/\blaisscms\b/, "all-lowercase squashing", "LaissCMS or laiss_cms"],
+  [/\blasscms\b/, "missing i", "LaissCMS"],
+  [/\blaiss_cms::/, "snake_case used as a constant", "LaissCms::"],
+  [/\bLaissCms_[A-Z]/, "constant written with a trailing underscore", "LaissCms"],
+  [/\blaissCms\b/, "mixed case", "LaissCMS or laiss_cms"],
+  [/\bLaisscms\b/, "wrong internal capitalisation", "LaissCMS"],
+  [/\bLAISS_CMS::/, "env-style prefix used as a Ruby constant", "LaissCms::"],
+  [/\blaiss-cms_/, "kebab prefix with snake separator", "laiss-cms- or laiss_cms_"],
+  [/\blaiss_cms-/, "snake prefix with kebab separator", "laiss_cms_ or laiss-cms-"],
+  [/\bLAISS-CMS_/, "hyphenated env prefix", "LAISS_CMS_"],
+  [/\bLaissCMS_/, "brand name used as a prefix", "LaissCms (no underscore)"]
+].freeze
+
+def main(argv)
+  quiet = argv.include?("--quiet")
+  unknown = argv - %w[--quiet]
+  unless unknown.empty?
+    warn "unknown option(s): #{unknown.join(" ")}"
+    return 2
+  end
+
+  problems = 0
+
+  # --- check 1: leftovers ---------------------------------------------------
+  tally = Rebrand.tally
+  leftovers = tally.reject { |_, entry| entry[:count].zero? }
+
+  if leftovers.any?
+    puts "FAIL — upstream tokens remain outside the licence allowlist:"
+    leftovers.each do |id, entry|
+      row = Rebrand.row_by_id(id)
+      printf("\n  [%s] %s -> %s: %d occurrence(s) in %d file(s)\n",
+        id, row.from, row.to, entry[:count], entry[:files].size)
+      Rebrand.locations(row).each { |line| puts "    #{line}" }
+    end
+    puts
+    problems += leftovers.size
+  elsif !quiet
+    puts "OK    no upstream tokens remain (allowlisted: #{Rebrand::LICENSE_ALLOWLIST.join(", ")})"
+  end
+
+  # --- check 2: drift -------------------------------------------------------
+  files = Rebrand.tracked_files
+  drift_hits = []
+
+  files.each do |path|
+    content = Rebrand.read(path)
+    DRIFT_RULES.each do |pattern, why, expected|
+      content.each_line.with_index(1) do |line, number|
+        next unless line.match?(pattern)
+
+        drift_hits << "#{path}:#{number}: #{why} — expected #{expected}: #{line.strip[0, 110]}"
+      end
+    end
+  end
+
+  if drift_hits.any?
+    puts "FAIL — case/separator drift in replacement tokens:"
+    drift_hits.first(25).each { |hit| puts "    #{hit}" }
+    puts "    ... #{drift_hits.size - 25} more" if drift_hits.size > 25
+    puts
+    problems += drift_hits.size
+  elsif !quiet
+    puts "OK    no case/separator drift in replacement tokens (#{DRIFT_RULES.size} rules)"
+  end
+
+  # --- check 3: allowlist is intact ----------------------------------------
+  missing = Rebrand::LICENSE_ALLOWLIST.reject { |path| File.exist?(File.join(Rebrand::ROOT, path)) }
+  if missing.any?
+    puts "FAIL — allowlisted licence file(s) missing: #{missing.join(", ")}"
+    problems += missing.size
+  end
+
+  if problems.zero?
+    puts "VERDICT: PASS"
+    0
+  else
+    puts "VERDICT: FAIL (#{problems} problem(s))"
+    1
+  end
+end
+
+exit(main(ARGV)) if $PROGRAM_NAME == __FILE__

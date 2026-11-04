@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+# Run every gate with the upstream baseline numbers baked in.
+#
+# A gate passes only if it exits 0 AND the example/test count matches the
+# baseline. Counting matters: a broken `require` makes RSpec silently load fewer
+# files, which still exits 0 with "0 failures" while testing almost nothing.
+#
+#   script/rebrand/gates              # run everything
+#   script/rebrand/gates ruby         # only rspec + standardrb
+#   script/rebrand/gates js           # only node gates
+#   script/rebrand/gates rebrand      # only the rebrand tooling
+set -uo pipefail
+
+cd "$(dirname "$0")/../.." || exit 2
+
+BASELINE_EXAMPLES=4347
+BASELINE_DEVISE=167
+BASELINE_VITEST=830
+
+failures=0
+pass() { printf '  \033[32mPASS\033[0m  %s\n' "$1"; }
+fail() { printf '  \033[31mFAIL\033[0m  %s\n' "$1"; failures=$((failures + 1)); }
+
+run_ruby() {
+  echo "Ruby"
+
+  local out
+  out=$(bin/rspec spec --format progress 2>&1)
+  local status=$?
+  local count
+  count=$(echo "$out" | grep -oE '[0-9]+ examples' | tail -1 | grep -oE '[0-9]+')
+  if [ "$status" -ne 0 ]; then
+    fail "core specs (exit $status)"
+    echo "$out" | grep -E '^rspec \./' | head -10
+  elif [ "${count:-0}" -ne "$BASELINE_EXAMPLES" ]; then
+    fail "core specs ran ${count:-0} examples, baseline is $BASELINE_EXAMPLES"
+  else
+    pass "core specs ($count examples)"
+  fi
+
+  out=$(bin/rspec devise/spec --format progress 2>&1)
+  status=$?
+  count=$(echo "$out" | grep -oE '[0-9]+ examples' | tail -1 | grep -oE '[0-9]+')
+  if [ "$status" -ne 0 ]; then
+    fail "devise specs (exit $status)"
+  elif [ "${count:-0}" -ne "$BASELINE_DEVISE" ]; then
+    fail "devise specs ran ${count:-0} examples, baseline is $BASELINE_DEVISE"
+  else
+    pass "devise specs ($count examples)"
+  fi
+
+  local lint
+  if lint=$(bundle exec standardrb 2>&1); then
+    pass "standardrb"
+  else
+    fail "standardrb"
+    echo "$lint" | grep -E '^  ' | head -10
+  fi
+}
+
+run_js() {
+  echo "JavaScript"
+
+  # Herb lints generated HTML too, so clear artefacts that would otherwise
+  # produce offences in files nobody wrote.
+  rm -rf coverage devise/coverage spec/dummy/tmp/capybara
+
+  if pnpm run eslint > /dev/null 2>&1; then pass "eslint"; else fail "eslint"; fi
+  if pnpm run lint > /dev/null 2>&1; then pass "prettier"; else fail "prettier"; fi
+  if pnpm exec herb-lint > /dev/null 2>&1; then pass "herb-lint"; else fail "herb-lint"; fi
+  if pnpm run build > /dev/null 2>&1; then pass "build"; else fail "build"; fi
+
+  # Vitest is flaky upstream (see docs/development/toolchain-pinning.md): it can
+  # exit 1 on an unhandled rejection while every test still passes, and that
+  # flake also truncates the summary line. So retry once, and keep the last
+  # count we actually managed to parse rather than reporting a misleading zero.
+  local out status count="" attempts=0
+  for attempt in 1 2; do
+    attempts=$attempt
+    out=$(pnpm run test 2>&1)
+    status=$?
+    local seen
+    seen=$(echo "$out" | grep -oE 'Tests +[0-9]+ passed' | tail -1 | grep -oE '[0-9]+')
+    [ -n "$seen" ] && count=$seen
+    [ "$status" -eq 0 ] && break
+  done
+
+  if [ "$status" -ne 0 ]; then
+    fail "vitest (exit $status after $attempts attempt(s); last parsed count ${count:-none})"
+    echo "$out" | grep -E 'Unhandled Errors|TypeError|✕|FAIL ' | head -5
+  elif [ -z "$count" ]; then
+    fail "vitest exited 0 but printed no test count — output format changed?"
+  elif [ "$count" -ne "$BASELINE_VITEST" ]; then
+    fail "vitest ran $count tests, baseline is $BASELINE_VITEST"
+  else
+    pass "vitest ($count tests, attempt $attempts)"
+  fi
+}
+
+run_rebrand() {
+  echo "Rebrand tooling"
+
+  if ruby script/rebrand/self_test > /dev/null 2>&1; then
+    pass "self_test"
+  else
+    fail "self_test"
+  fi
+  if ruby script/rebrand/verify > /tmp/rebrand-verify.log 2>&1; then
+    pass "verify"
+  else
+    # Mid-rebrand a non-zero verify is expected; report without failing the run.
+    printf '  \033[33mNOTE\033[0m  verify reports outstanding tokens (expected until Phase 1+ lands)\n'
+  fi
+}
+
+case "${1:-all}" in
+  ruby) run_ruby ;;
+  js) run_js ;;
+  rebrand) run_rebrand ;;
+  all) run_ruby; run_js; run_rebrand ;;
+  *) echo "usage: $0 [all|ruby|js|rebrand]" >&2; exit 2 ;;
+esac
+
+echo
+if [ "$failures" -eq 0 ]; then
+  echo "ALL GATES PASSED"
+  exit 0
+fi
+echo "$failures GATE(S) FAILED"
+exit 1
