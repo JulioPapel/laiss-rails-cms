@@ -10,7 +10,7 @@ vi.mock("laiss_cms_admin/image_loader", () => ({
 
 // The component calls routes.url_admin_picture_path() from a 125ms debounce
 // timer. Without this mock the imported `routes` object is empty (the spec
-// supplies no alchemy_routes JSON script), so the call throws — and whether it
+// supplies no routes JSON script), so the call throws — and whether it
 // throws inside a test or after teardown is a race, which made the whole suite
 // exit 1 intermittently while every test still passed. Mocking the module makes
 // the URL deterministic and removes the race at its source.

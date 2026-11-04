@@ -8,12 +8,25 @@
   <link rel="preload" href="<%= asset_path("#{tinymce_base_path}/plugins/#{plugin}/plugin.min.js") %>" as="script">
 <% end %>
 
+<%
+  # TinyMCE loads content_css inside the editor iframe, whose base URI is the
+  # admin page, not the editor. A bare name like "laiss_cms" is therefore
+  # resolved relative to that page and requests /admin/laiss_cms. Emit absolute
+  # asset URLs instead, for the light and dark themes the component switches
+  # between, so the name is never used as a path.
+  tinymce_content_css = {
+    light: asset_path("#{tinymce_base_path}/skins/content/laiss_cms/content.min.css"),
+    dark: asset_path("#{tinymce_base_path}/skins/content/laiss-cms-dark/content.min.css")
+  }
+%>
+
 <%= tag.script(type: "application/json", id: "laiss_cms_tinymce_defaults") do %>
   <%== LaissCms::Tinymce.init.merge(
     base_url: ActionController::Base.config.asset_host ?
       asset_url(tinymce_base_path, host: ActionController::Base.config.asset_host) :
       tinymce_base_path,
     suffix: ".min",
-    plugins: LaissCms::Tinymce.plugins.join(",")
+    plugins: LaissCms::Tinymce.plugins.join(","),
+    content_css: tinymce_content_css
   ).to_json %>
 <% end %>

@@ -132,7 +132,14 @@ export class Tinymce extends HTMLElement {
     const editor = tinymce.get(this.editorId)
     if (editor) {
       const skin = event.matches ? DARK_THEME : LIGHT_THEME
-      const content_css = event.matches ? DARK_THEME : LIGHT_THEME
+      const css = (readJSONScript("laiss_cms_tinymce_defaults") || {})
+        .content_css
+      const content_css =
+        css && typeof css === "object"
+          ? event.matches
+            ? css.dark
+            : css.light
+          : css
 
       // Update the skin by reinitializing the editor with new configuration
       editor.remove()
@@ -172,7 +179,7 @@ export class Tinymce extends HTMLElement {
     })
 
     const config = {
-      content_css: this.preferredTheme,
+      content_css: this.preferredContentCss,
       ...readJSONScript("laiss_cms_tinymce_defaults"),
       ...customConfig,
       language: currentLocale(),
@@ -192,6 +199,20 @@ export class Tinymce extends HTMLElement {
     return window.matchMedia("(prefers-color-scheme: dark)").matches
       ? DARK_THEME
       : LIGHT_THEME
+  }
+
+  // Absolute asset URLs for the editor content stylesheet, supplied by the
+  // server in the defaults JSON. `content_css` must never be a bare theme name:
+  // TinyMCE loads it inside the editor iframe, whose base URI is the admin page,
+  // so "laiss_cms" resolves to /admin/laiss_cms instead of an asset path.
+  get preferredContentCss() {
+    const css = (readJSONScript("laiss_cms_tinymce_defaults") || {}).content_css
+    if (css && typeof css === "object") {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? css.dark
+        : css.light
+    }
+    return css
   }
 
   get editorId() {
