@@ -1,4 +1,4 @@
-import { vi, describe, it, expect } from "vitest"
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import "laiss_cms_admin/components/picture_editor"
 
 vi.mock("laiss_cms_admin/image_loader", () => ({
@@ -6,6 +6,18 @@ vi.mock("laiss_cms_admin/image_loader", () => ({
   default: vi.fn().mockImplementation(() => ({
     load: vi.fn()
   }))
+}))
+
+// The component calls routes.url_admin_picture_path() from a 125ms debounce
+// timer. Without this mock the imported `routes` object is empty (the spec
+// supplies no alchemy_routes JSON script), so the call throws — and whether it
+// throws inside a test or after teardown is a race, which made the whole suite
+// exit 1 intermittently while every test still passed. Mocking the module makes
+// the URL deterministic and removes the race at its source.
+vi.mock("laiss_cms_admin/routes", () => ({
+  routes: {
+    url_admin_picture_path: (id) => `/admin/pictures/${id}/url`
+  }
 }))
 
 function renderComponent(options = {}) {
@@ -64,6 +76,20 @@ function renderComponent(options = {}) {
 }
 
 describe("PictureEditor", () => {
+  // connectedCallback schedules a 125ms debounced DOM update. These tests finish
+  // well inside that window, so the timer fires after teardown, against a
+  // detached node, and throws — as an unhandled rejection that makes vitest exit
+  // 1 even though every assertion passed. Fake timers mean the callback only runs
+  // if a test explicitly advances time, so it never outlives its test.
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.clearAllTimers()
+    vi.useRealTimers()
+  })
+
   describe("removeImage", () => {
     it("clears the picture thumbnail", () => {
       const editor = renderComponent()

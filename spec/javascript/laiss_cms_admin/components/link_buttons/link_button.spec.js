@@ -173,7 +173,7 @@ describe("laiss-cms-link-button", () => {
       `
       const button = renderComponent("laiss-cms-link-button", html)
 
-      expect(button.linkButtons.tagName).toEqual("ALCHEMY-LINK-BUTTONS")
+      expect(button.linkButtons.tagName).toEqual("LAISS-CMS-LINK-BUTTONS")
     })
   })
 })
