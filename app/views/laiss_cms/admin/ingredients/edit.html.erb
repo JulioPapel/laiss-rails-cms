@@ -1,0 +1,4 @@
+<%= laiss_cms_form_for @ingredient, as: :ingredient, url: laiss_cms.admin_ingredient_path(@ingredient) do |f| %>
+  <%= render "laiss_cms/admin/ingredients/#{@ingredient.partial_name}_fields", ingredient: @ingredient, f: f %>
+  <%= f.submit LaissCms.t(:save) %>
+<% end %>

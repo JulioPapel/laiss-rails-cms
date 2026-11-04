@@ -1,0 +1,9 @@
+kl:
+  laiss_cms:
+    welcome_back_note: majQa' Dub
+
+  # LaissCms date formats
+  date:
+    formats:
+      laiss_cms:
+        default: "%Y-%m-%d"

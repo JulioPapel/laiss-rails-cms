@@ -19,22 +19,22 @@ require "factory_bot"
 require "view_component/test_helpers"
 require "webmock"
 
-require "alchemy/seeder"
-require "alchemy/test_support"
-require "alchemy/test_support/capybara_helpers"
-require "alchemy/test_support/config_stubbing"
-require "alchemy/test_support/having_crop_action_examples"
-require "alchemy/test_support/having_picture_thumbnails_examples"
-require "alchemy/test_support/relatable_resource_examples"
-require "alchemy/test_support/shared_dom_ids_examples"
-require "alchemy/test_support/shared_ingredient_examples"
-require "alchemy/test_support/shared_ingredient_editor_examples"
-require "alchemy/test_support/integration_helpers"
-require "alchemy/test_support/rspec_matchers"
-require "alchemy/test_support/shared_contexts"
-require "alchemy/test_support/shared_link_tab_examples"
-require "alchemy/test_support/shared_uploader_examples"
-require "alchemy/test_support/current_language_shared_examples"
+require "laiss_cms/seeder"
+require "laiss_cms/test_support"
+require "laiss_cms/test_support/capybara_helpers"
+require "laiss_cms/test_support/config_stubbing"
+require "laiss_cms/test_support/having_crop_action_examples"
+require "laiss_cms/test_support/having_picture_thumbnails_examples"
+require "laiss_cms/test_support/relatable_resource_examples"
+require "laiss_cms/test_support/shared_dom_ids_examples"
+require "laiss_cms/test_support/shared_ingredient_examples"
+require "laiss_cms/test_support/shared_ingredient_editor_examples"
+require "laiss_cms/test_support/integration_helpers"
+require "laiss_cms/test_support/rspec_matchers"
+require "laiss_cms/test_support/shared_contexts"
+require "laiss_cms/test_support/shared_link_tab_examples"
+require "laiss_cms/test_support/shared_uploader_examples"
+require "laiss_cms/test_support/current_language_shared_examples"
 
 require_relative "support/file_name_examples"
 require_relative "support/hint_examples"
@@ -45,7 +45,7 @@ ActionMailer::Base.delivery_method = :test
 ActionMailer::Base.perform_deliveries = true
 ActionMailer::Base.default_url_options[:host] = "test.com"
 
-Alchemy::Deprecation.silenced = false
+LaissCms::Deprecation.silenced = false
 
 Rails.backtrace_cleaner.remove_silencers!
 # Disable rails loggin for faster IO. Remove this if you want to have a test.log
@@ -55,7 +55,7 @@ Rails.logger.level = 4
 Capybara.default_selector = :css
 Capybara.ignore_hidden_elements = false
 
-FactoryBot.definition_file_paths.append(Alchemy::TestSupport.factories_path)
+FactoryBot.definition_file_paths.append(LaissCms::TestSupport.factories_path)
 FactoryBot.find_definitions
 
 Shoulda::Matchers.configure do |config|
@@ -72,13 +72,13 @@ end
 RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
   config.include ActiveSupport::Testing::TimeHelpers
-  config.include Alchemy::Engine.routes.url_helpers
-  config.include Alchemy::TestSupport::ConfigStubbing
+  config.include LaissCms::Engine.routes.url_helpers
+  config.include LaissCms::TestSupport::ConfigStubbing
   [:controller, :system, :request].each do |type|
-    config.include Alchemy::TestSupport::IntegrationHelpers, type: type
+    config.include LaissCms::TestSupport::IntegrationHelpers, type: type
   end
   config.include FactoryBot::Syntax::Methods
-  config.include Alchemy::TestSupport::CapybaraHelpers, type: :system
+  config.include LaissCms::TestSupport::CapybaraHelpers, type: :system
   config.include ViewComponent::TestHelpers, type: :component
 
   [:controller, :model].each do |type|
@@ -88,12 +88,12 @@ RSpec.configure do |config|
   config.use_transactional_fixtures = true
 
   config.before(:each) do
-    Alchemy::Current.site = nil
+    LaissCms::Current.site = nil
     ::I18n.locale = :en
   end
 
   config.around(:each, silence_deprecations: true) do |example|
-    Alchemy::Deprecation.silence do
+    LaissCms::Deprecation.silence do
       example.run
     end
   end

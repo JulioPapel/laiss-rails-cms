@@ -7,12 +7,12 @@ RSpec.describe "Node select", type: :system, js: true do
     authorize_user(:as_admin)
   end
 
-  let(:english_element) { create(:alchemy_element, name: :menu, page: create(:alchemy_page)) }
-  let!(:english_node) { create(:alchemy_node, name: "test") }
+  let(:english_element) { create(:laiss_cms_element, name: :menu, page: create(:laiss_cms_page)) }
+  let!(:english_node) { create(:laiss_cms_node, name: "test") }
 
-  let!(:klingon) { create(:alchemy_language, :klingon) }
-  let(:klingon_element) { create(:alchemy_element, name: :menu, page: create(:alchemy_page, language: klingon)) }
-  let!(:klingon_node) { create(:alchemy_node, name: "test", language: klingon) }
+  let!(:klingon) { create(:laiss_cms_language, :klingon) }
+  let(:klingon_element) { create(:laiss_cms_element, name: :menu, page: create(:laiss_cms_page, language: klingon)) }
+  let!(:klingon_node) { create(:laiss_cms_node, name: "test", language: klingon) }
 
   %w[english klingon].each do |language|
     context language do
@@ -20,7 +20,7 @@ RSpec.describe "Node select", type: :system, js: true do
       let(:node) { send(:"#{language}_node") }
 
       it "restricts to the site/language of the page the element is on" do
-        visit alchemy.admin_elements_path(page_version_id: element.page_version_id)
+        visit laiss_cms.admin_elements_path(page_version_id: element.page_version_id)
         tom_select_search("test", element_id: element.id, ingredient_role: "menu")
         within "#element_#{element.id} .element-footer" do
           click_on("Save")

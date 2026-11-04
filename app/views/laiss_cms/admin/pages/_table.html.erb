@@ -1,0 +1,72 @@
+<%= render LaissCms::Admin::Resource::Table.new(@pages, query: @query, search_filter_params: search_filter_params) do |table| %>
+  <% table.column :icon, header: "" do |page| %>
+    <% if can?(:edit_content, page) %>
+      <% if page.locked? %>
+        <sl-tooltip class="like-hint-tooltip" content="<%= LaissCms.t("This page is locked", name: page.locker_name) %>" placement="bottom-start">
+          <%= render_icon "file-edit", size: "xl" %>
+        </sl-tooltip>
+      <% else %>
+        <%= render_icon "file", size: "xl" %>
+      <% end %>
+    <% else %>
+      <sl-tooltip class="like-hint-tooltip" content="<%= LaissCms.t("Your user role does not allow you to edit this page") %>" placement="bottom-start">
+        <%= render_icon "file-forbid", size: "xl" %>
+      </sl-tooltip>
+    <% end %>
+  <% end %>
+  <% table.column :name, sortable: true do |page| %>
+    <%= link_to_if(
+          can?(:edit_content, page),
+          page.name,
+          laiss_cms.edit_admin_page_path(page),
+          title: LaissCms.t(:edit_page),
+        ) { content_tag(:span, page.name) } -%>
+  <% end %>
+  <% table.column :url_path, header: LaissCms::Page.human_attribute_name(:urlname) %>
+  <% table.column :page_type do |page| %>
+    <%= LaissCms.t(page.page_layout, scope: "page_layout_names", default: page.page_layout.to_s.humanize) %>
+  <% end %>
+  <% table.column :tag_list, class_name: "tags" do |page| %>
+    <% page.tag_list.each do |tag| %>
+      <%= content_tag(:span, tag, class: "tag") %>
+    <% end %>
+  <% end %>
+  <% table.column :updated_at, sortable: true %>
+  <% table.column :status, class_name: :right do |page| %>
+    <%= render LaissCms.config.admin_components.page_status_indicators.new(page:) %>
+  <% end %>
+
+  <% table.with_action :info, LaissCms.t(:page_infos) do |page| %>
+    <%= link_to_dialog(
+          render_icon('info-circle'),
+          laiss_cms.info_admin_page_path(page),
+          {
+            title: LaissCms.t(:page_infos),
+            size: '520x290'
+          },
+          class: "icon_button"
+        ) %>
+  <% end %>
+  <% table.with_action :configure, LaissCms.t(:edit_page_properties) do |page| %>
+    <%= link_to_dialog(
+          render_icon(:cog),
+          laiss_cms.configure_admin_page_path(page, view: "list"),
+          {
+            title: LaissCms.t(:edit_page_properties),
+            size: '530x680'
+          },
+          class: "icon_button"
+        ) -%>
+  <% end %>
+  <% table.with_action :copy, LaissCms.t(:copy_page) do |page| %>
+    <%= button_to(
+          render_icon(:copy),
+          laiss_cms.insert_admin_clipboard_path(
+            remarkable_type: :pages,
+            remarkable_id: page.id,
+          ),
+          class: "icon_button"
+        ) %>
+  <% end %>
+  <% table.delete_button tooltip: LaissCms.t(:delete_page), confirm_message: LaissCms.t(:confirm_to_delete_page) %>
+<% end %>

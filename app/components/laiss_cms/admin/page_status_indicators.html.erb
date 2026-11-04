@@ -1,0 +1,29 @@
+<% if @page.locked? %>
+  <span class="page_status locked">
+    <laiss-cms-icon name="edit" size="1x"></laiss-cms-icon>
+    <%= @page.status_title(:locked) %>
+  </span>
+<% end %>
+
+<% if @page.restricted? %>
+  <span class="page_status">
+    <laiss-cms-icon name="lock" size="1x"></laiss-cms-icon>
+    <%= @page.status_title(:restricted) %>
+  </span>
+<% end %>
+
+<% if !@page.public? && !@page.scheduled? %>
+  <span class="page_status">
+    <laiss-cms-icon name="cloud-off" size="1x"></laiss-cms-icon>
+    <%= @page.status_title(:public) %>
+  </span>
+<% end %>
+
+<% if @page.scheduled? %>
+  <span class="page_status">
+    <sl-tooltip content="<%= @page.status_message(:scheduled) %>">
+      <laiss-cms-icon name="calendar-schedule" size="1x"></laiss-cms-icon>
+      <%= @page.status_title(:scheduled) %>
+    </sl-tooltip>
+  </span>
+<% end %>

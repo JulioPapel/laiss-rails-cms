@@ -3,22 +3,22 @@ require "rails_helper"
 describe "Login: " do
   context "If user is present" do
     let!(:user) do
-      Alchemy::User.create!(
+      LaissCms::User.create!(
         login: "admin",
         email: "admin@example.com",
         password: "s3cr3t",
         password_confirmation: "s3cr3t",
-        alchemy_roles: %w[admin]
+        laiss_cms_roles: %w[admin]
       )
     end
 
     let!(:default_key) { Devise.authentication_keys }
 
     before do
-      allow(Alchemy::User).to receive_messages(count: 1)
+      allow(LaissCms::User).to receive_messages(count: 1)
     end
 
-    context "with Alchemy configuration" do
+    context "with LaissCms configuration" do
       it "displays an login authentication field" do
         visit "/admin/login"
         expect(page).to have_css("#user_login[required][autocomplete='username']")

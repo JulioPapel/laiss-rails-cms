@@ -1,0 +1,13 @@
+<laiss-cms-growl>
+  <%= LaissCms.t(:updated_ingredient, ingredient: @ingredient.translated_role) %>
+</laiss-cms-growl>
+<turbo-stream action="close_current_dialog"></turbo-stream>
+<turbo-stream action="reload_preview"></turbo-stream>
+<% if @ingredient.settings[:anchor] %>
+<turbo-stream action="update_anchor_icon" ingredient-id="<%= @ingredient.id %>" active="<%= @ingredient.dom_id.present? %>"></turbo-stream>
+<% end %>
+<% if @ingredient.type == "LaissCms::Ingredients::Picture" && @ingredient.css_class.present? %>
+  <%= turbo_stream.replace @ingredient do %>
+    <%= render LaissCms::Ingredients::PictureEditor.new(@ingredient) %>
+  <% end %>
+<% end %>

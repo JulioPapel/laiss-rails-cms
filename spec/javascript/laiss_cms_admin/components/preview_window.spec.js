@@ -1,0 +1,315 @@
+import "laiss_cms_admin/components/preview_window"
+import * as growler from "laiss_cms_admin/growler"
+import { setupLanguage } from "./component.helper"
+
+describe("laiss-cms-preview-window", () => {
+  /**
+   * @type {HTMLIFrameElement | undefined}
+   */
+  let previewWindow = undefined
+  let reloadButton = undefined
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div id="flash_notices"></div>
+      <button id="reload_preview_button">
+        <span>Reload</span>
+      </button>
+      <select id="preview_size"></select>
+      <iframe
+        is="laiss-cms-preview-window"
+        id="laiss_cms_preview_window"
+        url="about:blank"
+      ></iframe>
+    `
+    previewWindow = document.querySelector('[is="laiss-cms-preview-window"]')
+    reloadButton = document.getElementById("reload_preview_button")
+  })
+
+  afterEach(() => {
+    document.body.innerHTML = ""
+  })
+
+  describe("refresh with timeout", () => {
+    let growlSpy
+
+    beforeEach(() => {
+      setupLanguage()
+      LaissCms.translations["Preview failed to load"] =
+        "Preview failed to load. Please try again."
+      vi.useFakeTimers()
+      growlSpy = vi.spyOn(growler, "growl")
+    })
+
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
+    it("starts spinner when refresh is called", () => {
+      const originalContent = reloadButton.innerHTML
+
+      previewWindow.refresh()
+
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+      expect(reloadButton.innerHTML).not.toBe(originalContent)
+    })
+
+    it("stops spinner when iframe loads successfully", async () => {
+      const originalContent = reloadButton.innerHTML
+
+      previewWindow.refresh()
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Simulate iframe load event
+      previewWindow.dispatchEvent(new Event("load"))
+
+      expect(reloadButton.innerHTML).toBe(originalContent)
+      expect(reloadButton.innerHTML).not.toContain("laiss-cms-spinner")
+    })
+
+    it("stops spinner after 5s timeout if iframe doesn't load", () => {
+      const originalContent = reloadButton.innerHTML
+
+      previewWindow.refresh()
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Fast-forward time by 5 seconds
+      vi.advanceTimersByTime(5000)
+
+      expect(reloadButton.innerHTML).toBe(originalContent)
+      expect(reloadButton.innerHTML).not.toContain("laiss-cms-spinner")
+      expect(growlSpy).toHaveBeenCalledWith(
+        "Preview failed to load. Please try again.",
+        "warning"
+      )
+    })
+
+    it("clears timeout when iframe loads before timeout expires", () => {
+      const originalContent = reloadButton.innerHTML
+
+      previewWindow.refresh()
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Fast-forward time by 2 seconds (less than timeout)
+      vi.advanceTimersByTime(2000)
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Simulate iframe load event
+      previewWindow.dispatchEvent(new Event("load"))
+      expect(reloadButton.innerHTML).toBe(originalContent)
+
+      // Fast-forward remaining time - spinner should stay stopped
+      vi.advanceTimersByTime(3000)
+      expect(reloadButton.innerHTML).toBe(originalContent)
+      expect(reloadButton.innerHTML).not.toContain("laiss-cms-spinner")
+      // Growl should NOT be called since iframe loaded successfully
+      expect(growlSpy).not.toHaveBeenCalled()
+    })
+
+    it("clears previous timeout when refresh is called again", () => {
+      previewWindow.refresh()
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Fast-forward 2 seconds
+      vi.advanceTimersByTime(2000)
+
+      // Call refresh again before timeout
+      previewWindow.refresh()
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Fast-forward 4 seconds (total 6s from first refresh, but only 4s from second)
+      vi.advanceTimersByTime(4000)
+
+      // Spinner should still be showing because new 5s timeout hasn't expired
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Fast-forward 1 more second to complete new timeout
+      vi.advanceTimersByTime(1000)
+      expect(reloadButton.innerHTML).not.toContain("laiss-cms-spinner")
+    })
+
+    it("allows reload button to be clicked again after timeout", () => {
+      const originalContent = reloadButton.innerHTML
+
+      // First refresh
+      previewWindow.refresh()
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Wait for timeout
+      vi.advanceTimersByTime(5000)
+      expect(reloadButton.innerHTML).toBe(originalContent)
+
+      // Click reload button again
+      reloadButton.click()
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Verify it works again
+      vi.advanceTimersByTime(5000)
+      expect(reloadButton.innerHTML).toBe(originalContent)
+    })
+
+    it("stops spinner when receiving previewReady message from iframe", () => {
+      const originalContent = reloadButton.innerHTML
+
+      previewWindow.refresh()
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Fast-forward 2 seconds (less than timeout)
+      vi.advanceTimersByTime(2000)
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Simulate postMessage from iframe
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { message: "LaissCms.previewReady" },
+          source: previewWindow.contentWindow
+        })
+      )
+
+      expect(reloadButton.innerHTML).toBe(originalContent)
+      expect(reloadButton.innerHTML).not.toContain("laiss-cms-spinner")
+
+      // Fast-forward remaining time - spinner should stay stopped and no growl
+      vi.advanceTimersByTime(3000)
+      expect(reloadButton.innerHTML).toBe(originalContent)
+      expect(growlSpy).not.toHaveBeenCalled()
+    })
+
+    it("prefers postMessage over timeout when both occur", () => {
+      const originalContent = reloadButton.innerHTML
+
+      previewWindow.refresh()
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Simulate postMessage from iframe before timeout
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { message: "LaissCms.previewReady" },
+          source: previewWindow.contentWindow
+        })
+      )
+
+      expect(reloadButton.innerHTML).toBe(originalContent)
+
+      // Fast-forward past timeout - nothing should happen, already stopped
+      vi.advanceTimersByTime(5000)
+      expect(reloadButton.innerHTML).toBe(originalContent)
+      expect(growlSpy).not.toHaveBeenCalled()
+    })
+
+    it("uses the load-timeout attribute (in seconds) for the fallback", () => {
+      previewWindow.setAttribute("load-timeout", "2")
+
+      previewWindow.refresh()
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+
+      // Before the configured 2s timeout the spinner is still running
+      vi.advanceTimersByTime(1999)
+      expect(reloadButton.innerHTML).toContain("laiss-cms-spinner")
+      expect(growlSpy).not.toHaveBeenCalled()
+
+      // At 2s the fallback fires
+      vi.advanceTimersByTime(1)
+      expect(reloadButton.innerHTML).not.toContain("laiss-cms-spinner")
+      expect(growlSpy).toHaveBeenCalledWith(
+        "Preview failed to load. Please try again.",
+        "warning"
+      )
+    })
+
+    it("resolves the refresh promise on the iframe load event", async () => {
+      let resolved = false
+      previewWindow.refresh().then(() => {
+        resolved = true
+      })
+
+      previewWindow.dispatchEvent(new Event("load"))
+      await Promise.resolve()
+
+      expect(resolved).toBe(true)
+    })
+
+    it("does not resolve the refresh promise on previewReady", async () => {
+      // previewReady fires before the images are loaded, so a scroll triggered
+      // then (focusing the saved element) would be a no-op. The promise must
+      // wait for the load event.
+      let resolved = false
+      previewWindow.refresh().then(() => {
+        resolved = true
+      })
+
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { message: "LaissCms.previewReady" },
+          source: previewWindow.contentWindow
+        })
+      )
+      await Promise.resolve()
+      await Promise.resolve()
+
+      expect(resolved).toBe(false)
+    })
+  })
+
+  describe("messages", () => {
+    const previewOrigin = "https://www.example.com"
+    let postMessageSpy
+
+    beforeEach(() => {
+      // Keeps the load timeout of refresh from growling after the example.
+      vi.useFakeTimers()
+      postMessageSpy = vi
+        .spyOn(previewWindow.contentWindow, "postMessage")
+        .mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+      vi.restoreAllMocks()
+    })
+
+    function previewReady(source = previewWindow.contentWindow) {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { message: "LaissCms.previewReady" },
+          origin: previewOrigin,
+          source
+        })
+      )
+    }
+
+    it("are sent to the origin the preview reported as ready from", () => {
+      previewReady()
+
+      previewWindow.postMessage({ message: "LaissCms.blurElements" })
+
+      expect(postMessageSpy).toHaveBeenCalledWith(
+        { message: "LaissCms.blurElements" },
+        previewOrigin
+      )
+    })
+
+    it("are not sent before the preview is ready", () => {
+      previewWindow.postMessage({ message: "LaissCms.blurElements" })
+
+      expect(postMessageSpy).not.toHaveBeenCalled()
+    })
+
+    it("are not sent to a preview that was reloaded", () => {
+      previewReady()
+
+      previewWindow.refresh()
+      previewWindow.postMessage({ message: "LaissCms.blurElements" })
+
+      expect(postMessageSpy).not.toHaveBeenCalled()
+    })
+
+    it("are not sent to other windows reporting as ready", () => {
+      previewReady(window)
+
+      previewWindow.postMessage({ message: "LaissCms.blurElements" })
+
+      expect(postMessageSpy).not.toHaveBeenCalled()
+    })
+  })
+})

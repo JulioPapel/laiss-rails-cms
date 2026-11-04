@@ -1,10 +1,10 @@
 require "yaml"
 
-ALCHEMY_CMS_PATH = ENV.fetch("ALCHEMY_CMS_PATH", Alchemy::Engine.root.to_s)
-EN_LOCALE_PATH = File.join(ALCHEMY_CMS_PATH, "config/locales/alchemy.en.yml")
+LAISS_CMS_PATH = ENV.fetch("LAISS_CMS_PATH", LaissCms::Engine.root.to_s)
+EN_LOCALE_PATH = File.join(LAISS_CMS_PATH, "config/locales/laiss_cms.en.yml")
 LOCALES_DIR = File.expand_path("../../locales", __dir__)
 
-LOCALE_FILES = Dir.glob(File.join(LOCALES_DIR, "alchemy.*.yml")).sort
+LOCALE_FILES = Dir.glob(File.join(LOCALES_DIR, "laiss_cms.*.yml")).sort
 
 namespace :translations do
   def flatten_keys(hash, prefix = "")
@@ -24,26 +24,26 @@ namespace :translations do
   end
 
   def load_locale_keys(file)
-    locale_code = File.basename(file, ".yml").sub("alchemy.", "")
+    locale_code = File.basename(file, ".yml").sub("laiss_cms.", "")
     data = YAML.load_file(file, aliases: true)
     [locale_code, flatten_keys(data[locale_code])]
   end
 
-  # Extracts translation keys from Alchemy.t() calls, resolving scopes.
-  # All Alchemy.t() calls are automatically scoped under "alchemy.",
+  # Extracts translation keys from LaissCms.t() calls, resolving scopes.
+  # All LaissCms.t() calls are automatically scoped under "laiss_cms.",
   # and additional scope: parameters are appended.
   #
   # Examples:
-  #   Alchemy.t(:hello)                          => "alchemy.hello"
-  #   Alchemy.t(:name, scope: :filters)          => "alchemy.filters.name"
-  #   Alchemy.t(:all, scope: [:filters, :page])  => "alchemy.filters.page.all"
-  #   Alchemy.t("Welcome")                       => "alchemy.Welcome"
+  #   LaissCms.t(:hello)                          => "laiss_cms.hello"
+  #   LaissCms.t(:name, scope: :filters)          => "laiss_cms.filters.name"
+  #   LaissCms.t(:all, scope: [:filters, :page])  => "laiss_cms.filters.page.all"
+  #   LaissCms.t("Welcome")                       => "laiss_cms.Welcome"
   def used_translation_keys
     keys = []
-    # Match full Alchemy.t(...) calls, capturing the entire argument list
-    call_pattern = /Alchemy\.t\(([^)]+)\)/
+    # Match full LaissCms.t(...) calls, capturing the entire argument list
+    call_pattern = /LaissCms\.t\(([^)]+)\)/
 
-    Dir.glob(File.join(ALCHEMY_CMS_PATH, "{app,lib}", "**", "*.{rb,erb}")).each do |file|
+    Dir.glob(File.join(LAISS_CMS_PATH, "{app,lib}", "**", "*.{rb,erb}")).each do |file|
       content = File.read(file)
       content.scan(call_pattern) do |args_str,|
         # Skip calls with interpolation
@@ -57,9 +57,9 @@ namespace :translations do
         else next
         end
 
-        # Extract scope if present, but only from this call (not nested Alchemy.t calls)
-        scope_source = args_str.sub(/Alchemy\.t\(.*/, "")
-        scope_parts = ["alchemy"]
+        # Extract scope if present, but only from this call (not nested LaissCms.t calls)
+        scope_source = args_str.sub(/LaissCms\.t\(.*/, "")
+        scope_parts = ["laiss_cms"]
         if scope_source =~ /scope:\s*\[([^\]]+)\]/
           scope_content = $1
           # Skip if scope contains dynamic parts (variables, method calls)
@@ -71,7 +71,7 @@ namespace :translations do
             scope_parts << (sym || dq || sq)
           end
         elsif scope_source =~ /scope:\s*:(\w+)/
-          scope_parts << $1 unless $1 == "alchemy"
+          scope_parts << $1 unless $1 == "laiss_cms"
         elsif scope_source =~ /scope:\s*['"]([^'"]+)['"]/
           scope_parts << $1
         end
@@ -88,10 +88,10 @@ namespace :translations do
     locale = args[:locale]
 
     unless File.exist?(EN_LOCALE_PATH)
-      abort "ERROR: English locale not found at #{EN_LOCALE_PATH}\nSet ALCHEMY_CMS_PATH to your alchemy_cms checkout."
+      abort "ERROR: English locale not found at #{EN_LOCALE_PATH}\nSet LAISS_CMS_PATH to your laiss_cms checkout."
     end
 
-    file = File.join(LOCALES_DIR, "alchemy.#{locale}.yml")
+    file = File.join(LOCALES_DIR, "laiss_cms.#{locale}.yml")
     abort "ERROR: Locale file not found: #{file}" unless File.exist?(file)
 
     en_flat = load_en_keys
@@ -128,7 +128,7 @@ namespace :translations do
   desc "Show missing translation summary for all locales"
   task :status do
     unless File.exist?(EN_LOCALE_PATH)
-      abort "ERROR: English locale not found at #{EN_LOCALE_PATH}\nSet ALCHEMY_CMS_PATH to your alchemy_cms checkout."
+      abort "ERROR: English locale not found at #{EN_LOCALE_PATH}\nSet LAISS_CMS_PATH to your laiss_cms checkout."
     end
 
     en_flat = load_en_keys

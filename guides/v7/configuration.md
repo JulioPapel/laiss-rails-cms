@@ -3,27 +3,27 @@ prev: render_images
 next: upgrading
 ---
 
-# Configuration of AlchemyCMS
+# Configuration of LaissCMS
 
-Alchemy configuration is done in the `config/alchemy/config.yml` file.
+LaissCms configuration is done in the `config/laiss_cms/config.yml` file.
 
 Use
 
 ~~~ bash
-bin/rake alchemy:install
+bin/rake laiss_cms:install
 ~~~
 
 or
 
 ~~~ bash
-bin/rails g alchemy:install
+bin/rails g laiss_cms:install
 ~~~
 
 to generate it.
 
 ## The configuration file
 
-Please [have a look into the source code](https://github.com/AlchemyCMS/alchemy_cms/blob/master/config/alchemy/config.yml). The file is pretty well documentated and much more up to date then this guide.
+Please [have a look into the source code](https://github.com/LaissCMS/laiss_cms/blob/master/config/laiss_cms/config.yml). The file is pretty well documentated and much more up to date then this guide.
 
 ## Environment related configurations
 
@@ -36,13 +36,13 @@ Its easy to achieve by setting up a second configuration file for development wh
 Your apps default config:
 
 ~~~
-your_app/config/alchemy/config.yml
+your_app/config/laiss_cms/config.yml
 ~~~
 
 Environment specific config:
 
 ~~~
-your_app/config/alchemy/development.config.yml
+your_app/config/laiss_cms/development.config.yml
 ~~~
 
 ::: tip NOTE

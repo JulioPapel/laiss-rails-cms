@@ -1,0 +1,32 @@
+<%= render LaissCms::Admin::Resource::Table.new(users, query: query) do |table| %>
+  <% table.icon_column do |user| %>
+    <%= render_icon(:user, style: user.logged_in? ? "solid" : "regular") %>
+  <% end %>
+  <% table.column :login, sortable: true do |user| %>
+    <% if can?(:edit, user) && user.login %>
+      <%= link_to_dialog user.login,
+        laiss_cms.edit_admin_user_path(user), {
+          title: LaissCms.t(:edit_user),
+          overflow: true,
+          size: "460x190"
+        },
+        title: LaissCms.t(:edit_user) %>
+    <% else %>
+      <%= user.login %>
+    <% end %>
+  <% end %>
+  <% table.column :firstname, class_name: "name", sortable: true %>
+  <% table.column :lastname, sortable: true %>
+  <% table.column :email, sortable: true %>
+  <% table.column :language do |user| %>
+    <%= LaissCms.t(user.language, scope: :translations, default: LaissCms.t(:unknown)) %>
+  <% end %>
+  <% table.column :last_sign_in_at, sortable: true do |user| %>
+    <%= user.last_sign_in_at.present? ? l(user.last_sign_in_at, format: :"laiss_cms.default") : LaissCms.t(:unknown) %>
+  <% end %>
+  <% table.column :role, header: LaissCms::User.human_attribute_name(:laiss_cms_roles) do |user| %>
+    <%= user.human_laiss_cms_roles %>
+  <% end %>
+  <% table.delete_button tooltip: LaissCms.t(:delete_user), confirm_message: LaissCms.t(:confirm_to_delete_user) %>
+  <% table.edit_button tooltip: LaissCms.t(:edit_user), dialog_size: "460x190" %>
+<% end %>

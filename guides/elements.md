@@ -9,26 +9,26 @@ next:
 
 # Elements
 
-Elements are the central building blocks of an Alchemy website. They are reusable content containers - for example, a headline, an image and a text block might form an "article" element. These individual pieces of content within an element are called [ingredients](ingredients).
+Elements are the central building blocks of an LaissCms website. They are reusable content containers - for example, a headline, an image and a text block might form an "article" element. These individual pieces of content within an element are called [ingredients](ingredients).
 
 You define elements and their ingredients in YAML. Editors place them on pages through the admin interface. You control how they are rendered with view partials. See the [About guide](about) for how elements fit into the full content architecture.
 
 ## Defining elements
 
-Elements are defined in the `config/alchemy/elements.yml` file. Element definitions are written in [YAML](http://yaml.org).
+Elements are defined in the `config/laiss_cms/elements.yml` file. Element definitions are written in [YAML](http://yaml.org).
 
 If this file does not exist yet, create it with the scaffold generator:
 
 ~~~ bash
-bin/rails g alchemy:install
+bin/rails g laiss_cms:install
 ~~~
 
-The generator also creates the other basic folders and files for setting up your website with Alchemy.
+The generator also creates the other basic folders and files for setting up your website with LaissCms.
 
 ### Example Element Definition
 
 ~~~ yaml
-# config/alchemy/elements.yml
+# config/laiss_cms/elements.yml
 - name: article
   unique: true
   ingredients:
@@ -58,7 +58,7 @@ The following settings can be used to define elements in the `elements.yml`.
 ### name
 `String` _required_
 
-A lowercased **unique** name of the element. Separate words need to be underscored. The name is used in the `page_layouts.yml` file to define on which pages the element can be used. It is also the file name of the element's view partial in `app/views/alchemy/elements/`. The name is [translatable](i18n#element-names) for the admin interface.
+A lowercased **unique** name of the element. Separate words need to be underscored. The name is used in the `page_layouts.yml` file to define on which pages the element can be used. It is also the file name of the element's view partial in `app/views/laiss_cms/elements/`. The name is [translatable](i18n#element-names) for the admin interface.
 
 ### unique
 `Boolean` (Default: `false`)
@@ -98,10 +98,10 @@ Separates an element from the normal flow. When `true`, the element is only rend
 ### icon
 `String|Boolean`
 
-Controls the icon in the admin UI. Set to `true` to use `<element_name>.svg` or set to a string to use `<string>.svg`, both from `app/assets/images/alchemy/element_icons/` in your app. If not set, Alchemy uses its own default icon.
+Controls the icon in the admin UI. Set to `true` to use `<element_name>.svg` or set to a string to use `<string>.svg`, both from `app/assets/images/laiss_cms/element_icons/` in your app. If not set, LaissCms uses its own default icon.
 
 ::: tip
-Alchemy uses Remix Icons throughout its admin interface. To keep your custom element icons consistent, download SVG icons from the [Remix Icon website](https://remixicon.com) and place them in the `element_icons` folder.
+LaissCms uses Remix Icons throughout its admin interface. To keep your custom element icons consistent, download SVG icons from the [Remix Icon website](https://remixicon.com) and place them in the `element_icons` folder.
 :::
 
 ### amount
@@ -145,12 +145,12 @@ Mark this element as deprecated. Set to `true` to use a [translated deprecation 
   deprecated: "Use the new_widget element instead."
 ~~~
 
-When set to `true`, Alchemy looks up the notice via I18n:
+When set to `true`, LaissCms looks up the notice via I18n:
 
 ~~~ yaml
 # config/locales/en.yml
 en:
-  alchemy:
+  laiss_cms:
     element_deprecation_notices:
       old_element: "This element is outdated. Please use new_element instead."
 ~~~
@@ -168,7 +168,7 @@ Have a look at the [ingredients guide](ingredients) to get more information abou
 
 Before you can use elements on pages, you need to define which page layouts they can be placed on.
 
-Open `config/alchemy/page_layouts.yml` and add the element name to the list of available elements for a page layout.
+Open `config/laiss_cms/page_layouts.yml` and add the element name to the list of available elements for a page layout.
 
 ~~~ yaml
 - name: standard
@@ -286,7 +286,7 @@ Group names can be [translated via I18n](i18n#ingredient-groups).
 ~~~ yaml
 # config/locales/en.yml
 en:
-  alchemy:
+  laiss_cms:
     element_groups:
       settings: Settings
       product:
@@ -316,7 +316,7 @@ Tags are a collection on the `element` object. `element.tag_list` returns an arr
 <%= element.tag_list.join(', ') %>
 ~~~
 
-Alchemy uses the [gutentag](https://github.com/pat/gutentag) gem, so please refer to the github [README](https://github.com/pat/gutentag/blob/master/README.md) or the [Wiki](https://github.com/pat/gutentag/wiki) for further information.
+LaissCms uses the [gutentag](https://github.com/pat/gutentag) gem, so please refer to the github [README](https://github.com/pat/gutentag/blob/master/README.md) or the [Wiki](https://github.com/pat/gutentag/wiki) for further information.
 
 ## Publishing
 
@@ -324,7 +324,7 @@ Only published elements are rendered on the public page version. Editors can tog
 
 ### Time-Based Publishing <Badge type="tip" text="8.1+" />
 
-Beginning with Alchemy 8.1, elements support time-based publishing, just like [pages](pages#publishing). Each element has `public_on` and `public_until` timestamps that control when it is visible to visitors.
+Beginning with LaissCms 8.1, elements support time-based publishing, just like [pages](pages#publishing). Each element has `public_on` and `public_until` timestamps that control when it is visible to visitors.
 
 - **`public_on`** — the date and time the element becomes visible (defaults to the current time when created)
 - **`public_until`** — the date and time the element is automatically hidden
@@ -350,8 +350,8 @@ Predefined format matchers are configured in your initializer. You can also add 
 ### Format Matchers
 
 ~~~ ruby
-# config/initializers/alchemy.rb
-Alchemy.configure do |config|
+# config/initializers/laiss_cms.rb
+LaissCms.configure do |config|
   config.format_matchers.tap do |format|
     format.email = /\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/
     format.url = /\A[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?\z/ix
@@ -405,12 +405,12 @@ The name ingredient will be validated for `presence` first, then for `uniqueness
 
 ### Generating Partials
 
-Each element has a view partial (a [Rails partial](https://guides.rubyonrails.org/layouts_and_rendering.html#using-partials)) that lives in `app/views/alchemy/elements/`.
+Each element has a view partial (a [Rails partial](https://guides.rubyonrails.org/layouts_and_rendering.html#using-partials)) that lives in `app/views/laiss_cms/elements/`.
 
 You don't need to create these files yourself. Use the Rails generator to create them.
 
 ~~~ bash
-bin/rails g alchemy:elements --skip
+bin/rails g laiss_cms:elements --skip
 ~~~
 
 The `--skip` flag skips files that already exist.
@@ -421,13 +421,13 @@ You can pass `--template-engine` or `-e` as an argument to use `haml`, `slim` or
 The default template engine depends on your settings in your Rails host app.
 :::
 
-The generator will create partials for each element in your `app/views/alchemy/elements` folder.
+The generator will create partials for each element in your `app/views/laiss_cms/elements` folder.
 
 For the article element from the example above, the generator creates `_article.html.erb`. The generated code serves as a starting point that you can customize to fit your needs.
 
 ### Page Layouts
 
-With the article element associated with the 'standard' page layout, it can be rendered in the layout partial `app/views/alchemy/page_layouts/_standard.html.erb`.
+With the article element associated with the 'standard' page layout, it can be rendered in the layout partial `app/views/laiss_cms/page_layouts/_standard.html.erb`.
 
 ~~~ erb
 ...
@@ -467,7 +467,7 @@ The `render_elements` helper accepts several options:
 
 * **only** - Render only elements with these names
 * **except** - Render all elements except these names
-* **from_page** - Render elements from a different page. Accepts a page layout name as a `String`, an `Array` of page layout names, or an `Alchemy::Page` instance
+* **from_page** - Render elements from a different page. Accepts a page layout name as a `String`, an `Array` of page layout names, or an `LaissCms::Page` instance
 * **count** - Limit the number of rendered elements
 * **offset** - Skip the first N elements
 * **random** - Randomize the order of elements
@@ -477,7 +477,7 @@ The `render_elements` helper accepts several options:
 
 A common use case is to have global pages for header and footer parts.
 ~~~ yaml
-# config/alchemy/elements.yml
+# config/laiss_cms/elements.yml
 - name: header
   hint: Navigation bar at the top of every page
   ingredients:
@@ -488,7 +488,7 @@ A common use case is to have global pages for header and footer parts.
   ingredients:
     # ...
 
-# config/alchemy/page_layouts.yml
+# config/laiss_cms/page_layouts.yml
 
 - name: header
   unique: true
@@ -521,7 +521,7 @@ These can be rendered in your `application.html.erb` file.
 
     <footer><%= render_elements from_page: 'footer' %></footer>
 
-    <%= render "alchemy/edit_mode" %>
+    <%= render "laiss_cms/edit_mode" %>
   </body>
 </html>
 ~~~
@@ -558,7 +558,7 @@ You can also access them directly via the page.
 
 ### Element Views
 
-The Alchemy element generator creates a basic view partial for each element. This is where you control how the element's content is rendered on your website.
+The LaissCms element generator creates a basic view partial for each element. This is where you control how the element's content is rendered on your website.
 
 ~~~ erb
 <%= element_view_for(element) do |el| %>
@@ -601,13 +601,13 @@ Besides `el.render`, the block helper provides additional methods for accessing 
 * **`el.has?(:role)`** - Returns `true` if the ingredient has a non-blank value
 * **`el.ingredient_by_role(:role)`** - Returns the ingredient record directly
 
-Use `el.ingredient_by_role` when you need to access ingredient attributes beyond the plain value. For example, a Page ingredient has a `page` method that returns the actual `Alchemy::Page` record, which you can use to build custom links.
+Use `el.ingredient_by_role` when you need to access ingredient attributes beyond the plain value. For example, a Page ingredient has a `page` method that returns the actual `LaissCms::Page` record, which you can use to build custom links.
 
 ~~~ erb
 <%= element_view_for(element) do |el| %>
   <% page_ingredient = el.ingredient_by_role(:linked_page) %>
   <% if page_ingredient&.page %>
-    <%= link_to page_ingredient.page.name, show_alchemy_page_path(page_ingredient.page) %>
+    <%= link_to page_ingredient.page.name, show_laiss_cms_page_path(page_ingredient.page) %>
   <% end %>
 <% end %>
 ~~~
@@ -652,7 +652,7 @@ You can translate them in your `config/locales` language yml file.
 
 ~~~ yaml
 de:
-  alchemy:
+  laiss_cms:
     element_names:
       contact_form: Kontaktformular
       search: Suche
@@ -665,7 +665,7 @@ This is useful when the same role name needs different labels depending on the e
 
 ~~~ yaml
 de:
-  alchemy:
+  laiss_cms:
     element_names:
       contact_form: Kontaktformular
     ingredient_roles:

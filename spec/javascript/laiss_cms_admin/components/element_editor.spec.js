@@ -1,0 +1,970 @@
+import { vi } from "vitest"
+import { ElementEditor } from "laiss_cms_admin/components/element_editor"
+import { renderComponent } from "./component.helper"
+import { growl } from "laiss_cms_admin/growler"
+
+vi.mock("laiss_cms_admin/routes", () => {
+  return {
+    routes: {
+      collapse_admin_element_path(id) {
+        return `/admin/elements/${id}/collapse`
+      },
+      expand_admin_element_path(id) {
+        return `/admin/elements/${id}/expand`
+      }
+    }
+  }
+})
+
+vi.mock("laiss_cms_admin/growler", () => {
+  return {
+    growl: vi.fn()
+  }
+})
+
+vi.mock("laiss_cms_admin/image_loader", () => {
+  return {
+    __esModule: true,
+    default: {
+      init: vi.fn()
+    }
+  }
+})
+
+vi.mock("laiss_cms_admin/utils/ajax", () => {
+  return {
+    __esModule: true,
+    post(url) {
+      return new Promise((resolve, reject) => {
+        switch (url) {
+          case "/admin/elements/123/collapse":
+            resolve({
+              data: {
+                nestedElementIds: ["666"]
+              }
+            })
+            break
+          case "/admin/elements/123/expand":
+            resolve({
+              data: {
+                parentElementIds: ["456"]
+              }
+            })
+            break
+          case "/admin/elements/456/expand":
+            resolve({
+              data: {
+                parentElementIds: []
+              }
+            })
+            break
+          case "/admin/elements/666/collapse":
+          case "/admin/elements/666/expand":
+            reject(new Error("Something went wrong!"))
+            break
+          default:
+            reject(new Error(`URL ${url} not found!`))
+        }
+      })
+    }
+  }
+})
+
+function getComponent(html) {
+  return renderComponent("laiss-cms-element-editor", html)
+}
+
+describe("laiss-cms-element-editor", () => {
+  let html = `
+    <laiss-cms-element-editor
+      id="element_123"
+      data-element-id="123"
+      data-element-name="article"
+      class="expanded"
+    >
+      <div class="element-header">
+        <div class="preview_text_quote">Lorem ipsum</div>
+        <button class="element-toggle">
+          <laiss-cms-icon name="expand"></laiss-cms-icon>
+        </button>
+      </div>
+      <form class="element-body">
+        <div class="element_errors">
+          <ul class="error-messages"></ul>
+        </div>
+        <div class="element-ingredient-editors"></div>
+      </form>
+      <div class="element-footer"></div>
+    </laiss-cms-element-editor>
+  `
+  let editor
+
+  beforeEach(() => {
+    editor = getComponent(html)
+    LaissCms = {
+      Spinner: vi.fn(function () {
+        this.spin = vi.fn()
+        this.stop = vi.fn()
+      }),
+      growl: vi.fn(),
+      PreviewWindow: {
+        postMessage: vi.fn(),
+        refresh: vi.fn()
+      }
+    }
+    LaissCms.PreviewWindow.postMessage.mockClear()
+    LaissCms.PreviewWindow.refresh.mockClear()
+    growl.mockClear()
+  })
+
+  describe("connectedCallback", () => {
+    describe("if dragged", () => {
+      it("does not initializes", () => {
+        const html = `
+          <laiss-cms-element-editor id="element_123" class="ui-sortable-placeholder"></laiss-cms-element-editor>
+        `
+        getComponent(html)
+      })
+    })
+
+    it("initializes image loader", () => {
+      getComponent(html)
+    })
+  })
+
+  describe("on click", () => {
+    it("marks element editor as selected", () => {
+      return new Promise((resolve) => {
+        const click = new Event("click", { bubbles: true })
+        editor.dispatchEvent(click)
+        window.requestAnimationFrame(() => {
+          expect(editor.classList.contains("selected")).toBeTruthy()
+          resolve()
+        })
+      })
+    })
+
+    it("focuses element in preview", () => {
+      const click = new Event("click", { bubbles: true })
+      const postMessage = vi.fn()
+      vi.spyOn(editor, "previewWindow", "get").mockImplementation(() => {
+        return {
+          postMessage
+        }
+      })
+      editor.dispatchEvent(click)
+      expect(postMessage).toHaveBeenCalledWith({
+        message: "LaissCms.focusElement",
+        element_id: "123"
+      })
+    })
+  })
+
+  describe("on doubleclick", () => {
+    it("toggles element", () => {
+      const dblclick = new Event("dblclick", { bubbles: true })
+      const originalToggle = ElementEditor.prototype.toggle
+      ElementEditor.prototype.toggle = vi.fn()
+      editor.header.dispatchEvent(dblclick)
+      expect(ElementEditor.prototype.toggle).toHaveBeenCalled()
+      ElementEditor.prototype.toggle = originalToggle
+    })
+  })
+
+  describe("on click on toggle button", () => {
+    it("toggles element", () => {
+      const click = new Event("click", { bubbles: true })
+      const originalToggle = ElementEditor.prototype.toggle
+      ElementEditor.prototype.toggle = vi.fn()
+      editor.toggleButton.dispatchEvent(click)
+      expect(ElementEditor.prototype.toggle).toHaveBeenCalled()
+      ElementEditor.prototype.toggle = originalToggle
+    })
+  })
+
+  describe("if editor has nested elements", () => {
+    beforeEach(() => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_456" data-element-id="456" class="folded">
+          <div class="element-header">
+            <div class="preview_text_quote">Lorem Ipsum</div>
+          </div>
+          <div class="nested-elements">
+            <laiss-cms-element-editor id="element_123" data-element-id="123"></laiss-cms-element-editor>
+          </div>
+        </laiss-cms-element-editor>
+      `)
+    })
+
+    describe("on laiss_cms:element-update-title", () => {
+      it("updates title if triggered on first child", () => {
+        const childElement = editor.querySelector("#element_123")
+        const event = new CustomEvent("laiss_cms:element-update-title", {
+          detail: { title: "New Title" },
+          bubbles: true
+        })
+        childElement.dispatchEvent(event)
+        expect(
+          editor.querySelector(".element-header .preview_text_quote")
+            .textContent
+        ).toBe("New Title")
+      })
+    })
+  })
+
+  describe("on turbo:submit-start", () => {
+    it("resets the element to a clean state", () => {
+      editor.dirty = true
+      editor.form.dispatchEvent(
+        new CustomEvent("turbo:submit-start", { bubbles: true })
+      )
+      expect(editor.dirty).toBeFalsy()
+    })
+
+    describe("if triggered on a child element form", () => {
+      it("does not reset the parent element", () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_456" data-element-id="456" class="expanded">
+            <form class="element-body">
+              <div class="element_errors"></div>
+              <div class="element-ingredient-editors"></div>
+            </form>
+            <div class="nested-elements">
+              <laiss-cms-element-editor id="element_789" data-element-id="789" class="expanded">
+                <form class="element-body">
+                  <div class="element_errors"></div>
+                  <div class="element-ingredient-editors"></div>
+                </form>
+              </laiss-cms-element-editor>
+            </div>
+          </laiss-cms-element-editor>
+        `)
+        editor.dirty = true
+        const childElement = editor.querySelector("#element_789")
+        childElement.form.dispatchEvent(
+          new CustomEvent("turbo:submit-start", { bubbles: true })
+        )
+        expect(editor.dirty).toBeTruthy()
+      })
+    })
+  })
+
+  describe("on turbo:submit-end", () => {
+    it("shows the element errors when the save failed", () => {
+      editor.elementErrors.classList.add("hidden")
+      editor.form.dispatchEvent(
+        new CustomEvent("turbo:submit-end", {
+          bubbles: true,
+          detail: { success: false }
+        })
+      )
+      expect(editor.elementErrors.classList).not.toContain("hidden")
+    })
+
+    describe("if the element has no own form (a wrapper element)", () => {
+      it("does not react to a nested element's save", () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_16" data-element-id="16" class="expanded">
+            <div class="element-header">
+              <div class="preview_text_quote"></div>
+            </div>
+            <div class="nested-elements">
+              <laiss-cms-element-editor id="element_17" data-element-id="17" class="expanded">
+                <form class="element-body">
+                  <div class="element_errors"></div>
+                  <div class="element-ingredient-editors"></div>
+                </form>
+              </laiss-cms-element-editor>
+            </div>
+          </laiss-cms-element-editor>
+        `)
+        const child = editor.querySelector("#element_17")
+        const parentSpy = vi.spyOn(editor, "onSaveElement")
+        const childSpy = vi.spyOn(child, "onSaveElement")
+
+        child.form.dispatchEvent(
+          new CustomEvent("turbo:submit-end", {
+            bubbles: true,
+            detail: { success: true }
+          })
+        )
+
+        expect(childSpy).toHaveBeenCalledTimes(1)
+        expect(parentSpy).not.toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe("on change", () => {
+    describe("of inputs or selects", () => {
+      it("sets element to dirty state", () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_123" class="expanded">
+            <form class="element-body">
+              <div class="element-ingredient-editors">
+                <input type="text">
+              </div>
+            </form>
+            <div class="element-footer"></div>
+          </laiss-cms-element-editor>
+        `)
+        const event = new Event("change", { bubbles: true })
+        editor.dirty = false
+        editor.querySelector("input").dispatchEvent(event)
+        expect(editor.dirty).toBeTruthy()
+      })
+    })
+
+    describe("of nestable elements", () => {
+      it("does not set element to dirty state", () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_123" class="expanded">
+            <form class="element-body">
+              <div class="element-ingredient-editors">
+                <input type="text">
+              </div>
+            </form>
+            <div class="nested-elements"></div>
+          </laiss-cms-element-editor>
+        `)
+        const event = new Event("change", { bubbles: true })
+        editor.dirty = false
+        editor.querySelector(".nested-elements").dispatchEvent(event)
+        expect(editor.dirty).toBeFalsy()
+      })
+    })
+  })
+
+  describe("focusElement", () => {
+    describe("if tabs are present", () => {
+      it("selects tab for element", async () => {
+        editor = getComponent(`
+          <sl-tab-group id="fixed-elements">
+            <sl-tab slot="nav" panel="main-content-elements">
+              Main Content
+            </sl-tab>
+            <sl-tab-panel name="main-content-elements">
+              <laiss-cms-element-editor id="element_123"></laiss-cms-element-editor>
+            </sl-tab-panel>
+          </sl-tab-group>
+        `)
+        const originalSelectTab = ElementEditor.prototype.selectTabForElement
+        ElementEditor.prototype.selectTabForElement = vi.fn()
+        await editor.focusElement()
+        expect(ElementEditor.prototype.selectTabForElement).toHaveBeenCalled()
+        ElementEditor.prototype.selectTabForElement = originalSelectTab
+      })
+    })
+
+    describe("if element is collapsed", () => {
+      it("expands element", async () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_123" class="folded"></laiss-cms-element-editor>
+        `)
+        const originalExpand = ElementEditor.prototype.expand
+        ElementEditor.prototype.expand = vi.fn()
+        await editor.focusElement()
+        expect(ElementEditor.prototype.expand).toHaveBeenCalled()
+        ElementEditor.prototype.expand = originalExpand
+      })
+    })
+
+    it("marks element as selected", async () => {
+      const originalSelect = ElementEditor.prototype.selectElement
+      ElementEditor.prototype.selectElement = vi.fn()
+      await editor.focusElement()
+      expect(ElementEditor.prototype.selectElement).toHaveBeenCalledWith(true)
+      ElementEditor.prototype.selectElement = originalSelect
+    })
+  })
+
+  describe("onSaveElement", () => {
+    describe("if the save succeeded", () => {
+      it("refreshes the preview and focuses the element", async () => {
+        const refresh = vi.fn().mockResolvedValue()
+        vi.spyOn(editor, "previewWindow", "get").mockReturnValue({ refresh })
+        const focusSpy = vi
+          .spyOn(editor, "focusElementPreview")
+          .mockImplementation(() => {})
+
+        editor.onSaveElement(true)
+
+        expect(refresh).toHaveBeenCalled()
+        await Promise.resolve()
+        expect(focusSpy).toHaveBeenCalled()
+      })
+    })
+
+    describe("if the save failed", () => {
+      it("shows the element errors", () => {
+        editor.elementErrors.classList.add("hidden")
+        editor.onSaveElement(false)
+        expect(editor.elementErrors.classList).not.toContain("hidden")
+      })
+    })
+  })
+
+  describe("scrollToElement", () => {
+    it("scrolls to element", () => {
+      ElementEditor.prototype.scrollIntoView = vi.fn()
+      editor.scrollToElement()
+
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          expect(editor.scrollIntoView).toHaveBeenCalledWith({
+            behavior: "smooth"
+          })
+          resolve()
+        }, 50)
+      })
+    })
+  })
+
+  describe("selectElement", () => {
+    it("marks all other element editors as unselected", () => {
+      const editor = getComponent(`
+        <laiss-cms-element-editor id="element_123"></laiss-cms-element-editor>
+        <laiss-cms-element-editor id="element_666" class="selected"></laiss-cms-element-editor>
+      `)
+      editor.selectElement()
+      const el = document.querySelector("#element_666")
+      expect(el.classList.contains("selected")).toBeFalsy()
+    })
+
+    it("marks element editor as selected", () => {
+      return new Promise((resolve) => {
+        editor.selectElement()
+        window.requestAnimationFrame(() => {
+          expect(editor.classList.contains("selected")).toBeTruthy()
+          resolve()
+        })
+      })
+    })
+
+    describe("with scroll enabled", () => {
+      it("scrolls to element", () => {
+        const scrollSpy = vi.spyOn(editor, "scrollToElement")
+        editor.selectElement(true)
+        expect(scrollSpy).toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe("selectTabForElement", () => {
+    describe("if tabs are not present", () => {
+      it("rejects with error", async () => {
+        await editor.selectTabForElement().catch((error) => {
+          expect(error.message).toBe("No tabs present")
+        })
+      })
+    })
+
+    describe("if tabs are present", () => {
+      it("selects tab", async () => {
+        editor = getComponent(`
+          <sl-tab-group id="fixed-elements">
+            <sl-tab slot="nav" panel="main-content-elements">
+              Main Content
+            </sl-tab>
+            <sl-tab-panel name="main-content-elements">
+              <laiss-cms-element-editor id="element_123"></laiss-cms-element-editor>
+            </sl-tab-panel>
+          </sl-tab-group>
+        `)
+        const tabgroup = document.querySelector("sl-tab-group")
+        tabgroup.show = vi.fn()
+        await editor.selectTabForElement().then(() => {
+          expect(tabgroup.show).toHaveBeenCalledWith("main-content-elements")
+        })
+      })
+    })
+  })
+
+  describe("setClean", () => {
+    beforeEach(() => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" class="dirty">
+          <form class="element-body">
+            <div class="element_errors"></div>
+            <div class="element-ingredient-editors">
+              <div class="ingredient-editor dirty"></div>
+            </div>
+          </form>
+        </laiss-cms-element-editor>
+      `)
+      editor.setClean()
+    })
+
+    it("sets dirty to false", () => {
+      expect(editor.dirty).toBeFalsy()
+    })
+
+    it("removes beforeunload", () => {
+      expect(window.onbeforeunload).toBeNull()
+    })
+
+    it("sets all ingredient editors clean", () => {
+      editor.body.querySelectorAll(".ingredient-editor").forEach((el) => {
+        expect(el.classList.contains("dirty")).toBeFalsy()
+      })
+    })
+  })
+
+  describe("setDirty", () => {
+    describe("if element has ingredient editors", () => {
+      beforeEach(() => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_123" class="expanded">
+            <form class="element-body">
+              <div class="element-ingredient-editors">
+                <div class="ingredient-editor">
+                  <input type="text">
+                </div>
+              </div>
+            </form>
+            <div class="nested-elements"></div>
+          </laiss-cms-element-editor>
+        `)
+      })
+
+      it("sets dirty to true", () => {
+        editor.setDirty()
+        expect(editor.dirty).toBeTruthy
+      })
+
+      it("sets beforeunload", () => {
+        editor.setDirty()
+        expect(window.onbeforeunload).toBeInstanceOf(Function)
+      })
+
+      it("sets ingredient editor dirty", () => {
+        const ingredientEditor = editor.querySelector(".ingredient-editor")
+        editor.setDirty(ingredientEditor)
+        expect(ingredientEditor.classList).toContain("dirty")
+      })
+    })
+  })
+
+  describe("setTitle", () => {
+    it("sets title", () => {
+      editor.setTitle("Foo bar")
+      expect(
+        editor.querySelector(".element-header .preview_text_quote").textContent
+      ).toBe("Foo bar")
+    })
+
+    describe("if element has no header (fixed element)", () => {
+      it("does not raise", () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_123" fixed></laiss-cms-element-editor>
+        `)
+        expect(() => editor.setTitle("Foo bar")).not.toThrow()
+      })
+    })
+  })
+
+  describe("toggle", () => {
+    describe("if collapsed", () => {
+      it("expands element", async () => {
+        const editor = getComponent(`
+          <laiss-cms-element-editor id="element_123" class="folded"></laiss-cms-element-editor>
+        `)
+        const originalExpand = ElementEditor.prototype.expand
+        ElementEditor.prototype.expand = vi.fn()
+        await editor.toggle()
+        expect(editor.expand).toHaveBeenCalled()
+        ElementEditor.prototype.expand = originalExpand
+      })
+    })
+
+    describe("if expanded", () => {
+      it("collapses element", async () => {
+        const editor = getComponent(html)
+        const originalCollapse = ElementEditor.prototype.collapse
+        ElementEditor.prototype.collapse = vi.fn()
+        await editor.toggle()
+        expect(editor.collapse).toHaveBeenCalled()
+        ElementEditor.prototype.collapse = originalCollapse
+      })
+    })
+  })
+
+  describe("collapse", () => {
+    describe("if collapsed", () => {
+      it("immediatly resolves promise", async () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_123" class="folded"></laiss-cms-element-editor>
+        `)
+        await expect(editor.collapse()).resolves.toBe(
+          "Element is already collapsed."
+        )
+      })
+    })
+
+    describe("if compact", () => {
+      it("immediatly resolves promise", async () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_123" class="expanded" compact=""></laiss-cms-element-editor>
+        `)
+        await expect(editor.collapse()).resolves.toBe(
+          "Element is already collapsed."
+        )
+      })
+    })
+
+    describe("if fixed", () => {
+      it("immediatly resolves promise", async () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_123" class="expanded" fixed=""></laiss-cms-element-editor>
+        `)
+        await expect(editor.collapse()).resolves.toBe(
+          "Element is already collapsed."
+        )
+      })
+    })
+
+    describe("if expanded", () => {
+      it("collapses element on API then sets to collapsed", async () => {
+        await editor.collapse().then(() => {
+          expect(editor.collapsed).toBeTruthy()
+        })
+      })
+
+      it("collapses nested elements", async () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_123" data-element-id="123" class="expanded">
+            <div class="nested-elements">
+              <laiss-cms-element-editor id="element_666" class="expanded"></laiss-cms-element-editor>
+            </div>
+          </laiss-cms-element-editor>
+        `)
+        const nestedElement = document.querySelector("#element_666")
+        await editor.collapse().then(() => {
+          expect(nestedElement.collapsed).toBeTruthy()
+        })
+      })
+
+      it("handles errors", async () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_666" data-element-id="666" class="expanded"></laiss-cms-element-editor>
+        `)
+        global.console = {
+          ...console,
+          error: vi.fn()
+        }
+        await editor.collapse()
+        expect(growl).toHaveBeenCalledWith("Something went wrong!", "error")
+      })
+    })
+  })
+
+  describe("expand", () => {
+    describe("if expanded", () => {
+      it("immediatly resolves promise", async () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_123" class="expanded"></laiss-cms-element-editor>
+        `)
+        await expect(editor.expand()).resolves.toBe(
+          "Element is already expanded."
+        )
+      })
+    })
+
+    describe("if compact", () => {
+      describe("and has a parent element editor", () => {
+        it("expands parent element", async () => {
+          editor = getComponent(`
+            <laiss-cms-element-editor id="element_456" data-element-id="456" class="folded">
+              <div class="nested-elements">
+                <laiss-cms-element-editor id="element_123" data-element-id="123" class="expanded" compact=""></laiss-cms-element-editor>
+              </div>
+            </laiss-cms-element-editor>
+          `)
+          const nestedElement = document.querySelector("#element_123")
+          await nestedElement.expand()
+          expect(editor.expanded).toBeTruthy()
+        })
+      })
+    })
+
+    describe("if collapsed", () => {
+      it("expands element on API then sets to expanded", async () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_456" data-element-id="456" class="folded"></laiss-cms-element-editor>
+        `)
+        await editor.expand().then(() => {
+          expect(editor.expanded).toBeTruthy()
+        })
+      })
+
+      it("expands parent elements", async () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_456" data-element-id="456" class="folded">
+            <div class="nested-elements">
+              <laiss-cms-element-editor id="element_123" data-element-id="123" class="folded"></laiss-cms-element-editor>
+            </div>
+          </laiss-cms-element-editor>
+        `)
+        const nestedElement = document.querySelector("#element_123")
+        await nestedElement.expand().then(() => {
+          expect(editor.expanded).toBeTruthy()
+        })
+      })
+
+      it("handles errors", async () => {
+        editor = getComponent(`
+          <laiss-cms-element-editor id="element_666" data-element-id="666" class="folded"></laiss-cms-element-editor>
+        `)
+        global.console = {
+          ...console,
+          error: vi.fn()
+        }
+        try {
+          await editor.expand()
+        } catch {
+          expect(growl).toHaveBeenCalledWith("Something went wrong!", "error")
+        }
+      })
+    })
+  })
+
+  describe("updateTitle", () => {
+    it("sets title", () => {
+      editor.updateTitle("Foo bar")
+      expect(
+        editor.querySelector(".element-header .preview_text_quote").textContent
+      ).toBe("Foo bar")
+    })
+
+    it("dispatches event", () => {
+      return new Promise((resolve) => {
+        editor.addEventListener("laiss_cms:element-update-title", (event) => {
+          expect(event.detail).toEqual({ title: "Foo bar" })
+          resolve()
+        })
+        editor.updateTitle("Foo bar")
+      })
+    })
+  })
+
+  describe("elementId", () => {
+    it("returns element database id", () => {
+      expect(editor.elementId).toEqual("123")
+    })
+  })
+
+  describe("elementName", () => {
+    it("returns element definition name", () => {
+      expect(editor.elementName).toEqual("article")
+    })
+  })
+
+  describe("compact", () => {
+    it("is false if not has compact attribute", () => {
+      expect(editor.compact).toBeFalsy()
+    })
+
+    it("is true if has compact attribute", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" compact=""></laiss-cms-element-editor>
+      `)
+      expect(editor.compact).toBeTruthy()
+    })
+  })
+
+  describe("fixed", () => {
+    it("is false if not has fixed attribute", () => {
+      expect(editor.fixed).toBeFalsy()
+    })
+
+    it("is true if has fixed attribute", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" fixed=""></laiss-cms-element-editor>
+      `)
+      expect(editor.fixed).toBeTruthy()
+    })
+  })
+
+  describe("expanded", () => {
+    it("is true if not folded", () => {
+      expect(editor.expanded).toBeTruthy()
+    })
+
+    it("is false if folded", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" class="folded"></laiss-cms-element-editor>
+      `)
+      expect(editor.expanded).toBeFalsy()
+    })
+  })
+
+  describe("collapsed", () => {
+    it("is true if folded", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" class="folded"></laiss-cms-element-editor>
+      `)
+      expect(editor.collapsed).toBeTruthy()
+    })
+
+    it("is false if not folded", () => {
+      expect(editor.collapsed).toBeFalsy()
+    })
+  })
+
+  describe("dirty", () => {
+    it("is true if dirty class is present", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" class="dirty"></laiss-cms-element-editor>
+      `)
+      expect(editor.dirty).toBeTruthy()
+    })
+
+    it("is false if dirty class is not present", () => {
+      expect(editor.dirty).toBeFalsy()
+    })
+  })
+
+  describe("dirty =", () => {
+    it("sets to dirty if set to true", () => {
+      expect(editor.dirty).toBeFalsy()
+      editor.dirty = true
+      expect(editor.dirty).toBeTruthy()
+    })
+
+    it("sets not dirty if set to false", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" class="dirty"></laiss-cms-element-editor>
+      `)
+      expect(editor.dirty).toBeTruthy()
+      editor.dirty = false
+      expect(editor.dirty).toBeFalsy()
+    })
+  })
+
+  describe("header", () => {
+    it("returns header element", () => {
+      expect(editor.header).toBeInstanceOf(HTMLElement)
+    })
+  })
+
+  describe("body", () => {
+    it("returns body", () => {
+      expect(editor.body).toBeInstanceOf(HTMLElement)
+    })
+
+    it("only returns immediate body", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" class="expanded">
+          <div class="nested-elements">
+            <laiss-cms-element-editor id="element_666" class="expanded">
+              <form class="element-body"></form>
+            </laiss-cms-element-editor>
+          </div>
+        </laiss-cms-element-editor>
+      `)
+      expect(editor.body).toBeNull()
+    })
+  })
+
+  describe("footer", () => {
+    it("returns footer", () => {
+      expect(editor.footer).toBeInstanceOf(HTMLElement)
+    })
+
+    it("only returns immediate footer", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" class="expanded">
+          <div class="nested-elements">
+            <laiss-cms-element-editor id="element_666" class="expanded">
+              <div class="element-footer"></div>
+            </laiss-cms-element-editor>
+          </div>
+        </laiss-cms-element-editor>
+      `)
+      expect(editor.footer).toBeNull()
+    })
+  })
+
+  describe("toggleButton", () => {
+    it("returns toggleButton", () => {
+      expect(editor.toggleButton).toBeInstanceOf(HTMLElement)
+    })
+  })
+
+  describe("toggleIcon", () => {
+    it("returns icon if present", () => {
+      expect(editor.toggleIcon).toBeInstanceOf(HTMLElement)
+    })
+
+    it("returns undefined if not present", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" class="expanded" compact>
+          <div class="element-header"></div>
+        </laiss-cms-element-editor>
+      `)
+      expect(editor.toggleIcon).toBeUndefined()
+    })
+  })
+
+  describe("elementErrors", () => {
+    it("returns element errors element", () => {
+      expect(editor.elementErrors).toBeInstanceOf(HTMLElement)
+    })
+  })
+
+  describe("hasEditors", () => {
+    it("returns true if ingredient editors present", () => {
+      expect(editor.hasEditors).toBeTruthy()
+    })
+
+    it("returns false if no ingredient editors present", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" class="expanded"></laiss-cms-element-editor>
+      `)
+      expect(editor.hasEditors).toBeFalsy()
+    })
+  })
+
+  describe("hasChildren", () => {
+    it("returns true if nested elements present", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" class="expanded">
+          <div class="nested-elements"></div>
+        </laiss-cms-element-editor>
+      `)
+      expect(editor.hasChildren).toBeTruthy()
+    })
+
+    it("returns false if no ingredient editors present", () => {
+      expect(editor.hasChildren).toBeFalsy()
+    })
+  })
+
+  describe("firstChild", () => {
+    it("returns first nested element", () => {
+      editor = getComponent(`
+        <laiss-cms-element-editor id="element_123" class="expanded">
+          <div class="nested-elements">
+            <laiss-cms-element-editor id="element_666" class="expanded"></laiss-cms-element-editor>
+          </div>
+        </laiss-cms-element-editor>
+      `)
+      expect(editor.firstChild).toBeInstanceOf(ElementEditor)
+    })
+  })
+
+  describe("parentElementEditor", () => {
+    it("returns parent element editor", () => {
+      getComponent(`
+        <laiss-cms-element-editor id="element_123" class="expanded">
+          <div class="nested-elements">
+            <laiss-cms-element-editor id="element_666" class="expanded"></laiss-cms-element-editor>
+          </div>
+        </laiss-cms-element-editor>
+      `)
+      editor = document.querySelector("#element_666")
+      expect(editor.parentElementEditor).toBeInstanceOf(ElementEditor)
+      expect(editor.parentElementEditor.id).toBe("element_123")
+    })
+  })
+})

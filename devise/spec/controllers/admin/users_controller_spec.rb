@@ -1,11 +1,11 @@
 require "rails_helper"
 
-module Alchemy
+module LaissCms
   describe Admin::UsersController do
-    routes { Alchemy::Engine.routes }
+    routes { LaissCms::Engine.routes }
 
-    let(:admin) { build_stubbed(:alchemy_admin_user) }
-    let(:user) { build_stubbed(:alchemy_user) }
+    let(:admin) { build_stubbed(:laiss_cms_admin_user) }
+    let(:user) { build_stubbed(:laiss_cms_user) }
 
     before do
       allow(controller).to receive_messages(store_user_request_time: true)
@@ -14,7 +14,7 @@ module Alchemy
     end
 
     describe "#index" do
-      let(:user) { create :alchemy_user }
+      let(:user) { create :laiss_cms_user }
 
       context "with matching search query" do
         it "lists all matching users" do
@@ -57,22 +57,22 @@ module Alchemy
       end
 
       it "creates an user record" do
-        post :create, params: {user: attributes_for(:alchemy_user)}
-        expect(Alchemy::User.count).to eq(1)
+        post :create, params: {user: attributes_for(:laiss_cms_user)}
+        expect(LaissCms::User.count).to eq(1)
       end
 
       context "while signup" do
         before { allow(User).to receive(:count).and_return(0) }
 
         it "sets the user role to admin." do
-          post :create, params: {user: attributes_for(:alchemy_admin_user)}
-          expect(assigns(:user).alchemy_roles).to include("admin")
+          post :create, params: {user: attributes_for(:laiss_cms_admin_user)}
+          expect(assigns(:user).laiss_cms_roles).to include("admin")
         end
 
         context "with valid params" do
           it "signs the user in." do
             expect(controller).to receive(:sign_in)
-            post :create, params: {user: attributes_for(:alchemy_admin_user)}
+            post :create, params: {user: attributes_for(:laiss_cms_admin_user)}
           end
         end
 
@@ -87,7 +87,7 @@ module Alchemy
 
       context "with send_credentials set to '1'" do
         it "should send an email notification" do
-          post :create, params: {user: attributes_for(:alchemy_user).merge(send_credentials: "1")}
+          post :create, params: {user: attributes_for(:laiss_cms_user).merge(send_credentials: "1")}
           expect(ActionMailer::Base.deliveries).not_to be_empty
         end
 
@@ -101,14 +101,14 @@ module Alchemy
 
       context "with send_credentials set to true" do
         it "should not send an email notification" do
-          post :create, params: {user: attributes_for(:alchemy_user).merge(send_credentials: true)}
+          post :create, params: {user: attributes_for(:laiss_cms_user).merge(send_credentials: true)}
           expect(ActionMailer::Base.deliveries).to be_empty
         end
       end
 
       context "with send_credentials left blank" do
         it "should not send an email notification" do
-          post :create, params: {user: attributes_for(:alchemy_user)}
+          post :create, params: {user: attributes_for(:laiss_cms_user)}
           expect(ActionMailer::Base.deliveries).to be_empty
         end
       end
@@ -150,7 +150,7 @@ module Alchemy
       end
 
       context "with send_credentials set to '1'" do
-        let(:user) { create(:alchemy_admin_user) }
+        let(:user) { create(:laiss_cms_admin_user) }
 
         it "should send an email notification" do
           post :update, params: {id: user.id, user: {send_credentials: "1"}}
@@ -166,7 +166,7 @@ module Alchemy
       end
 
       context "with send_credentials left blank" do
-        let(:user) { create(:alchemy_admin_user) }
+        let(:user) { create(:laiss_cms_admin_user) }
 
         it "should not send an email notification" do
           post :update, params: {id: user.id, user: {email: user.email}}
@@ -178,19 +178,19 @@ module Alchemy
         before do
           allow(controller)
             .to receive(:can?)
-            .with(:edit_content, Alchemy::Page)
+            .with(:edit_content, LaissCms::Page)
             .and_return(true)
           allow(controller)
             .to receive(:can?)
-            .with(:update_role, Alchemy::User)
+            .with(:update_role, LaissCms::User)
             .and_return(true)
         end
 
         it "updates the user including role" do
           expect(user)
             .to receive(:update_without_password)
-            .with(ActionController::Parameters.new({"alchemy_roles" => ["Administrator"]}).permit!)
-          post :update, params: {id: user.id, user: {alchemy_roles: ["Administrator"]}, format: :turbo_stream}
+            .with(ActionController::Parameters.new({"laiss_cms_roles" => ["Administrator"]}).permit!)
+          post :update, params: {id: user.id, user: {laiss_cms_roles: ["Administrator"]}, format: :turbo_stream}
         end
       end
 
@@ -198,51 +198,51 @@ module Alchemy
         before do
           allow(controller)
             .to receive(:can?)
-            .with(:edit_content, Alchemy::Page)
+            .with(:edit_content, LaissCms::Page)
             .and_return(true)
           allow(controller)
             .to receive(:can?)
-            .with(:update_role, Alchemy::User)
+            .with(:update_role, LaissCms::User)
             .and_return(false)
         end
 
         it "updates user without role" do
           expect(user).to receive(:update_without_password).with(ActionController::Parameters.new.permit!)
-          post :update, params: {id: user.id, user: {alchemy_roles: ["Administrator"]}, format: :turbo_stream}
+          post :update, params: {id: user.id, user: {laiss_cms_roles: ["Administrator"]}, format: :turbo_stream}
         end
       end
     end
 
     describe "password confirmation for role changes" do
-      let!(:admin) { create(:alchemy_admin_user) }
-      let(:user) { create(:alchemy_member_user) }
+      let!(:admin) { create(:laiss_cms_admin_user) }
+      let(:user) { create(:laiss_cms_member_user) }
 
       describe "#create" do
         it "does not create the user without the current password" do
-          post :create, params: {user: attributes_for(:alchemy_user).merge(alchemy_roles: ["admin"])}
+          post :create, params: {user: attributes_for(:laiss_cms_user).merge(laiss_cms_roles: ["admin"])}
 
           expect(response).to be_unprocessable
-          expect(Alchemy::User.alchemy_admins.count).to eq(1)
+          expect(LaissCms::User.laiss_cms_admins.count).to eq(1)
         end
 
         it "does not create the user with a wrong current password" do
           post :create, params: {
-            user: attributes_for(:alchemy_user).merge(alchemy_roles: ["admin"], current_password: "wr0ng")
+            user: attributes_for(:laiss_cms_user).merge(laiss_cms_roles: ["admin"], current_password: "wr0ng")
           }
 
           expect(response).to be_unprocessable
-          expect(Alchemy::User.alchemy_admins.count).to eq(1)
+          expect(LaissCms::User.laiss_cms_admins.count).to eq(1)
         end
 
         it "reports a missing password as blank" do
-          post :create, params: {user: attributes_for(:alchemy_user).merge(alchemy_roles: ["admin"])}
+          post :create, params: {user: attributes_for(:laiss_cms_user).merge(laiss_cms_roles: ["admin"])}
 
           expect(assigns(:user).errors.details[:current_password]).to eq([{error: :blank}])
         end
 
         it "reports a wrong password as invalid" do
           post :create, params: {
-            user: attributes_for(:alchemy_user).merge(alchemy_roles: ["admin"], current_password: "wr0ng")
+            user: attributes_for(:laiss_cms_user).merge(laiss_cms_roles: ["admin"], current_password: "wr0ng")
           }
 
           expect(assigns(:user).errors.details[:current_password]).to eq([{error: :invalid}])
@@ -250,22 +250,22 @@ module Alchemy
 
         it "creates the user with the current password" do
           post :create, params: {
-            user: attributes_for(:alchemy_user).merge(alchemy_roles: ["admin"], current_password: "s3cr3t")
+            user: attributes_for(:laiss_cms_user).merge(laiss_cms_roles: ["admin"], current_password: "s3cr3t")
           }
 
           expect(response).to redirect_to(admin_users_path)
-          expect(Alchemy::User.alchemy_admins.count).to eq(2)
+          expect(LaissCms::User.laiss_cms_admins.count).to eq(2)
         end
 
         it "does not ask for the password for an unprivileged role" do
-          post :create, params: {user: attributes_for(:alchemy_user).merge(alchemy_roles: ["author"])}
+          post :create, params: {user: attributes_for(:laiss_cms_user).merge(laiss_cms_roles: ["author"])}
 
           expect(response).to redirect_to(admin_users_path)
-          expect(Alchemy::User.find_by(login: assigns(:user).login).alchemy_roles).to eq(["author"])
+          expect(LaissCms::User.find_by(login: assigns(:user).login).laiss_cms_roles).to eq(["author"])
         end
 
         it "does not ask for the password for the default role" do
-          post :create, params: {user: attributes_for(:alchemy_user).merge(alchemy_roles: ["member"])}
+          post :create, params: {user: attributes_for(:laiss_cms_user).merge(laiss_cms_roles: ["member"])}
 
           expect(response).to redirect_to(admin_users_path)
         end
@@ -273,30 +273,30 @@ module Alchemy
 
       describe "#update" do
         it "does not change the roles without the current password" do
-          post :update, params: {id: user.id, user: {alchemy_roles: ["admin"]}}
+          post :update, params: {id: user.id, user: {laiss_cms_roles: ["admin"]}}
 
           expect(response).to be_unprocessable
-          expect(user.reload.alchemy_roles).to eq(["member"])
+          expect(user.reload.laiss_cms_roles).to eq(["member"])
         end
 
         it "changes the roles with the current password" do
           post :update, params: {
-            id: user.id, user: {alchemy_roles: ["admin"], current_password: "s3cr3t"}
+            id: user.id, user: {laiss_cms_roles: ["admin"], current_password: "s3cr3t"}
           }
 
-          expect(user.reload.alchemy_roles).to eq(["admin"])
+          expect(user.reload.laiss_cms_roles).to eq(["admin"])
         end
 
         it "does not ask for the password for an unprivileged role" do
-          post :update, params: {id: user.id, user: {alchemy_roles: ["author"]}}
+          post :update, params: {id: user.id, user: {laiss_cms_roles: ["author"]}}
 
           expect(response).to redirect_to(admin_users_path)
-          expect(user.reload.alchemy_roles).to eq(["author"])
+          expect(user.reload.laiss_cms_roles).to eq(["author"])
         end
 
         it "does not ask for the password when the roles stay the same" do
           post :update, params: {
-            id: user.id, user: {firstname: "Johnny", alchemy_roles: ["member"]}
+            id: user.id, user: {firstname: "Johnny", laiss_cms_roles: ["member"]}
           }
 
           expect(response).to redirect_to(admin_users_path)
@@ -304,45 +304,45 @@ module Alchemy
         end
 
         context "with an admin as the edited user" do
-          let(:user) { create(:alchemy_admin_user) }
+          let(:user) { create(:laiss_cms_admin_user) }
 
           it "asks for the password when the admin role is revoked" do
-            post :update, params: {id: user.id, user: {alchemy_roles: [""]}}
+            post :update, params: {id: user.id, user: {laiss_cms_roles: [""]}}
 
             expect(response).to be_unprocessable
-            expect(user.reload.alchemy_roles).to eq(["admin"])
+            expect(user.reload.laiss_cms_roles).to eq(["admin"])
           end
         end
       end
 
       context "with privileged_user_roles customised" do
         before do
-          stub_config(Alchemy::Devise.config, privileged_user_roles: ["editor"])
+          stub_config(LaissCms::Devise.config, privileged_user_roles: ["editor"])
         end
 
         it "asks for the password for the configured role" do
-          post :update, params: {id: user.id, user: {alchemy_roles: ["editor"]}}
+          post :update, params: {id: user.id, user: {laiss_cms_roles: ["editor"]}}
 
           expect(response).to be_unprocessable
-          expect(user.reload.alchemy_roles).to eq(["member"])
+          expect(user.reload.laiss_cms_roles).to eq(["member"])
         end
 
         it "does not ask for the password for a role that is not configured" do
-          post :update, params: {id: user.id, user: {alchemy_roles: ["admin"]}}
+          post :update, params: {id: user.id, user: {laiss_cms_roles: ["admin"]}}
 
-          expect(user.reload.alchemy_roles).to eq(["admin"])
+          expect(user.reload.laiss_cms_roles).to eq(["admin"])
         end
       end
 
       context "with require_password_for_role_change disabled" do
         before do
-          stub_config(Alchemy::Devise.config, require_password_for_role_change: false)
+          stub_config(LaissCms::Devise.config, require_password_for_role_change: false)
         end
 
         it "changes the roles without the current password" do
-          post :update, params: {id: user.id, user: {alchemy_roles: ["admin"]}}
+          post :update, params: {id: user.id, user: {laiss_cms_roles: ["admin"]}}
 
-          expect(user.reload.alchemy_roles).to eq(["admin"])
+          expect(user.reload.laiss_cms_roles).to eq(["admin"])
         end
       end
     end

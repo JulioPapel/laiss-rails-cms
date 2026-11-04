@@ -1,16 +1,16 @@
 nb:
   activerecord:
     attributes:
-      alchemy/user:
+      laiss_cms/user:
         current_password: "Passordet ditt"
     errors:
       models:
-        alchemy/user:
+        laiss_cms/user:
           attributes:
             current_password:
               blank: "kreves for å endre roller"
               invalid: "er ikke riktig"
-  alchemy:
+  laiss_cms:
     admin:
       users:
         confirm_password_for_role_change:

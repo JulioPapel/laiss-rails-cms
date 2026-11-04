@@ -2,7 +2,7 @@
 
 Alchemys powerful content storage technology is build around ingredients. They are ActiveRecord models that have an editor and a presentation view partial.
 
-Alchemy has lots of [build in ingredients](https://github.com/AlchemyCMS/alchemy_cms/tree/main/app/models/alchemy/ingredients). But you can create your own ingredient and even associate them with your existing models. This guide shows how.
+LaissCms has lots of [build in ingredients](https://github.com/LaissCMS/laiss_cms/tree/main/app/models/laiss_cms/ingredients). But you can create your own ingredient and even associate them with your existing models. This guide shows how.
 
 * Use the generator to create a new ingredient
 * Associate an ingredient to your model
@@ -12,20 +12,20 @@ Alchemy has lots of [build in ingredients](https://github.com/AlchemyCMS/alchemy
 The ingredient generator is a wrapper around the Rails model generator. It generates the ingredient model for you.
 
 ~~~ bash
-bin/rails g alchemy:ingredient MyIngredient
+bin/rails g laiss_cms:ingredient MyIngredient
 ~~~
 
 ::: tip INFO
-Ingredients are created under the `Alchemy::Ingredients` namespace.
+Ingredients are created under the `LaissCms::Ingredients` namespace.
 :::
 
 This is what the generated model looks like:
 
 ~~~ ruby
-# app/models/alchemy/ingredients/my_ingredient.rb
-module Alchemy
+# app/models/laiss_cms/ingredients/my_ingredient.rb
+module LaissCms
   module Ingredients
-    class MyIngredient < Alchemy::Ingredient
+    class MyIngredient < LaissCms::Ingredient
       # Set additional attributes that get stored in the `data` JSON column
       # store_accessor :data, :some, :attribute
 
@@ -36,7 +36,7 @@ module Alchemy
 end
 ~~~
 
-Alchemy stores the main value in the `value` (a `Text`) column.
+LaissCms stores the main value in the `value` (a `Text`) column.
 
 If you want to store additional values in another column, please add it as attribute to the `data` [`store_accessor`](https://api.rubyonrails.org/classes/ActiveRecord/Store.html). Rails will create accessor methods for you.
 
@@ -54,7 +54,7 @@ The view partial is used by the `render_elements` helper to present the ingredie
 It is yours. Adjust it to your needs. You can access the value with the `ingredient` method of the `content` object instance.
 
 ~~~ erb
-<!-- app/views/alchemy/ingredients/_my_ingredient_view.html.erb -->
+<!-- app/views/laiss_cms/ingredients/_my_ingredient_view.html.erb -->
 <h1><%= my_ingredient_view.ingredient %></h1>
 ~~~
 
@@ -65,7 +65,7 @@ The editor partial is basically a set of form fields holding values of your ingr
 This is just what the generator creates for you:
 
 ~~~ erb
-<!-- app/views/alchemy/ingredients/_my_ingredient_editor.html.erb -->
+<!-- app/views/laiss_cms/ingredients/_my_ingredient_editor.html.erb -->
 <%= content_tag :div,
   class: my_ingredient_editor.css_classes,
   data: my_ingredient_editor.data_attributes do %>
@@ -77,21 +77,21 @@ This is just what the generator creates for you:
 ~~~
 
 But this is yours. Feel free to adjust it to your needs.
-Just make shure that you provide form fields that Alchemy can use to update your object in the database.
+Just make shure that you provide form fields that LaissCms can use to update your object in the database.
 
 ## Associations
 
-You can associate every ActiveRecord based model with an ingredient. In this example we want to connect an existing `Person` model to an element, so we can associate it with an Alchemy page.
+You can associate every ActiveRecord based model with an ingredient. In this example we want to connect an existing `Person` model to an element, so we can associate it with an LaissCms page.
 
-Just use the `related_object_alias` method to tell Alchemy the foreign key to use for the association.
+Just use the `related_object_alias` method to tell LaissCms the foreign key to use for the association.
 
 ### Set the foreign key
 
 ~~~ ruby
-# app/models/alchemy/ingredients/person.rb
-module Alchemy
+# app/models/laiss_cms/ingredients/person.rb
+module LaissCms
   module Ingredients
-    class Person < Alchemy::Ingredient
+    class Person < LaissCms::Ingredient
       related_object_alias :person, class_name: "My::Person"
     end
   end
@@ -100,10 +100,10 @@ end
 
 ### Accessing your model instance
 
-That's it. Everything else is handled by Alchemy. You can now access the associated `My::Person` model with the `person` method.
+That's it. Everything else is handled by LaissCms. You can now access the associated `My::Person` model with the `person` method.
 
 ~~~ erb
-<!-- app/views/alchemy/ingredients/_person_view.html.erb -->
+<!-- app/views/laiss_cms/ingredients/_person_view.html.erb -->
 <%= person_view.person.firstname %>
 ~~~
 

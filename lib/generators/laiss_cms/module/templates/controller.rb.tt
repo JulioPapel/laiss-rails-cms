@@ -1,0 +1,2 @@
+class Admin::<%= @controller_class %>Controller < LaissCms::Admin::ResourcesController
+end

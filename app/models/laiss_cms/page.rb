@@ -1,0 +1,691 @@
+# frozen_string_literal: true
+
+# == Schema Information
+#
+# Table name: laiss_cms_pages
+#
+#  id              :integer          not null, primary key
+#  cached_tag_list :text
+#  depth           :integer
+#  language_code   :string
+#  language_root   :boolean          default(FALSE), not null
+#  layoutpage      :boolean          default(FALSE), not null
+#  lft             :integer
+#  locked_at       :datetime
+#  locked_by       :integer
+#  name            :string
+#  page_layout     :string
+#  permitted_roles :text
+#  published_at    :datetime
+#  restricted      :boolean          default(FALSE), not null
+#  rgt             :integer
+#  robot_follow    :boolean          default(TRUE), not null
+#  robot_index     :boolean          default(TRUE), not null
+#  searchable      :boolean          default(TRUE), not null
+#  sitemap         :boolean          default(TRUE), not null
+#  urlname         :string
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  creator_id      :integer
+#  language_id     :integer          not null
+#  parent_id       :integer
+#  updater_id      :integer
+#
+# Indexes
+#
+#  index_laiss_cms_pages_on_creator_id               (creator_id)
+#  index_laiss_cms_pages_on_language_id              (language_id)
+#  index_laiss_cms_pages_on_locked_at_and_locked_by  (locked_at,locked_by)
+#  index_laiss_cms_pages_on_rgt                      (rgt)
+#  index_laiss_cms_pages_on_updater_id               (updater_id)
+#  index_pages_on_parent_id_and_lft                (parent_id,lft)
+#  index_pages_on_urlname                          (urlname)
+#
+# Foreign Keys
+#
+#  language_id  (language_id => laiss_cms_languages.id)
+#
+
+require_dependency "laiss_cms/page/fixed_attributes"
+require_dependency "laiss_cms/page/definitions"
+require_dependency "laiss_cms/page/page_scopes"
+require_dependency "laiss_cms/page/page_natures"
+require_dependency "laiss_cms/page/page_naming"
+require_dependency "laiss_cms/page/page_elements"
+
+module LaissCms
+  class Page < BaseRecord
+    include LaissCms::Taggable
+    include LaissCms::RelatableResource
+
+    # These columns are deprecated in favor of page versions
+    self.ignored_columns += [
+      "meta_description",
+      "meta_keywords",
+      "title"
+    ]
+
+    DEFAULT_ATTRIBUTES_FOR_COPY = {
+      autogenerate_elements: false,
+      public_on: nil,
+      public_until: nil,
+      locked_at: nil,
+      locked_by: nil
+    }
+
+    SKIPPED_ATTRIBUTES_ON_COPY = %w[
+      id
+      updated_at
+      created_at
+      creator_id
+      updater_id
+      lft
+      rgt
+      depth
+      urlname
+      cached_tag_list
+      title
+      meta_description
+      meta_keywords
+    ]
+
+    PERMITTED_ATTRIBUTES = [
+      :name,
+      :page_layout,
+      :public_on,
+      :public_until,
+      :restricted,
+      :robot_index,
+      :robot_follow,
+      :searchable,
+      :sitemap,
+      :tag_list,
+      :urlname,
+      :layoutpage,
+      :menu_id,
+      {
+        permitted_roles: [],
+        draft_version_attributes: [:id] + PageVersion::METADATA_ATTRIBUTES.map(&:to_sym)
+      }
+    ]
+
+    acts_as_nested_set(dependent: :destroy, scope: [:layoutpage, :language_id])
+
+    stampable stamper_class_name: LaissCms.config.user_class_name
+
+    belongs_to :language
+
+    belongs_to :creator,
+      primary_key: LaissCms.config.user_class_primary_key,
+      class_name: LaissCms.config.user_class_name,
+      foreign_key: :creator_id,
+      optional: true
+
+    belongs_to :updater,
+      primary_key: LaissCms.config.user_class_primary_key,
+      class_name: LaissCms.config.user_class_name,
+      foreign_key: :updater_id,
+      optional: true
+
+    belongs_to :locker,
+      primary_key: LaissCms.config.user_class_primary_key,
+      class_name: LaissCms.config.user_class_name,
+      foreign_key: :locked_by,
+      optional: true
+
+    has_one :site, through: :language
+    has_many :site_languages, through: :site, source: :languages
+    has_many :folded_pages, dependent: :destroy
+    has_many :legacy_urls, class_name: "LaissCms::LegacyPageUrl", dependent: :destroy
+    has_many :nodes, class_name: "LaissCms::Node", inverse_of: :page, dependent: :restrict_with_error
+    has_many :versions, class_name: "LaissCms::PageVersion", inverse_of: :page, dependent: :destroy
+    has_one :draft_version, -> { draft.order(updated_at: :desc) }, class_name: "LaissCms::PageVersion"
+    has_one :public_version, -> { published.or(scheduled).order(public_on: :desc) },
+      class_name: "LaissCms::PageVersion",
+      autosave: -> { persisted? }
+
+    accepts_nested_attributes_for :draft_version
+
+    has_many :page_ingredients, class_name: "LaissCms::Ingredients::Page", foreign_key: :related_object_id, dependent: :nullify
+
+    # Stored as a JSON array in a plain text column, so the value is byte
+    # identical on every supported database and the +readable_by+ scope can
+    # match a single quoted role with a portable LIKE. No +type: Array+, as
+    # that would serialize an empty array to NULL, which +readable_by?+ cannot
+    # intersect; the writer already guarantees an array is stored.
+    attribute :permitted_roles, default: -> { ["member"] }
+    serialize :permitted_roles, coder: JSON
+
+    before_destroy :check_descendants_for_menu_nodes
+
+    before_validation :set_language,
+      if: -> { language.nil? }
+
+    validates_presence_of :page_layout
+    validates_format_of :page_layout, with: /\A[a-z0-9_-]+\z/, unless: -> { page_layout.blank? }
+    validates_presence_of :parent, unless: -> { layoutpage? || language_root? }
+    validates_presence_of :permitted_roles, if: :restricted?
+    validate :permitted_roles_are_configured
+
+    after_initialize :ensure_draft_version, if: :new_record?
+
+    before_save :set_language_code,
+      if: -> { language.present? }
+
+    # Runs after save, so descendants inheriting from this page see the new
+    # values instead of the ones still stored in the database.
+    after_save :set_restrictions_to_child_pages,
+      if: -> { saved_change_to_restricted? || saved_change_to_permitted_roles? }
+
+    before_save :inherit_restricted_status,
+      if: -> { parent && parent.restricted? }
+
+    before_save :set_fixed_attributes,
+      if: -> { fixed_attributes.any? }
+
+    after_update :create_legacy_url,
+      if: :saved_change_to_urlname?
+
+    after_update :touch_nodes
+
+    # Concerns
+    include Definitions
+    include PageScopes
+    include PageNatures
+    include PageNaming
+    include PageElements
+
+    # site_name accessor
+    delegate :name, to: :site, prefix: true, allow_nil: true
+    delegate :has_hint?, :hint, to: :definition
+
+    # Class methods
+    #
+    class << self
+      # The url_path class
+      # @see LaissCms::Page::UrlPath
+      def url_path_class
+        @_url_path_class ||= LaissCms::Page::UrlPath
+      end
+
+      # Set a custom url path class
+      #
+      #     # config/initializers/laiss_cms.rb
+      #     LaissCms::Page.url_path_class = MyPageUrlPathClass
+      #
+      def url_path_class=(klass)
+        @_url_path_class = klass
+      end
+
+      def searchable_laiss_cms_resource_attributes
+        %w[name urlname]
+      end
+
+      # @return the language root page for given language id.
+      # @param language_id [Fixnum]
+      #
+      def language_root_for(language_id)
+        language_roots.find_by_language_id(language_id)
+      end
+
+      # Creates a copy of given source.
+      #
+      # Also copies all elements included in source.
+      #
+      # === Note:
+      #
+      # It prevents the element auto generator from running.
+      #
+      # @param source [LaissCms::Page]
+      #   The source page the copy is taken from
+      # @param differences [Hash]
+      #   A optional hash with attributes that take precedence over the source attributes
+      #
+      # @return [LaissCms::Page]
+      #
+      def copy(source, differences = {})
+        LaissCms::CopyPage.new(page: source).call(changed_attributes: differences)
+      end
+
+      def copy_and_paste(source, new_parent, new_name)
+        page = LaissCms::CopyPage.new(page: source)
+          .call(changed_attributes: {
+            parent: new_parent,
+            language: new_parent&.language,
+            name: new_name
+          })
+        if source.children.any?
+          source.copy_children_to(page)
+        end
+        page
+      end
+
+      def all_from_clipboard(clipboard)
+        return [] if clipboard.blank?
+
+        where(id: clipboard.collect { |p| p["id"] })
+      end
+
+      def all_from_clipboard_for_select(clipboard, language_id, layoutpages: false)
+        return [] if clipboard.blank?
+
+        clipboard_pages = all_from_clipboard(clipboard)
+        allowed_page_layouts = LaissCms::Page.selectable_layouts(language_id, layoutpages: layoutpages)
+        allowed_page_layout_names = allowed_page_layouts.collect(&:name)
+        clipboard_pages.select { |cp| allowed_page_layout_names.include?(cp.page_layout) }
+      end
+
+      def link_target_options
+        options = [[LaissCms.t(:default, scope: "link_target_options"), ""]]
+        link_target_options = LaissCms.config.link_target_options
+        link_target_options.each do |option|
+          # add an underscore to the options to provide the default syntax
+          # @link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#target
+          options << [LaissCms.t(option, scope: "link_target_options",
+            default: option.to_s.humanize), "_#{option}"]
+        end
+        options
+      end
+
+      # Allow all string and text attributes to be searchable by Ransack.
+      def ransackable_attributes(_auth_object = nil)
+        searchable_laiss_cms_resource_attributes + %w[updated_at page_layout]
+      end
+    end
+
+    # Instance methods
+    #
+
+    # Returns elements from pages public version.
+    #
+    # You can pass another page_version to load elements from in the options.
+    #
+    # @option options [Array<String>|String] :only
+    #   Returns only elements with given names
+    # @option options [Array<String>|String] :except
+    #   Returns all elements except the ones with given names
+    # @option options [Integer] :count
+    #   Limit the count of returned elements
+    # @option options [Integer] :offset
+    #   Starts with an offset while returning elements
+    # @option options [Boolean] :include_hidden (false)
+    #   Return hidden elements as well
+    # @option options [Boolean] :random (false)
+    #   Return elements randomly shuffled
+    # @option options [Boolean] :reverse (false)
+    #   Reverse the load order
+    # @option options [Class] :finder (LaissCms::ElementsFinder)
+    #   A class that will return elements from page.
+    #   Use this for your custom element loading logic.
+    # @option options [LaissCms::PageVersion] :page_version
+    #   A page version to load elements from.
+    #   Uses the pages public_version by default.
+    #
+    # @return [ActiveRecord::Relation]
+    def find_elements(options = {})
+      finder = options[:finder] || LaissCms::ElementsFinder.new(options)
+      finder.elements(page_version: options[:page_version] || public_version)
+    end
+
+    # = The url_path for this page
+    #
+    # @see LaissCms::Page::UrlPath#call
+    def url_path(optional_params = {}, wildcard_params: {})
+      self.class.url_path_class.new(self, optional_params, wildcard_params: wildcard_params).call
+    end
+
+    # The page's view partial is dependent from its page layout
+    #
+    # == Define page layouts
+    #
+    # Page layouts are defined in the +config/laiss_cms/page_layouts.yml+ file
+    #
+    #     - name: contact
+    #       elements: [contactform]
+    #       ...
+    #
+    # == Override the view
+    #
+    # Page layout partials live in +app/views/laiss_cms/page_layouts+
+    #
+    def to_partial_path
+      "laiss_cms/page_layouts/#{layout_partial_name}"
+    end
+
+    # Returns the previous page on the same level or nil.
+    #
+    # @option options [Boolean] :restricted (false)
+    #   only restricted pages (true), skip restricted pages (false)
+    # @option options [Boolean] :public (true)
+    #   only public pages (true), skip public pages (false)
+    #
+    def previous(options = {})
+      pages = self_and_siblings.where("lft < ?", lft)
+      select_page(pages, options.merge(order: :desc))
+    end
+
+    alias_method :previous_page, :previous
+
+    # Returns the next page on the same level or nil.
+    #
+    # @option options [Boolean] :restricted (false)
+    #   only restricted pages (true), skip restricted pages (false)
+    # @option options [Boolean] :public (true)
+    #   only public pages (true), skip public pages (false)
+    #
+    def next(options = {})
+      pages = self_and_siblings.where("lft > ?", lft)
+      select_page(pages, options.merge(order: :asc))
+    end
+
+    alias_method :next_page, :next
+
+    # Locks the page to given user
+    #
+    def lock_to!(user)
+      update_columns(locked_at: Time.current, locked_by: user.id)
+    end
+
+    # Unlocks the page without updating the timestamps
+    #
+    def unlock!
+      if update_columns(locked_at: nil, locked_by: nil)
+        Current.preview_page = nil
+      end
+    end
+
+    def fold!(user_id, status)
+      folded_page = folded_pages.find_or_create_by(user_id: user_id)
+      folded_page.folded = status
+      folded_page.save!
+    end
+
+    def set_restrictions_to_child_pages
+      descendants.each do |child|
+        child.update(restricted: restricted?, permitted_roles: permitted_roles)
+      end
+    end
+
+    def inherit_restricted_status
+      self.restricted = parent.restricted?
+      # Roles are only seeded from the parent. An existing page keeps the roles
+      # assigned to it, until the parent pushes its own roles down again.
+      self.permitted_roles = parent.permitted_roles if new_record?
+    end
+
+    def permitted_roles_are_configured
+      unknown = permitted_roles - LaissCms.config.user_roles.map(&:to_s)
+      return if unknown.empty?
+
+      errors.add(:permitted_roles, :inclusion, roles: unknown.to_sentence)
+    end
+
+    # Returns the first published child
+    def first_public_child
+      children.published.first
+    end
+
+    # Gets the language_root page for page
+    def get_language_root
+      self_and_ancestors.find_by(language_root: true)
+    end
+
+    def copy_children_to(new_parent)
+      children.each do |child|
+        next if child == new_parent
+
+        new_child = LaissCms::CopyPage.new(page: child).call(changed_attributes: {
+          parent_id: new_parent.id,
+          language_id: new_parent.language_id,
+          language_code: new_parent.language_code
+        })
+        new_child.move_to_child_of(new_parent)
+        child.copy_children_to(new_child) unless child.children.blank?
+      end
+    end
+
+    # Creates a public version of the page in the background.
+    #
+    def publish!(current_time = Time.current)
+      PublishPageJob.perform_later(id, public_on: current_time)
+    end
+
+    # Returns true if the draft version has changes not yet published.
+    #
+    # Compares the updated_at timestamp of the draft_version against the
+    # updated_at timestamp of the public_version. If there's no public_version,
+    # the page has never been published and always has unpublished changes.
+    #
+    # @return [Boolean]
+    def has_unpublished_changes?
+      return true unless public_version
+
+      draft_version.updated_at > public_version.updated_at
+    end
+
+    # Sets the public_on date on the published version
+    #
+    # Builds a new version if none exists yet.
+    # Destroys public version if empty time is set
+    #
+    def public_on=(time)
+      if public_version && time.blank?
+        public_version.destroy!
+        # Need to reset the public version on the instance so we do not need to reload
+        self.public_version = nil
+      elsif public_version
+        public_version.public_on = time
+      elsif time.present?
+        versions.build(public_on: time)
+      end
+    end
+
+    delegate :public_until=, to: :public_version, allow_nil: true
+
+    # Holds an instance of +FixedAttributes+
+    def fixed_attributes
+      @_fixed_attributes ||= FixedAttributes.new(self)
+    end
+
+    # True if given attribute name is defined as fixed
+    def attribute_fixed?(name)
+      fixed_attributes.fixed?(name)
+    end
+
+    # Checks the current page's list of editors, if defined.
+    #
+    # This allows us to pass in a user and see if any of their roles are enable
+    # them to make edits
+    #
+    def editable_by?(user)
+      return true unless has_limited_editors?
+
+      (editor_roles & user.laiss_cms_roles).any?
+    end
+
+    # Accepts an array of role names (as sent by the admin form) and normalizes
+    # it to an array of unique, non blank strings. Whether the roles are
+    # actually configured is enforced by a validation, not silently here.
+    #
+    def permitted_roles=(roles)
+      super(Array(roles).map(&:to_s).select(&:present?).uniq)
+    end
+
+    # Checks if the given user is allowed to read this page.
+    #
+    # Unrestricted pages are readable by everyone. A restricted page is only
+    # readable by users holding one of the page's +permitted_roles+. A restricted
+    # page without any role locks everybody out, which is why at least one role
+    # is validated to be present.
+    #
+    def readable_by?(user)
+      return true unless restricted?
+
+      (permitted_roles & Array(user&.laiss_cms_roles).map(&:to_s)).any?
+    end
+
+    # Returns the value of +public_on+ attribute from public version
+    #
+    # If it's a fixed attribute then the fixed value is returned instead
+    #
+    def public_on
+      attribute_fixed?(:public_on) ? fixed_attributes[:public_on] : public_version&.public_on
+    end
+
+    # Returns the value of +public_until+ attribute
+    #
+    # If it's a fixed attribute then the fixed value is returned instead
+    #
+    def public_until
+      attribute_fixed?(:public_until) ? fixed_attributes[:public_until] : public_version&.public_until
+    end
+
+    # Returns the title from the public version, falling back to draft version
+    #
+    # If it's a fixed attribute then the fixed value is returned instead
+    #
+    def title
+      return fixed_attributes[:title] if attribute_fixed?(:title)
+
+      public_version&.title || draft_version&.title
+    end
+
+    # Returns the meta_description from the public version, falling back to draft version
+    #
+    # If it's a fixed attribute then the fixed value is returned instead
+    #
+    def meta_description
+      return fixed_attributes[:meta_description] if attribute_fixed?(:meta_description)
+
+      public_version&.meta_description || draft_version&.meta_description
+    end
+
+    # Returns the meta_keywords from the public version, falling back to draft version
+    #
+    # If it's a fixed attribute then the fixed value is returned instead
+    #
+    def meta_keywords
+      return fixed_attributes[:meta_keywords] if attribute_fixed?(:meta_keywords)
+
+      public_version&.meta_keywords || draft_version&.meta_keywords
+    end
+
+    # @deprecated Use draft_version.title= instead
+    def title=(value)
+      draft_version&.title = value
+    end
+    deprecate "title=": :"page.draft_version.title=", deprecator: LaissCms::Deprecation
+
+    # @deprecated Use draft_version.meta_description= instead
+    def meta_description=(value)
+      draft_version&.meta_description = value
+    end
+    deprecate "meta_description=": :"page.draft_version.meta_description=", deprecator: LaissCms::Deprecation
+
+    # @deprecated Use draft_version.meta_keywords= instead
+    def meta_keywords=(value)
+      draft_version&.meta_keywords = value
+    end
+    deprecate "meta_keywords=": :"page.draft_version.meta_keywords=", deprecator: LaissCms::Deprecation
+
+    # Returns the name of the creator of this page.
+    #
+    # If no creator could be found or associated user model
+    # does not respond to +#name+ it returns +'unknown'+
+    #
+    def creator_name
+      creator.try(:laiss_cms_display_name) || LaissCms.t("unknown")
+    end
+
+    # Returns the name of the last updater of this page.
+    #
+    # If no updater could be found or associated user model
+    # does not respond to +#name+ it returns +'unknown'+
+    #
+    def updater_name
+      updater.try(:laiss_cms_display_name) || LaissCms.t("unknown")
+    end
+
+    # Returns the name of the user currently editing this page.
+    #
+    # If no locker could be found or associated user model
+    # does not respond to +#name+ it returns +'unknown'+
+    #
+    def locker_name
+      locker.try(:laiss_cms_display_name) || LaissCms.t("unknown")
+    end
+
+    # Key hint translations by page layout, rather than the default name.
+    #
+    def hint_translation_attribute
+      page_layout
+    end
+
+    # Menus (aka. root nodes) this page is attached to
+    #
+    def menus
+      @_menus ||= nodes.map(&:root)
+    end
+
+    private
+
+    def ensure_draft_version
+      self.draft_version ||= versions.build
+    end
+
+    def set_fixed_attributes
+      fixed_attributes.all.each do |attribute, value|
+        attribute_name = attribute.to_s
+        if PageVersion::METADATA_ATTRIBUTES.include?(attribute_name)
+          draft_version&.send(:"#{attribute}=", value)
+        else
+          send(:"#{attribute}=", value)
+        end
+      end
+    end
+
+    def select_page(pages, options = {})
+      pages = options.fetch(:public, true) ? pages.published : pages.not_public
+      pages.where(restricted: options.fetch(:restricted, false))
+        .reorder(lft: options.fetch(:order))
+        .limit(1).first
+    end
+
+    def set_language
+      self.language = parent&.language || Current.language
+      set_language_code
+    end
+
+    def set_language_code
+      self.language_code = language.code
+    end
+
+    # Stores the old urlname in a LegacyPageUrl
+    def create_legacy_url
+      legacy_urls.find_or_create_by(urlname: urlname_before_last_save)
+    end
+
+    def touch_nodes
+      ids = node_ids + nodes.flat_map { |n| n.ancestors.pluck(:id) }
+      Node.where(id: ids).touch_all
+    end
+
+    def check_descendants_for_menu_nodes
+      # awesome_nested_set's before_destroy runs first and closes the gap left
+      # by this page, shifting the following siblings' lft/rgt leftward. For a
+      # leaf the next sibling then lands exactly on this page's lft, so the
+      # inclusive comparison the `descendants` helper uses (lft >= self.lft)
+      # would match it. Restrict to true descendants with strict bounds. Build
+      # on nested_set_scope so the acts_as_nested_set scope stays in sync.
+      pages_with_nodes = nested_set_scope
+        .where("laiss_cms_pages.lft > ? AND laiss_cms_pages.rgt < ?", lft, rgt)
+        .joins(:nodes)
+        .reorder("laiss_cms_pages.lft")
+        .distinct
+      if pages_with_nodes.exists?
+        errors.add(:descendants, :still_attached_to_nodes, page_names: pages_with_nodes.map(&:name).to_sentence)
+        throw :abort
+      end
+    end
+  end
+end

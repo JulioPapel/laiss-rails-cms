@@ -9,7 +9,7 @@ In this guide you will learn how to:
 
 ## Conceptual page and content structuring
 
-Imagine you like to have a simple blog template on your website. First of all as mentioned in [about AlchemyCMS](about) you should identify required components in your blog layout. Common components are a **headline**, a **blog post** itself and **sidebar blocks** for category overview and featured posts.
+Imagine you like to have a simple blog template on your website. First of all as mentioned in [about LaissCMS](about) you should identify required components in your blog layout. Common components are a **headline**, a **blog post** itself and **sidebar blocks** for category overview and featured posts.
 
 Following the steps you will create blog template according to [Foundation Zurb](http://foundation.zurb.com/). (© ZURB, Inc)
 
@@ -34,13 +34,13 @@ Hence the necessary preparations are completed.
 
 ## Define elements
 
-First of all we define the elements we need in `config/alchemy/elements.yml`. The individual page elements (see [Concept and structure](#concept-and-structure)) could be considered as an element.
+First of all we define the elements we need in `config/laiss_cms/elements.yml`. The individual page elements (see [Concept and structure](#concept-and-structure)) could be considered as an element.
 
 ### Blog title
 
 The blog should have a unique title. The title element contains a `title` and a `text` which represents a description or motto. In both cases we choose an `Text`, due to the fact that the `title` and the `text` will contain simple text.
 
-The `default` attribute provides the preset value, if the user didn't specify a motto or description (in Alchemy's backend).
+The `default` attribute provides the preset value, if the user didn't specify a motto or description (in LaissCms's backend).
 
 ~~~ yaml
 - name: blog_title
@@ -133,7 +133,7 @@ Instead of `Text` you could alternatively use `Link` for 'featured_link'.
 
 ## Define blog page layout
 
-After the definition of the elements, you we will continue with the defintion of an appropriate page layout. Page layout are specified in `config/alchemy/page_layouts.yml`.
+After the definition of the elements, you we will continue with the defintion of an appropriate page layout. Page layout are specified in `config/laiss_cms/page_layouts.yml`.
 
 Add a new page layout for your blog template:
 
@@ -155,12 +155,12 @@ The `autogenerate` attribute allows to define elements which will be generated a
 The command
 
 ~~~ bash
-rails g alchemy:elements --skip
+rails g laiss_cms:elements --skip
 ~~~
 
 creates the partials according to the element definition in the `elements.yml`.
 
-The partials are stored in `app/views/alchemy/elements/`.
+The partials are stored in `app/views/laiss_cms/elements/`.
 
 e.g. the partial for 'blog_post' element: `_blog_post.html.erb`
 
@@ -267,11 +267,11 @@ Finally you have to integrate your elements into the page layout.
 
 ### Create new page layout view
 
-Create a new file called `_blog.html.erb` in `app/views/alchemy/page_layouts` and copy the plain html code from [Foundation Zurb Blog Template Raw](https://gist.githubusercontent.com/ghaida/5054379/raw/f080e139a4e25c4548b265e7229cd6dbe09bff92/gistfile1.html).
+Create a new file called `_blog.html.erb` in `app/views/laiss_cms/page_layouts` and copy the plain html code from [Foundation Zurb Blog Template Raw](https://gist.githubusercontent.com/ghaida/5054379/raw/f080e139a4e25c4548b265e7229cd6dbe09bff92/gistfile1.html).
 
 ### Edit blog page layout view
 
-In `app/views/alchemy/page_layouts/_blog.html` search for
+In `app/views/laiss_cms/page_layouts/_blog.html` search for
 (inside 'Nav Bar' comment)
 
 ~~~ erb

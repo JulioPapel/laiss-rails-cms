@@ -6,7 +6,7 @@ RSpec.describe "Page destroy feature", type: :system, js: true do
   before { authorize_user(:as_admin) }
 
   context "destroying a content page" do
-    let!(:content_page) { create(:alchemy_page) }
+    let!(:content_page) { create(:laiss_cms_page) }
 
     it "deletes page and redirects to page tree" do
       visit admin_pages_path
@@ -26,7 +26,7 @@ RSpec.describe "Page destroy feature", type: :system, js: true do
   end
 
   context "destroying a layout page" do
-    let!(:layout_page) { create(:alchemy_page, :layoutpage) }
+    let!(:layout_page) { create(:laiss_cms_page, :layoutpage) }
 
     it "deletes page and redirects to layoutpages list" do
       visit admin_layoutpages_path

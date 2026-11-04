@@ -2,12 +2,12 @@
 
 require "rails_helper"
 
-module Alchemy
-  describe "alchemy/pages/_meta_data" do
-    let!(:language) { create(:alchemy_language, code: :en) }
+module LaissCms
+  describe "laiss_cms/pages/_meta_data" do
+    let!(:language) { create(:laiss_cms_language, code: :en) }
     let(:root_page) { Page.new }
     let(:page) do
-      build(:alchemy_page, language_code: "en", urlname: "roadrunner").tap do |p|
+      build(:laiss_cms_page, language_code: "en", urlname: "roadrunner").tap do |p|
         p.draft_version&.title = "Road Runner"
       end
     end
@@ -16,7 +16,7 @@ module Alchemy
     let(:title_separator) { "" }
 
     subject do
-      render "alchemy/pages/meta_data", title_prefix: title_prefix, title_suffix: title_suffix, title_separator: title_separator
+      render "laiss_cms/pages/meta_data", title_prefix: title_prefix, title_suffix: title_suffix, title_separator: title_separator
     end
 
     context "when current page is set" do

@@ -13,14 +13,14 @@ on:
 
 jobs:
   post-release:
-    uses: AlchemyCMS/.github/.github/workflows/post-release.yml@main
+    uses: LaissCMS/.github/.github/workflows/post-release.yml@main
     with:
-      version_file_path: lib/alchemy/version.rb
+      version_file_path: lib/laiss_cms/version.rb
       target_branch: ${{ github.event.client_payload.target_branch || inputs.target_branch }}
       announce_to_rubyflow: true
     secrets:
-      app_id: ${{ vars.ALCHEMY_BOT_APP_ID }}
-      app_private_key: ${{ secrets.ALCHEMY_BOT_APP_PRIVATE_KEY }}
+      app_id: ${{ vars.LAISS_CMS_BOT_APP_ID }}
+      app_private_key: ${{ secrets.LAISS_CMS_BOT_APP_PRIVATE_KEY }}
       slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
       mastodon_access_token: ${{ secrets.MASTODON_ACCESS_TOKEN }}
       mastodon_instance: ${{ secrets.MASTODON_INSTANCE }}

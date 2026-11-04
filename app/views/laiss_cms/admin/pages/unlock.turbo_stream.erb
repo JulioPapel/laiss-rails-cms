@@ -1,0 +1,20 @@
+<laiss-cms-growl><%= @notice %></laiss-cms-growl>
+<%= turbo_stream.remove "locked_page_#{@page.id}" %>
+<% if @page.layoutpage %>
+  <%= turbo_stream.replace "page_#{@page.id}" do %>
+    <%= render "laiss_cms/admin/layoutpages/layoutpage", layoutpage: @page %>
+  <% end %>
+<% else %>
+  <%= turbo_stream.replace "laiss_cms_pages_tree" do %>
+    <%= turbo_frame_tag "laiss_cms_pages_tree", src: laiss_cms.tree_admin_pages_path do %>
+      <laiss-cms-spinner></laiss-cms-spinner>
+    <% end %>
+  <% end %>
+<% end %>
+<% ["LockedPages", "RecentPages"].each do |widget| %>
+  <%= turbo_stream.replace widget do %>
+    <%= turbo_frame_tag widget, src: laiss_cms.admin_dashboard_widget_path(id: widget) do %>
+      <laiss-cms-spinner size="small"></laiss-cms-spinner>
+    <% end %>
+  <% end %>
+<% end %>

@@ -2,4 +2,4 @@
 
 source "https://rubygems.org"
 
-gem "alchemy_cms", path: "../.."
+gem "laiss_cms", path: "../.."

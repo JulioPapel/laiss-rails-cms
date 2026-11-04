@@ -1,0 +1,44 @@
+<% content_for(:title) do %>
+  <%= LaissCms.t(:menus, scope: 'modules') %>
+<% end %>
+
+<% content_for(:toolbar) do %>
+  <div class="toolbar_buttons">
+    <%= render 'laiss_cms/admin/partials/site_select' %>
+    <%= render 'laiss_cms/admin/partials/language_tree_select' %>
+    <%= render LaissCms::Admin::ToolbarButton.new(
+      icon: 'add',
+      label: LaissCms.t(:create_menu),
+      primary: true,
+      url: laiss_cms.new_admin_node_path,
+      hotkey: 'alt+n',
+      tooltip_placement: "top-start",
+      dialog_options: {
+        title: LaissCms.t(:create_menu),
+        size: '450x120'
+      },
+      if_permitted_to: [:create, LaissCms::Node]
+    ) %>
+    <div class="toolbar_spacer"></div>
+    <%= render "laiss_cms/admin/clipboard/button", remarkable_type: "nodes" %>
+  </div>
+<% end %>
+
+<h1 id="node_filter_result">Node filter display</h1>
+<% if @root_nodes.any? %>
+  <laiss-cms-node-tree>
+    <% @root_nodes.each do |root_node| %>
+      <ul class="nodes_tree list">
+        <%= render 'node', node: root_node %>
+      </ul>
+    <% end %>
+  </laiss-cms-node-tree>
+<% else %>
+  <%= render "laiss_cms/admin/resources/empty_state" do %>
+    <%= render 'form', node: LaissCms::Node.new(
+        site: LaissCms::Current.site,
+        language: LaissCms::Current.language
+      ),
+      button_label: LaissCms.t(:create) %>
+  <% end %>
+<% end %>

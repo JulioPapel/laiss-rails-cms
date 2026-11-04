@@ -1,0 +1,55 @@
+<div class="toolbar_buttons">
+  <%= render "laiss_cms/admin/partials/site_select" %>
+  <%= render "laiss_cms/admin/partials/language_tree_select" %>
+  <%= render LaissCms::Admin::ToolbarButton.new(
+    icon: "add",
+    url: laiss_cms.new_admin_page_path(language: @current_language),
+    hotkey: 'alt+n',
+    primary: true,
+    tooltip_placement: "top-start",
+    dialog_options: {
+      title: LaissCms.t('Add a page'),
+      size: '420x215',
+      overflow: true
+    },
+    label: LaissCms.t('Add a page'),
+    if_permitted_to: [:create, LaissCms::Page]
+  ) %>
+  <div class="toolbar_spacer"></div>
+  <% if can?(:flush, LaissCms::Page) %>
+    <div class="toolbar_button">
+      <sl-tooltip content="<%= LaissCms.t("Flush page cache") %>">
+        <%= button_to(
+          render_icon(:eraser),
+          laiss_cms.flush_admin_pages_path,
+          "data-turbo-confirm": LaissCms.t(:confirm_to_flush_cache),
+          class: "icon_button"
+        ) %>
+      </sl-tooltip>
+    </div>
+  <% end %>
+  <%= render "laiss_cms/admin/clipboard/button", remarkable_type: "pages" %>
+  <div class="toolbar_spacer"></div>
+  <div class="toolbar_button">
+    <sl-tooltip content="<%= LaissCms.t("Hierarchical") %>">
+      <%= link_to(
+        render_icon(:"menu-2"),
+        laiss_cms.admin_pages_path(view: "tree"),
+        class: ["icon_button", @view != "list" && "active"].compact
+      ) %>
+    </sl-tooltip>
+  </div>
+  <div class="toolbar_button">
+    <sl-tooltip content="<%= LaissCms.t("Sortable List") %>">
+      <%= link_to(
+        render_icon("sort-desc", style: false),
+        laiss_cms.admin_pages_path(view: "list"),
+        class: ["icon_button", @view == "list" && "active"].compact
+      ) %>
+    </sl-tooltip>
+  </div>
+</div>
+<% search_filter_params[:view] = "list" %>
+<%= render "laiss_cms/admin/partials/search_form",
+  url: laiss_cms.admin_pages_path(search_filter_params.except(:q, :page)),
+  additional_params: [:view] %>

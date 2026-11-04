@@ -1,2 +1,2 @@
 bump:
-  file: lib/alchemy/version.rb
+  file: lib/laiss_cms/version.rb

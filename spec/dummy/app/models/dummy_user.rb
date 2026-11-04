@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class DummyUser < ActiveRecord::Base
-  include Alchemy::UserMethods
+  include LaissCms::UserMethods
 
-  has_many :folded_pages, class_name: "Alchemy::FoldedPage"
+  has_many :folded_pages, class_name: "LaissCms::FoldedPage"
   attr_writer :name
 
   def self.logged_in
@@ -14,7 +14,7 @@ class DummyUser < ActiveRecord::Base
     @name || email
   end
 
-  def alchemy_display_name
+  def laiss_cms_display_name
     name
   end
 

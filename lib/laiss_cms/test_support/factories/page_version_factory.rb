@@ -1,0 +1,26 @@
+# frozen_string_literal: true
+
+FactoryBot.define do
+  factory :laiss_cms_page_version, class: "LaissCms::PageVersion" do
+    association :page, factory: :laiss_cms_page
+    title { nil }
+    meta_description { nil }
+    meta_keywords { nil }
+
+    trait :published do
+      public_on { Time.current }
+    end
+
+    transient do
+      element_count { 1 }
+    end
+
+    trait :with_elements do
+      after(:build) do |page_version, evaluator|
+        evaluator.element_count.times do
+          page_version.elements.build(name: "article")
+        end
+      end
+    end
+  end
+end

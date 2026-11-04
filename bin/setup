@@ -4,7 +4,7 @@ require "fileutils"
 # path to dummy application root.
 APP_ROOT = File.expand_path("../spec/dummy", __dir__)
 
-# path to alchemy gem
+# path to laiss_cms gem
 GEM_ROOT = File.expand_path("../", __dir__)
 
 def system!(*args)
@@ -29,12 +29,12 @@ FileUtils.chdir GEM_ROOT do
 end
 
 FileUtils.chdir APP_ROOT do
-  puts "\n== Installing Alchemy into dummy app =="
-  system!("bin/rails g alchemy:install --skip --skip-demo-files --auto-accept")
+  puts "\n== Installing LaissCms into dummy app =="
+  system!("bin/rails g laiss_cms:install --skip --skip-demo-files --auto-accept")
 
   puts "\n== Removing old logs and tempfiles =="
   system! "bin/rails log:clear tmp:clear"
 end
 
-puts "\n== Alchemy is ready 🎉 =="
+puts "\n== LaissCms is ready 🎉 =="
 puts "Start server by typing:\n\n  bin/start"

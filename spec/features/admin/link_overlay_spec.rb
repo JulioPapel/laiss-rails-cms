@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-class TestTab < Alchemy::Admin::LinkDialog::BaseTab
+class TestTab < LaissCms::Admin::LinkDialog::BaseTab
   def title
     "Test Tab"
   end
@@ -17,7 +17,7 @@ class TestTab < Alchemy::Admin::LinkDialog::BaseTab
 end
 
 RSpec.describe "Link overlay", type: :system do
-  let!(:language) { create(:alchemy_language) }
+  let!(:language) { create(:laiss_cms_language) }
 
   before do
     authorize_user(:as_admin)
@@ -46,7 +46,7 @@ RSpec.describe "Link overlay", type: :system do
 
     context "add new tab" do
       before do
-        stub_alchemy_config(link_dialog_tabs: [TestTab])
+        stub_laiss_cms_config(link_dialog_tabs: [TestTab])
       end
 
       it "has a new tab" do
@@ -58,20 +58,20 @@ RSpec.describe "Link overlay", type: :system do
 
   context "linking pages", js: true do
     let(:lang_root) do
-      create(:alchemy_page, :language_root)
+      create(:laiss_cms_page, :language_root)
     end
 
     let!(:page1) do
-      create(:alchemy_page, :public, parent_id: lang_root.id)
+      create(:laiss_cms_page, :public, parent_id: lang_root.id)
     end
 
     let!(:page2) do
-      create(:alchemy_page, :public, parent_id: lang_root.id)
+      create(:laiss_cms_page, :public, parent_id: lang_root.id)
     end
 
     let!(:article) do
       create(
-        :alchemy_element,
+        :laiss_cms_element,
         name: "article",
         page_version: page1.draft_version,
         autogenerate_ingredients: true
@@ -83,7 +83,7 @@ RSpec.describe "Link overlay", type: :system do
 
       within "#element_#{article.id} .ingredient-editor.text.linkable" do
         fill_in "Intro", with: "Link me"
-        click_button_with_tooltip Alchemy.t(:place_link)
+        click_button_with_tooltip LaissCms.t(:place_link)
       end
 
       within "[name='overlay_tab_internal_link']" do
@@ -100,8 +100,8 @@ RSpec.describe "Link overlay", type: :system do
         expect(page).to have_content "Saved element."
       end
 
-      expect(page).to have_css("iframe#alchemy_preview_window", wait: 5)
-      within_frame "alchemy_preview_window" do
+      expect(page).to have_css("iframe#laiss_cms_preview_window", wait: 5)
+      within_frame "laiss_cms_preview_window" do
         expect(page).to have_link("Link me", href: "/#{page2.urlname}")
       end
     end
@@ -111,7 +111,7 @@ RSpec.describe "Link overlay", type: :system do
 
       within "#element_#{article.id} .ingredient-editor.text.linkable" do
         fill_in "Intro", with: "Link me"
-        click_button_with_tooltip Alchemy.t(:place_link)
+        click_button_with_tooltip LaissCms.t(:place_link)
       end
 
       within "#overlay_tabs" do
@@ -132,19 +132,19 @@ RSpec.describe "Link overlay", type: :system do
         expect(page).to have_content "Saved element."
       end
 
-      expect(page).to have_css("iframe#alchemy_preview_window", wait: 5)
-      within_frame "alchemy_preview_window" do
+      expect(page).to have_css("iframe#laiss_cms_preview_window", wait: 5)
+      within_frame "laiss_cms_preview_window" do
         expect(page).to have_link("Link me", href: "https://example.com")
       end
     end
 
     it "should be possible to link a file" do
-      file = create(:alchemy_attachment)
+      file = create(:laiss_cms_attachment)
       visit edit_admin_page_path(page1)
 
       within "#element_#{article.id} .ingredient-editor.text.linkable" do
         fill_in "Intro", with: "Link me"
-        click_button_with_tooltip Alchemy.t(:place_link)
+        click_button_with_tooltip LaissCms.t(:place_link)
       end
 
       within "#overlay_tabs" do
@@ -165,8 +165,8 @@ RSpec.describe "Link overlay", type: :system do
         expect(page).to have_content "Saved element."
       end
 
-      expect(page).to have_css("iframe#alchemy_preview_window", wait: 5)
-      within_frame "alchemy_preview_window" do
+      expect(page).to have_css("iframe#laiss_cms_preview_window", wait: 5)
+      within_frame "laiss_cms_preview_window" do
         expect(page).to have_link("Link me", href: "/attachment/#{file.id}/download/#{file.file_name}")
       end
     end
@@ -176,10 +176,10 @@ RSpec.describe "Link overlay", type: :system do
 
       within "[name='overlay_tab_internal_link']" do
         # The page select shows the page, not the raw url with the anchor.
-        expect(page).to have_selector("alchemy-page-select .ts-control .item", text: page2.name)
+        expect(page).to have_selector("laiss-cms-page-select .ts-control .item", text: page2.name)
         # The url (page path + anchor) is kept so the link can be applied.
         expect(find("#internal_link", visible: :all).value).to eq("#{page2.url_path}#some-anchor")
-        find("alchemy-page-select .ts-control").click
+        find("laiss-cms-page-select .ts-control").click
       end
 
       # Opening the page select must not offer the raw url as a bogus option.
@@ -191,13 +191,13 @@ RSpec.describe "Link overlay", type: :system do
       visit link_admin_pages_path(selected_tab: "internal")
 
       within "[name='overlay_tab_internal_link']" do
-        find("alchemy-page-select .ts-control").click
+        find("laiss-cms-page-select .ts-control").click
       end
 
       # The initial list is preloaded on focus (the dropdown is appended to body).
       expect(page).to have_selector(".ts-dropdown .option", text: page1.name)
 
-      within "[name='overlay_tab_internal_link'] alchemy-page-select .ts-control" do
+      within "[name='overlay_tab_internal_link'] laiss-cms-page-select .ts-control" do
         find("input").send_keys("Nonexistentpagexyz")
       end
 
@@ -211,7 +211,7 @@ RSpec.describe "Link overlay", type: :system do
       visit link_admin_pages_path(selected_tab: "internal")
 
       within "[name='overlay_tab_internal_link']" do
-        find("alchemy-page-select .ts-control").click
+        find("laiss-cms-page-select .ts-control").click
         # The spinner is hidden by default and revealed while results load.
         expect(page).to have_selector(".ts-control sl-spinner", visible: true)
       end

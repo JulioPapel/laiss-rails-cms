@@ -2,7 +2,7 @@ require "rails_helper"
 
 describe "Security: " do
   context "If user is present" do
-    before { allow(Alchemy::User).to receive_messages(count: 1) }
+    before { allow(LaissCms::User).to receive_messages(count: 1) }
 
     it "a visitor should not be able to signup" do
       visit "/admin/signup"

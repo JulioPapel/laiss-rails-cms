@@ -3,12 +3,12 @@
 require "rails_helper"
 
 describe "The API routes" do
-  routes { Alchemy::Engine.routes }
+  routes { LaissCms::Engine.routes }
 
   describe "for pages" do
     it "has route to show all pages." do
       expect({get: "/api/pages.json"}).to route_to(
-        controller: "alchemy/api/pages",
+        controller: "laiss_cms/api/pages",
         action: "index",
         format: "json"
       )
@@ -17,7 +17,7 @@ describe "The API routes" do
     context "with missing format" do
       it "defaults to json." do
         expect({get: "/api/pages"}).to route_to(
-          controller: "alchemy/api/pages",
+          controller: "laiss_cms/api/pages",
           action: "index",
           format: "json"
         )
@@ -26,7 +26,7 @@ describe "The API routes" do
 
     it "has route to show a page by urlname." do
       expect({get: "/api/pages/a-page.json"}).to route_to(
-        controller: "alchemy/api/pages",
+        controller: "laiss_cms/api/pages",
         action: "show",
         urlname: "a-page",
         format: "json"
@@ -35,7 +35,7 @@ describe "The API routes" do
 
     it "has route to show a page by nested urlname." do
       expect({get: "/api/pages/nested/a-page"}).to route_to(
-        controller: "alchemy/api/pages",
+        controller: "laiss_cms/api/pages",
         action: "show",
         urlname: "nested/a-page",
         format: "json"
@@ -45,7 +45,7 @@ describe "The API routes" do
     context "with admin namespace" do
       it "routes to api pages controller." do
         expect({get: "/api/admin/pages/8"}).to route_to(
-          controller: "alchemy/api/pages",
+          controller: "laiss_cms/api/pages",
           action: "show",
           id: "8",
           format: "json"
@@ -57,7 +57,7 @@ describe "The API routes" do
   describe "for elements" do
     it "has route to show all elements." do
       expect({get: "/api/elements.json"}).to route_to(
-        controller: "alchemy/api/elements",
+        controller: "laiss_cms/api/elements",
         action: "index",
         format: "json"
       )
@@ -66,7 +66,7 @@ describe "The API routes" do
     context "with missing format" do
       it "defaults to json." do
         expect({get: "/api/elements"}).to route_to(
-          controller: "alchemy/api/elements",
+          controller: "laiss_cms/api/elements",
           action: "index",
           format: "json"
         )
@@ -75,7 +75,7 @@ describe "The API routes" do
 
     it "has route to show all elements for page id." do
       expect({get: "/api/pages/1/elements.json"}).to route_to(
-        controller: "alchemy/api/elements",
+        controller: "laiss_cms/api/elements",
         action: "index",
         page_id: "1",
         format: "json"
@@ -84,7 +84,7 @@ describe "The API routes" do
 
     it "has route to show all elements for page id and name." do
       expect({get: "/api/pages/1/elements/article.json"}).to route_to(
-        controller: "alchemy/api/elements",
+        controller: "laiss_cms/api/elements",
         action: "index",
         page_id: "1",
         named: "article",
@@ -94,7 +94,7 @@ describe "The API routes" do
 
     it "has route to show an element." do
       expect({get: "/api/elements/1.json"}).to route_to(
-        controller: "alchemy/api/elements",
+        controller: "laiss_cms/api/elements",
         action: "show",
         id: "1",
         format: "json"

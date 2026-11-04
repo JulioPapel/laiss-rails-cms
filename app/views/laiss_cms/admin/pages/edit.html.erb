@@ -1,0 +1,144 @@
+<% content_for(:title) { @page.name } %>
+
+<% content_for(:main_menu_style) { 'collapsed-menu' } %>
+
+<% content_for(:toolbar) do %>
+<div class="toolbar_buttons">
+  <div class="toolbar_button">
+    <laiss-cms-dirty-guard>
+      <sl-tooltip content="<%= LaissCms.t(:explain_unlocking) %>" placement="top-start">
+        <%= form_tag laiss_cms.unlock_admin_page_path(@page, redirect_to: @layoutpage ? laiss_cms.admin_layoutpages_path : laiss_cms.admin_pages_path), id: 'unlock_page_form' do %>
+          <button class="icon_button" data-laiss-cms-hotkey="alt+x">
+            <%= render_icon('expand-left') %>
+          </button>
+        <% end %>
+      </sl-tooltip>
+    </laiss-cms-dirty-guard>
+  </div>
+  <div class="toolbar_spacer"></div>
+  <div class="toolbar_button">
+    <sl-tooltip content="<%= LaissCms.t(:page_infos) %>">
+      <%= link_to_dialog(
+        render_icon(:information),
+        laiss_cms.info_admin_page_path(@page),
+        {
+          title: LaissCms.t(:page_infos),
+          size: '520x320'
+        },
+        {
+          class: 'icon_button',
+          'data-laiss-cms-hotkey' => 'alt+i'
+        }
+      ) %>
+    </sl-tooltip>
+  </div>
+  <div class="toolbar_button">
+    <sl-tooltip content="<%= LaissCms.t(:edit_page_properties) %>">
+      <% if @page.layoutpage? %>
+        <%= link_to_dialog(
+          render_icon("settings-3"),
+          laiss_cms.edit_admin_layoutpage_path(@page),
+          {
+            title: LaissCms.t(:page_properties),
+            size: '500x170'
+          },
+          class: :icon_button,
+          'data-laiss-cms-hotkey' => 'alt+e'
+        ) %>
+      <% else %>
+        <%= link_to_dialog(
+          render_icon("settings-3"),
+          laiss_cms.configure_admin_page_path(@page),
+          {
+            title: LaissCms.t(:page_properties),
+            size: '530x680'
+          },
+          class: :icon_button,
+          'data-laiss-cms-hotkey' => 'alt+e'
+        ) %>
+      <% end %>
+    </sl-tooltip>
+  </div>
+  <% unless @page.layoutpage? %>
+    <div class="toolbar_button">
+      <% if @page.public? %>
+        <sl-tooltip content="<%= LaissCms.t("Visit page") %>">
+          <%= link_to show_page_url(
+              urlname: @page.urlname,
+              locale: prefix_locale? ? @page.language_code : nil,
+              host: @page.site.host == "*" ? request.host : @page.site.host,
+            ),
+            data: { turbo: false },
+            target: "_blank",
+            class: 'icon_button' do %>
+            <%= render_icon('external-link') %>
+          <% end %>
+        </sl-tooltip>
+      <% else %>
+        <sl-tooltip content="<%= LaissCms.t(:cannot_visit_unpublic_page) %>">
+          <%= content_tag "a", class: "disabled icon_button" do %>
+            <%= render_icon('external-link') %>
+          <% end %>
+        </sl-tooltip>
+      <% end %>
+    </div>
+  <% end %>
+  <div class="toolbar_spacer"></div>
+  <div class="select_with_label">
+    <sl-tooltip content="<%= LaissCms.t(:preview_size) %>" placement="top-start">
+      <%= render_icon(:computer) %>
+      <%= select_tag "preview_size",
+        options_for_select(preview_sizes_for_select),
+        include_blank: LaissCms.t("auto", scope: "preview_sizes") %>
+    </sl-tooltip>
+  </div>
+  <div class="toolbar_spacer"></div>
+  <%= render LaissCms::Admin::PreviewTimeSelect.new(
+    @page_version,
+    url: edit_admin_page_path(@page),
+    selected: params[:laiss_cms_preview_time]) %>
+  <% if @preview_urls.many? %>
+    <div class="select_with_label">
+      <label><%= LaissCms.t(:preview_url) %></label>
+      <%= select_tag 'preview_url',
+        options_for_select(@preview_urls),
+        class: 'large' %>
+    </div>
+  <% end %>
+  <div class="toolbar_button">
+    <sl-tooltip content="<%= LaissCms.t('Reload Preview') %>">
+      <%= link_to render_icon(:refresh), nil, {
+        class: 'icon_button',
+        id: 'reload_preview_button'
+      } %>
+    </sl-tooltip>
+  </div>
+</div>
+
+<div class="toolbar_buttons right">
+  <%= render LaissCms::Admin::PublishPageButton.new(page: @page) %>
+  <div class="toolbar_spacer"></div>
+  <div class="toolbar_button">
+    <sl-tooltip content="<%= LaissCms.t(:hide_elements) %>">
+      <%= link_to render_icon("menu-unfold"), nil, {
+        id: "element_window_button",
+        class: "icon_button"
+      } %>
+    </sl-tooltip>
+  </div>
+</div>
+<% end %>
+
+<iframe
+  url="<%= @preview_url %>"
+  load-timeout="<%= LaissCms.config.preview_load_timeout %>"
+  id="laiss_cms_preview_window"
+  name="laiss_cms_preview_window"
+  is="laiss-cms-preview-window"
+  frameborder="0"
+  title="<%= LaissCms.t("Page preview") %>">
+</iframe>
+
+<%= turbo_frame_tag "laiss_cms_elements_window", src: laiss_cms.admin_elements_path(page_version_id: @page_version.id, laiss_cms_preview_time: params[:laiss_cms_preview_time]) do %>
+  <laiss-cms-spinner></laiss-cms-spinner>
+<% end %>

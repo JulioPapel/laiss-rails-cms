@@ -44,10 +44,10 @@
  * -------------------------------------------------------------------------- */
 
 :root {
-  --alchemy-c-blue: #214166;
-  --alchemy-c-orange: #d8741c;
-  --alchemy-c-light-gray: #f7f7f7;
-  --alchemy-c-text: rgba(51, 59, 81, 0.8);
+  --laiss-cms-c-blue: #214166;
+  --laiss-cms-c-orange: #d8741c;
+  --laiss-cms-c-light-gray: #f7f7f7;
+  --laiss-cms-c-text: rgba(51, 59, 81, 0.8);
   --font-size-1: 14px;
 }
 
@@ -57,10 +57,10 @@
   --vp-c-default-3: var(--vp-c-gray-3);
   --vp-c-default-soft: var(--vp-c-gray-soft);
 
-  --vp-c-brand-1: var(--alchemy-c-blue);
-  --vp-c-brand-2: var(--alchemy-c-blue);
-  --vp-c-brand-3: var(--alchemy-c-blue);
-  --vp-c-brand-soft: var(--alchemy-c-orange);
+  --vp-c-brand-1: var(--laiss-cms-c-blue);
+  --vp-c-brand-2: var(--laiss-cms-c-blue);
+  --vp-c-brand-3: var(--laiss-cms-c-blue);
+  --vp-c-brand-soft: var(--laiss-cms-c-orange);
 
   --vp-c-tip-1: var(--vp-c-green-1);
   --vp-c-tip-2: var(--vp-c-green-2);
@@ -77,7 +77,7 @@
   --vp-c-danger-3: var(--vp-c-red-3);
   --vp-c-danger-soft: var(--vp-c-red-soft);
 
-  --vp-c-text-1: var(--alchemy-c-text);
+  --vp-c-text-1: var(--laiss-cms-c-text);
 }
 
 .dark {
@@ -86,7 +86,7 @@
 }
 
 :root {
-  --vp-c-bg-alt: var(--alchemy-c-light-gray);
+  --vp-c-bg-alt: var(--laiss-cms-c-light-gray);
 }
 
 .dark {
@@ -118,14 +118,14 @@
   --vp-home-hero-name-color: transparent;
   --vp-home-hero-name-background: -webkit-linear-gradient(
     145deg,
-    var(--alchemy-c-orange) 25%,
-    var(--alchemy-c-blue)
+    var(--laiss-cms-c-orange) 25%,
+    var(--laiss-cms-c-blue)
   );
 
   --vp-home-hero-image-background-image: -webkit-linear-gradient(
     -45deg,
-    var(--alchemy-c-orange) 25%,
-    var(--alchemy-c-blue) 50%
+    var(--laiss-cms-c-orange) 25%,
+    var(--laiss-cms-c-blue) 50%
   );
   --vp-home-hero-image-filter: blur(44px);
 }
@@ -177,6 +177,6 @@
 
 .dark .VPContent {
   --vp-c-divider: rgba(51, 59, 81);
-  --vp-c-brand-2: var(--alchemy-c-orange);
+  --vp-c-brand-2: var(--laiss-cms-c-orange);
   --vp-code-bg: var(----vp-code-block-bg, #22272e);
 }

@@ -1,0 +1,12 @@
+<laiss-cms-growl>
+  <%= LaissCms.t(:page_published, name: @page.name) %>
+</laiss-cms-growl>
+<%= turbo_stream.replace "locked_page_#{@page.id}",
+  partial: "laiss_cms/admin/pages/current_page",
+  locals: {current_page: @page, published: true } %>
+<%= turbo_stream.replace "publish_page_button" do %>
+  <%= render LaissCms::Admin::PublishPageButton.new(
+    page: @page,
+    published: true
+  ) %>
+<% end %>

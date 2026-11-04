@@ -8,7 +8,7 @@ class CustomNewsElementsFinder
   private
 
   def element
-    Alchemy::Element.new(
+    LaissCms::Element.new(
       name: "news",
       id: 1001,
       position: 1
@@ -19,12 +19,12 @@ class CustomNewsElementsFinder
 
   def ingredients(element)
     [
-      Alchemy::Ingredients::Text.new(
+      LaissCms::Ingredients::Text.new(
         element: element,
         role: "news_headline",
         value: "Breaking News"
       ),
-      Alchemy::Ingredients::Richtext.new(
+      LaissCms::Ingredients::Richtext.new(
         element: element,
         role: "body",
         value: "<p>This is a breaking news story.</p>"

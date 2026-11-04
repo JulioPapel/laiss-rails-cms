@@ -2,16 +2,16 @@
 
 require "rails_helper"
 
-RSpec.describe Alchemy::TestSupport::CapybaraHelpers do
+RSpec.describe LaissCms::TestSupport::CapybaraHelpers do
   subject(:helper) do
-    Class.new { include Alchemy::TestSupport::CapybaraHelpers }.new
+    Class.new { include LaissCms::TestSupport::CapybaraHelpers }.new
   end
 
   let(:options) { {from: "Label"} }
 
   describe "#select2 (deprecated)" do
     it "warns and delegates to #tom_select" do
-      expect(Alchemy::Deprecation).to receive(:warn).with(/Use #tom_select instead/)
+      expect(LaissCms::Deprecation).to receive(:warn).with(/Use #tom_select instead/)
       expect(helper).to receive(:tom_select).with("value", options)
       helper.select2("value", options)
     end
@@ -19,7 +19,7 @@ RSpec.describe Alchemy::TestSupport::CapybaraHelpers do
 
   describe "#select2_search (deprecated)" do
     it "warns and delegates to #tom_select_search" do
-      expect(Alchemy::Deprecation).to receive(:warn).with(/Use #tom_select_search instead/)
+      expect(LaissCms::Deprecation).to receive(:warn).with(/Use #tom_select_search instead/)
       expect(helper).to receive(:tom_select_search).with("value", options)
       helper.select2_search("value", options)
     end

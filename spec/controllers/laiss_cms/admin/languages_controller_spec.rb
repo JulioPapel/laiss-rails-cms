@@ -1,0 +1,175 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+describe LaissCms::Admin::LanguagesController do
+  routes { LaissCms::Engine.routes }
+
+  before do
+    authorize_user(:as_admin)
+  end
+
+  describe "#index" do
+    context "without a site" do
+      it "redirects to the sites admin" do
+        get :index
+        expect(response).to redirect_to(admin_sites_path)
+      end
+    end
+
+    context "with multiple sites" do
+      let!(:default_site_language) do
+        create(:laiss_cms_language)
+      end
+
+      let!(:site_2) do
+        create(:laiss_cms_site, host: "another-site.com")
+      end
+
+      let!(:site_2_language) do
+        site_2.default_language
+      end
+
+      it "only shows languages from current site" do
+        get :index
+        expect(assigns(:languages)).to include(default_site_language)
+        expect(assigns(:languages)).to_not include(site_2_language)
+      end
+    end
+
+    context "editor users" do
+      let!(:site) { create(:laiss_cms_site) }
+
+      before do
+        authorize_user(:as_editor)
+      end
+
+      it "should be able to index language" do
+        get :index
+        expect(response).to render_template(:index)
+      end
+    end
+  end
+
+  describe "#new" do
+    context "without a site" do
+      it "redirects to the sites admin" do
+        get :new
+        expect(response).to redirect_to(admin_sites_path)
+      end
+    end
+
+    context "with a site" do
+      let!(:site) { create(:laiss_cms_site) }
+
+      it "has default language's page_layout set" do
+        get :new
+        expect(assigns(:language).page_layout)
+          .to eq(LaissCms.config.default_language.page_layout)
+      end
+    end
+  end
+
+  describe "#create" do
+    context "with valid params" do
+      it "redirects to the pages admin" do
+        post :create, params: {
+          language: {
+            name: "English",
+            language_code: "en",
+            frontpage_name: "Index",
+            page_layout: "index",
+            public: true,
+            default: true,
+            site_id: create(:laiss_cms_site)
+          }
+        }
+        language = LaissCms::Language.last
+        expect(response).to redirect_to admin_pages_path(language_id: language)
+        expect(flash[:notice]).to eq("Language successfully created.")
+      end
+    end
+
+    context "with invalid params" do
+      it "shows the form again" do
+        post :create, params: {language: {name: ""}}
+        expect(response).to render_template(:new)
+      end
+    end
+  end
+
+  describe "#destroy" do
+    let(:language) { create(:laiss_cms_language) }
+
+    context "with pages attached" do
+      let!(:page) { create(:laiss_cms_page, language: language) }
+
+      it "returns with error message" do
+        delete :destroy, params: {id: language.id}
+        expect(response).to redirect_to admin_languages_path
+        expect(flash[:warning]).to \
+          eq("There are still pages attached to this language. Please remove them first.")
+      end
+    end
+
+    context "with nodes attached" do
+      let!(:node) { create(:laiss_cms_node, language: language) }
+
+      it "returns with error message" do
+        delete :destroy, params: {id: language.id}
+        expect(response).to redirect_to admin_languages_path
+        expect(flash[:warning]).to \
+          eq("There are still menu nodes attached to this language. Please remove them first.")
+      end
+    end
+
+    context "without pages" do
+      it "removes the language" do
+        delete :destroy, params: {id: language.id}
+        expect(response).to redirect_to admin_languages_path
+        expect(flash[:notice]).to eq("Language successfully removed.")
+      end
+
+      it "removes the language from session if present" do
+        session[:laiss_cms_language_id] = language.id
+
+        delete :destroy, params: {id: language.id}
+        expect(response).to redirect_to admin_languages_path
+        expect(flash[:notice]).to eq("Language successfully removed.")
+
+        expect(session[:laiss_cms_language_id]).to be_nil
+      end
+    end
+  end
+
+  describe "#switch" do
+    subject(:switch) do
+      post :switch, params: {language_id: language.id}
+    end
+
+    let(:language) { create(:laiss_cms_language, :klingon) }
+
+    it "should store the current language in session" do
+      switch
+      expect(session[:laiss_cms_language_id]).to eq(language.id)
+    end
+
+    context "having a referer" do
+      before do
+        expect_any_instance_of(ActionDispatch::Request).to receive(:referer) do
+          "/admin/pages"
+        end
+      end
+
+      it "should redirect to location" do
+        is_expected.to redirect_to(admin_pages_path)
+      end
+    end
+
+    context "having no referer" do
+      it "should redirect to layoutpages" do
+        is_expected.to redirect_to(admin_dashboard_path)
+      end
+    end
+  end
+end

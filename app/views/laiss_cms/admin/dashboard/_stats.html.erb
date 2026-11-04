@@ -1,0 +1,7 @@
+<% if LaissCms.config.dashboard.stats.any? %>
+  <div class="stats">
+    <% LaissCms.config.dashboard.stats.each do |stat, args| %>
+      <%= render stat.new(**args) %>
+    <% end %>
+  </div>
+<% end %>

@@ -9,20 +9,20 @@ next:
 
 # Configuration
 
-Alchemy is configured through a Ruby initializer at `config/initializers/alchemy.rb`. The install generator creates this file for you. All settings have sensible defaults — you only need to configure what you want to change.
+LaissCms is configured through a Ruby initializer at `config/initializers/laiss_cms.rb`. The install generator creates this file for you. All settings have sensible defaults — you only need to configure what you want to change.
 
 ### The Initializer
 
 ~~~ ruby
-# config/initializers/alchemy.rb
-Alchemy.configure do |config|
+# config/initializers/laiss_cms.rb
+LaissCms.configure do |config|
   config.output_image_quality = 85
   config.storage_adapter = "active_storage"
 end
 ~~~
 
 ::: info NOTE
-`Alchemy.configure` is available since 8.1. In 8.0, use `Alchemy.config.tap` instead.
+`LaissCms.configure` is available since 8.1. In 8.0, use `LaissCms.config.tap` instead.
 :::
 
 ### Environment-Specific Configuration
@@ -32,7 +32,7 @@ Use Rails' standard environment files to override settings per environment.
 ~~~ ruby
 # config/environments/production.rb
 Rails.application.configure do
-  Alchemy.config.cache_pages = true
+  LaissCms.config.cache_pages = true
 end
 ~~~
 
@@ -81,7 +81,7 @@ Enable image sharpening on rendered variants.
 ### storage_adapter
 `String`
 
-The storage backend for pictures and attachments. Either `"active_storage"` or `"dragonfly"` (the default). Can also be set via the `ALCHEMY_STORAGE_ADAPTER` environment variable.
+The storage backend for pictures and attachments. Either `"active_storage"` or `"dragonfly"` (the default). Can also be set via the `LAISS_CMS_STORAGE_ADAPTER` environment variable.
 
 ## Caching
 
@@ -102,7 +102,7 @@ end
 ~~~
 
 :::tip NOTE
-When `stale_while_revalidate` is not set, Alchemy sends `must-revalidate` in the `Cache-Control` header instead.
+When `stale_while_revalidate` is not set, LaissCms sends `must-revalidate` in the `Cache-Control` header instead.
 :::
 
 ## Uploads
@@ -114,8 +114,8 @@ config.uploader.tap do |uploader|
   uploader.upload_limit = 50
   uploader.file_size_limit = 100
   uploader.allowed_filetypes.tap do |file_types|
-    file_types.alchemy_attachments = ["pdf", "zip"]  # default: ["*"] (all types)
-    file_types.alchemy_pictures = ["jpg", "jpeg", "gif", "png", "svg", "webp"]  # default
+    file_types.laiss_cms_attachments = ["pdf", "zip"]  # default: ["*"] (all types)
+    file_types.laiss_cms_pictures = ["jpg", "jpeg", "gif", "png", "svg", "webp"]  # default
   end
 end
 ~~~
@@ -127,7 +127,7 @@ end
 
 Values for the link target select in the link dialog. Each value is stored with a leading underscore and rendered as the link's `target` attribute, so `blank` becomes `target="_blank"`.
 
-If you render a link ingredient in your own view, pass the stored value through `Alchemy::Ingredients::LinkTarget#link_target_value` instead of comparing it yourself. It also maps the legacy `blank` value, stored before the underscore was added.
+If you render a link ingredient in your own view, pass the stored value through `LaissCms::Ingredients::LinkTarget#link_target_value` instead of comparing it yourself. It also maps the legacy `blank` value, stored before the underscore was added.
 
 ### link_dialog_tabs
 
@@ -138,12 +138,12 @@ config.link_dialog_tabs << "Acme::LinkTab"
 ~~~
 
 ::: tip
-[alchemy-solidus](extensions#alchemy-solidus) provides a tab for linking to Solidus products.
+[laiss-cms-solidus](extensions#laiss-cms-solidus) provides a tab for linking to Solidus products.
 :::
 
 ## Mailer
 
-Configure Alchemy's built-in contact form mailer. See the [contact form guide](how_to_create_a_contact_form) for a full walkthrough.
+Configure LaissCms's built-in contact form mailer. See the [contact form guide](how_to_create_a_contact_form) for a full walkthrough.
 
 ~~~ ruby
 config.mailer.tap do |mailer|
@@ -160,7 +160,7 @@ end
 
 ## Sitemap
 
-Alchemy generates a Google-compatible XML sitemap at `/sitemap.xml`.
+LaissCms generates a Google-compatible XML sitemap at `/sitemap.xml`.
 
 ~~~ ruby
 config.sitemap.tap do |sitemap|
@@ -196,12 +196,12 @@ The viewport sizes available in the preview size selector.
 ### show_page_searchable_checkbox
 `Boolean` (Default: `false`)
 
-Show a searchable checkbox in the page form. Useful with search plugins like [alchemy-pg_search](extensions#alchemy-pg_search).
+Show a searchable checkbox in the page form. Useful with search plugins like [laiss-cms-pg_search](extensions#laiss-cms-pg_search).
 
 ### auto_logout_time
 `Integer` (Default: `30`)
 
-Minutes of inactivity before the admin session expires. Used by [alchemy-devise](extensions#alchemy-devise) to configure Devise's `:timeoutable` module. Disabled in development.
+Minutes of inactivity before the admin session expires. Used by [laiss-cms-devise](extensions#laiss-cms-devise) to configure Devise's `:timeoutable` module. Disabled in development.
 
 ### items_per_page
 `Integer` (Default: `15`)
@@ -209,9 +209,9 @@ Minutes of inactivity before the admin session expires. Used by [alchemy-devise]
 Number of items per page in admin list views (uses Kaminari).
 
 ### menu
-`Array<Alchemy::Configurations::MenuItem>` <Badge type="tip" text="8.4+" />
+`Array<LaissCms::Configurations::MenuItem>` <Badge type="tip" text="8.4+" />
 
-The entries of the admin main navigation. Alchemy's own entries (Dashboard, Pages, Menus, Languages, Sites, Tags and Library) are the default. Add entries for your own modules with `config.menu.add`:
+The entries of the admin main navigation. LaissCms's own entries (Dashboard, Pages, Menus, Languages, Sites, Tags and Library) are the default. Add entries for your own modules with `config.menu.add`:
 
 ~~~ ruby
 config.menu.add(
@@ -227,11 +227,11 @@ See [Creating Modules](how_to_create_modules#menu-entry) for all options.
 
 ## Admin JavaScript and CSS
 
-Alchemy uses [importmap-rails](https://github.com/rails/importmap-rails) for JavaScript modules in the admin. You can extend the admin interface with custom modules and stylesheets.
+LaissCms uses [importmap-rails](https://github.com/rails/importmap-rails) for JavaScript modules in the admin. You can extend the admin interface with custom modules and stylesheets.
 
 ~~~ ruby
 # Pin a JS module and import it in the admin
-Alchemy.importmap.pin "flatpickr/de",
+LaissCms.importmap.pin "flatpickr/de",
   to: "https://ga.jspm.io/npm:flatpickr@4.6.13/dist/l10n/de.js"
 config.admin_js_imports << "flatpickr/de"
 
@@ -244,9 +244,9 @@ config.admin_stylesheets.add("my_app/admin_extension")
 Change the admin URL path or restrict access:
 
 ~~~ ruby
-# config/initializers/alchemy.rb
-Alchemy.admin_path = "backend"
-Alchemy.admin_constraints = { subdomain: "admin" }
+# config/initializers/laiss_cms.rb
+LaissCms.admin_path = "backend"
+LaissCms.admin_constraints = { subdomain: "admin" }
 ~~~
 
 The default admin path is `/admin`.
@@ -263,7 +263,7 @@ Available user roles. Each role inherits the permissions of the previous one. Se
 - **editor** - Can create, delete, publish and reorder pages, manage pictures, attachments and tags
 - **admin** - Can manage languages, sites and system settings
 
-You can also restrict which roles can edit specific page layouts with [`editable_by`](pages#editable_by). Alchemy uses [CanCanCan](https://github.com/CanCanCommunity/cancancan) for authorization. You can register custom abilities.
+You can also restrict which roles can edit specific page layouts with [`editable_by`](pages#editable_by). LaissCms uses [CanCanCan](https://github.com/CanCanCommunity/cancancan) for authorization. You can register custom abilities.
 
 ~~~ ruby
 config.abilities << "MyCustom::Ability"
@@ -274,7 +274,7 @@ Roles can be translated in your locale files. See the [I18n guide](i18n) for det
 ~~~ yaml
 # config/locales/en.yml
 en:
-  alchemy:
+  laiss_cms:
     user_roles:
       member: Member
       author: Author
@@ -282,11 +282,11 @@ en:
 
 ## Preview
 
-Alchemy offers two ways to customize the admin's page preview.
+LaissCms offers two ways to customize the admin's page preview.
 
 ### Preview Sources
 
-When multiple preview sources are configured, a select menu appears in the admin preview frame. This is useful when you want to preview content across different frontends, for example if you use Alchemy as a headless CMS via [alchemy-json_api](extensions#alchemy-json_api):
+When multiple preview sources are configured, a select menu appears in the admin preview frame. This is useful when you want to preview content across different frontends, for example if you use LaissCms as a headless CMS via [laiss-cms-json_api](extensions#laiss-cms-json_api):
 
 ~~~ ruby
 config.preview_sources << "MyCustom::PreviewSource"
@@ -294,7 +294,7 @@ config.preview_sources << "MyCustom::PreviewSource"
 
 ### Preview Host
 
-To replace Alchemy's built-in server-side rendered preview entirely, configure a static preview host. This points the preview frame to an external URL, optionally with Basic Auth:
+To replace LaissCms's built-in server-side rendered preview entirely, configure a static preview host. This points the preview frame to an external URL, optionally with Basic Auth:
 
 ~~~ ruby
 config.preview.tap do |preview|
@@ -311,11 +311,11 @@ end
 Customize how page URLs are generated:
 
 ~~~ ruby
-# config/initializers/alchemy.rb
-Alchemy::Page.url_path_class = MyCustomUrlPath
+# config/initializers/laiss_cms.rb
+LaissCms::Page.url_path_class = MyCustomUrlPath
 ~~~
 
-The default `Alchemy::Page::UrlPath` builds URLs from the page's `urlname` and its ancestors. Your class must respond to `call` and return a path string.
+The default `LaissCms::Page::UrlPath` builds URLs from the page's `urlname` and its ancestors. Your class must respond to `call` and return a path string.
 
 ## Format Matchers
 
@@ -323,33 +323,33 @@ Named aliases for regular expressions, commonly used for [ingredient validations
 
 ~~~ ruby
 # Use in your models
-validates_format_of :url, with: Alchemy.config.format_matchers.url
+validates_format_of :url, with: LaissCms.config.format_matchers.url
 ~~~
 
 ## Error Tracking
 
-Replace Alchemy's default error logger with your own handler:
+Replace LaissCms's default error logger with your own handler:
 
 ~~~ ruby
-# config/initializers/alchemy.rb
-Alchemy::ErrorTracking.notification_handler = MyErrorHandler
+# config/initializers/laiss_cms.rb
+LaissCms::ErrorTracking.notification_handler = MyErrorHandler
 ~~~
 
 Your class must respond to `call` with an exception argument.
 
 ::: tip
-Ready-made integrations exist for the most common services: [Sentry](extensions#alchemy-sentry), [Bugsnag](extensions#alchemy-bugsnag), [AppSignal](extensions#alchemy-appsignal), and [Airbrake](https://github.com/AlchemyCMS/alchemy-airbrake). See [Extensions](extensions) for more.
+Ready-made integrations exist for the most common services: [Sentry](extensions#laiss-cms-sentry), [Bugsnag](extensions#laiss-cms-bugsnag), [AppSignal](extensions#laiss-cms-appsignal), and [Airbrake](https://github.com/LaissCMS/laiss-cms-airbrake). See [Extensions](extensions) for more.
 :::
 
 ## Update Check
 
 ### update_check_service
-`Symbol` (Default: `:alchemy_app`)
+`Symbol` (Default: `:laiss_cms_app`)
 
-The service used to check for new Alchemy versions in the admin dashboard. Available options:
+The service used to check for new LaissCms versions in the admin dashboard. Available options:
 
-- `:alchemy_app` — Alchemy's own update check endpoint. Shares minimal data about your installation (Alchemy version, Rails version, Ruby version, origin host) with maintainers of AlchemyCMS
-- `:ruby_gems` — RubyGems.org API. Recommended if you don't want to share any data with AlchemyCMS maintainers
+- `:laiss_cms_app` — LaissCms's own update check endpoint. Shares minimal data about your installation (LaissCms version, Rails version, Ruby version, origin host) with maintainers of LaissCMS
+- `:ruby_gems` — RubyGems.org API. Recommended if you don't want to share any data with LaissCMS maintainers
 - `:none` — Disables update checks
 
 ### update_check_cache_duration

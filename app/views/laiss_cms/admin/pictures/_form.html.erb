@@ -1,0 +1,20 @@
+<%= turbo_frame_tag(@picture) do %>
+  <%= laiss_cms_form_for @picture,
+    url: laiss_cms.admin_picture_path(
+      @picture,
+      search_filter_params.merge(
+        size: @size,
+        picture_index: picture_index
+      ).to_h
+    ),
+    class: "picture-form" do |f| %>
+    <%= f.input :name %>
+    <%= render "laiss_cms/admin/pictures/picture_description_field", f: f %>
+    <%= render LaissCms::Admin::TagsAutocomplete.new(additional_class: "input tags") do %>
+      <%= f.label :tag_list %>
+      <%= f.text_field :tag_list, value: f.object.tag_list.join(",") %>
+      <small class="hint"><%= LaissCms.t('Please seperate the tags with commata') %></small>
+    <% end %>
+    <%= f.submit LaissCms.t(:save) %>
+  <% end %>
+<% end %>

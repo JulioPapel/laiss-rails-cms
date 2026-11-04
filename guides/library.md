@@ -5,11 +5,11 @@ next: false
 
 # Library
 
-The library is Alchemy's media management module. It stores **pictures** (images) and **attachments** (downloadable files) that editors use in page content.
+The library is LaissCms's media management module. It stores **pictures** (images) and **attachments** (downloadable files) that editors use in page content.
 
 ## Pictures
 
-Pictures are images that editors assign to [Picture ingredients](ingredients#picture) on elements. Alchemy stores the original image and generates resized variants on the fly. See [Rendering Images](render_images) for details on how images are processed and displayed.
+Pictures are images that editors assign to [Picture ingredients](ingredients#picture) on elements. LaissCms stores the original image and generates resized variants on the fly. See [Rendering Images](render_images) for details on how images are processed and displayed.
 
 The picture library supports:
 

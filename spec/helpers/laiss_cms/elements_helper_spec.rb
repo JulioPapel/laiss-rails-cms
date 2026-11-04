@@ -1,0 +1,338 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+module LaissCms
+  describe ElementsHelper do
+    include LaissCms::BaseHelper
+
+    let(:element) { create(:laiss_cms_element, name: "headline") }
+
+    before do
+      Current.page = element&.page
+      allow_any_instance_of(Element).to receive(:store_page).and_return(true)
+    end
+
+    describe "#render_element" do
+      subject { render_element(element) }
+
+      context "with nil element" do
+        let(:element) { nil }
+
+        it { is_expected.to be_nil }
+      end
+
+      context "with element record given" do
+        let(:element) do
+          create(:laiss_cms_element, :with_ingredients, name: "headline")
+        end
+
+        it "renders the element's view partial" do
+          is_expected.to have_selector("h1")
+        end
+
+        context "with element view partial not found" do
+          let(:element) { build_stubbed(:laiss_cms_element, name: "not_present") }
+
+          it "renders the view not found partial" do
+            is_expected.to match(/Missing view for not_present element/)
+          end
+        end
+      end
+
+      context "with options given" do
+        subject { render_element(element, locals: {some: "thing"}) }
+
+        it "passes them into the view" do
+          is_expected.to match(/thing/)
+        end
+      end
+
+      context "with counter given" do
+        subject { render_element(element, {}, 2) }
+
+        it "passes them into the view" do
+          is_expected.to match(/2\./)
+        end
+      end
+
+      context "with partial given" do
+        subject { render_element(element, partial: "laiss_cms/elements/other_headline") }
+
+        it "renders the differing partial" do
+          is_expected.to match(/<h3/)
+        end
+      end
+    end
+
+    describe "#render_elements" do
+      subject { helper.render_elements(options) }
+
+      let(:page) { create(:laiss_cms_page, :public) }
+
+      let!(:element) do
+        create(:laiss_cms_element, name: "headline", page_version: page.public_version).tap do |element|
+          LaissCms::Ingredients::Headline.create!(element: element, role: "headline", value: "Hello Headline")
+        end
+      end
+
+      let!(:another_element) do
+        create(:laiss_cms_element, name: "article", page_version: page.public_version).tap do |element|
+          LaissCms::Ingredients::Text.create!(element: element, role: "intro", value: "Hello Intro")
+        end
+      end
+
+      context "without any options" do
+        let(:options) { {} }
+
+        context "with Current.page set" do
+          before { Current.page = page }
+
+          it "should render all elements from current pages public version." do
+            is_expected.to have_selector("h1", text: "Hello Headline")
+            is_expected.to have_selector(".intro", text: "Hello Intro")
+          end
+        end
+
+        context "with Current.page not set" do
+          before { Current.page = nil }
+
+          it "should not render any elements." do
+            is_expected.to be_empty
+          end
+
+          context "but with @page set" do
+            before { helper.instance_variable_set(:@page, page) }
+
+            it "should render all elements from current pages public version." do
+              is_expected.to have_selector("h1", text: "Hello Headline")
+              is_expected.to have_selector(".intro", text: "Hello Intro")
+            end
+          end
+        end
+
+        context "in preview_mode" do
+          let!(:draft_element) do
+            create(:laiss_cms_element, name: "headline", page_version: page.draft_version).tap do |element|
+              LaissCms::Ingredients::Headline.create!(element: element, role: "headline", value: "Hello Draft Headline")
+            end
+          end
+
+          include_context "in preview mode"
+
+          it "page draft version is used" do
+            is_expected.to have_selector("h1", text: "Hello Draft Headline")
+          end
+        end
+      end
+
+      context "with a block" do
+        subject do
+          helper.render_elements(separator: ", ") do |element|
+            element.name
+          end
+        end
+
+        it "renders the block" do
+          is_expected.to be_a(ActiveSupport::SafeBuffer)
+          is_expected.to eq("headline, article")
+        end
+      end
+
+      context "with from_page option" do
+        context "is a page object" do
+          let(:another_page) { create(:laiss_cms_page, :public) }
+
+          let(:options) do
+            {from_page: another_page}
+          end
+
+          let!(:element) do
+            create(:laiss_cms_element, name: "headline", page_version: another_page.public_version).tap do |element|
+              LaissCms::Ingredients::Headline.create!(element: element, role: "headline", value: "Hello Headline")
+            end
+          end
+
+          let!(:another_element) do
+            create(:laiss_cms_element, name: "article", page_version: another_page.public_version).tap do |element|
+              LaissCms::Ingredients::Text.create!(element: element, role: "intro", value: "Hello Intro")
+            end
+          end
+
+          it "should render all elements from that page." do
+            is_expected.to have_selector("h1", text: "Hello Headline")
+            is_expected.to have_selector(".intro", text: "Hello Intro")
+          end
+
+          context "in preview_mode" do
+            let!(:draft_element) do
+              create(:laiss_cms_element, name: "headline", page_version: another_page.draft_version).tap do |element|
+                LaissCms::Ingredients::Headline.create!(element: element, role: "headline", value: "Hello Draft Headline")
+              end
+            end
+
+            include_context "in preview mode" do
+              let(:page) { another_page }
+            end
+
+            it "page draft version is used" do
+              is_expected.to have_selector("h1", text: "Hello Draft Headline")
+            end
+          end
+        end
+
+        context "if from_page is nil" do
+          let(:options) do
+            {from_page: nil}
+          end
+
+          it { is_expected.to be_empty }
+        end
+      end
+
+      context "with option separator given" do
+        let(:options) { {separator: "<hr>"} }
+
+        it "joins element partials with given string" do
+          is_expected.to have_selector("hr")
+        end
+      end
+
+      context "with custom elements finder" do
+        let(:options) do
+          {finder: CustomNewsElementsFinder.new}
+        end
+
+        it "uses that to load elements to render" do
+          is_expected.to have_selector("h2", text: "Breaking News")
+          is_expected.to have_selector(".body p", text: "This is a breaking news story.")
+        end
+      end
+
+      context "with locals option" do
+        let(:options) do
+          {locals: {foo: :bar}}
+        end
+
+        it "sends locals with every #render_element call" do
+          expect(helper).to receive(:render).with(
+            partial: element.to_partial_path,
+            object: element,
+            locals: {element: element, counter: 1, options: {from_page: page, render_format: "html"}, foo: :bar}
+          )
+          expect(helper).to receive(:render).with(
+            partial: another_element.to_partial_path,
+            object: another_element,
+            locals: {element: another_element, counter: 2, options: {from_page: page, render_format: "html"}, foo: :bar}
+          )
+
+          subject
+        end
+      end
+    end
+
+    describe "#element_preview_code_attributes" do
+      subject { helper.element_preview_code_attributes(element) }
+
+      context "in preview_mode" do
+        include_context "in preview mode" do
+          let(:page) { element.page }
+        end
+
+        it "should return the data-laiss-cms-element HTML attribute for element" do
+          is_expected.to eq({"data-laiss-cms-element" => element.id})
+        end
+      end
+
+      context "not in preview_mode" do
+        it "should return an empty hash" do
+          is_expected.to eq({})
+        end
+      end
+    end
+
+    describe "#element_preview_code" do
+      subject { helper.element_preview_code(element) }
+
+      context "in preview_mode" do
+        include_context "in preview mode" do
+          let(:page) { element.page }
+        end
+
+        it "should return the data-laiss-cms-element HTML attribute for element" do
+          is_expected.to eq(" data-laiss-cms-element=\"#{element.id}\"")
+        end
+      end
+
+      context "not in preview_mode" do
+        it "should not return the data-laiss-cms-element HTML attribute" do
+          is_expected.not_to eq(" data-laiss-cms-element=\"#{element.id}\"")
+        end
+      end
+    end
+
+    describe "#element_tags" do
+      subject { element_tags(element, options) }
+
+      let(:element) { create(:laiss_cms_element, name: "article") }
+      let(:options) { {} }
+
+      context "element having tags" do
+        before { element.update!(tag_list: "peter, lustig") }
+
+        context "with no formatter lambda given" do
+          it "should return tag list as HTML data attribute" do
+            is_expected.to eq(" data-element-tags=\"peter lustig\"")
+          end
+        end
+
+        context "with a formatter lambda given" do
+          let(:options) { {formatter: ->(tags) { tags.join ", " }} }
+
+          it "should return a properly formatted HTML data attribute" do
+            is_expected.to eq(" data-element-tags=\"peter, lustig\"")
+          end
+        end
+      end
+
+      context "element not having tags" do
+        it { is_expected.to be_blank }
+      end
+
+      context "for several persisted taggable elements without tags" do
+        before { create_list(:laiss_cms_element, 3, name: "article") }
+
+        it "issues no tag queries" do
+          elements = LaissCms::Element.all.to_a
+          tag_queries = 0
+          sub = ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
+            payload = args.last
+            next if payload[:cached]
+            tag_queries += 1 if /FROM ["`]?gutentag_(tags|taggings)["`]?/i.match?(payload[:sql])
+          end
+          elements.each { |el| element_tags_attributes(el) }
+          ActiveSupport::Notifications.unsubscribe(sub)
+          expect(tag_queries).to eq(0)
+        end
+      end
+
+      context "for a persisted taggable element with tags" do
+        before { create(:laiss_cms_element, name: "article", tag_list: "red, yellow") }
+
+        it "renders the tags from the cache without a tag query" do
+          element = LaissCms::Element.last
+          tag_queries = 0
+          sub = ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
+            payload = args.last
+            next if payload[:cached]
+            tag_queries += 1 if /FROM ["`]?gutentag_(tags|taggings)["`]?/i.match?(payload[:sql])
+          end
+          result = element_tags_attributes(element)
+          ActiveSupport::Notifications.unsubscribe(sub)
+          expect(result).to eq("data-element-tags" => "red yellow")
+          expect(tag_queries).to eq(0)
+        end
+      end
+    end
+  end
+end

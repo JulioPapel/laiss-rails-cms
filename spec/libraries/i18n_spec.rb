@@ -2,19 +2,19 @@
 
 require "rails_helper"
 
-module Alchemy
+module LaissCms
   describe ".t" do
-    it "scopes translations intro alchemy namespace" do
-      expect(::I18n).to receive(:t).with(:foo, default: "Foo", scope: ["alchemy"])
-      ::Alchemy.t(:foo)
+    it "scopes translations intro laiss_cms namespace" do
+      expect(::I18n).to receive(:t).with(:foo, default: "Foo", scope: ["laiss_cms"])
+      ::LaissCms.t(:foo)
     end
   end
 
   describe ".l" do
-    it "delegates to Alchemy::I18n.localize" do
+    it "delegates to LaissCms::I18n.localize" do
       time = Time.current
-      expect(Alchemy::I18n).to receive(:localize).with(time, format: "foo")
-      Alchemy.l(time, format: "foo")
+      expect(LaissCms::I18n).to receive(:localize).with(time, format: "foo")
+      LaissCms.l(time, format: "foo")
     end
   end
 
@@ -40,7 +40,7 @@ module Alchemy
       context "when locales are present in other gems" do
         before do
           expect(::I18n).to receive(:load_path) do
-            ["/Users/tvd/gems/alchemy_i18n/config/locales/alchemy.de.yml"]
+            ["/Users/tvd/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"]
           end
         end
 
@@ -53,8 +53,8 @@ module Alchemy
         before do
           expect(::I18n).to receive(:load_path) do
             [
-              "/Users/tvd/gems/alchemy-devise/config/locales/alchemy.de.yml",
-              "/Users/tvd/gems/alchemy_i18n/config/locales/alchemy.de.yml"
+              "/Users/tvd/gems/laiss-cms-devise/config/locales/laiss_cms.de.yml",
+              "/Users/tvd/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"
             ]
           end
         end
@@ -67,7 +67,7 @@ module Alchemy
       context "when locales have long iso format" do
         before do
           expect(::I18n).to receive(:load_path) do
-            ["/Users/tvd/gems/alchemy_i18n/config/locales/alchemy.zh-CN.yml"]
+            ["/Users/tvd/gems/laiss_cms_i18n/config/locales/laiss_cms.zh-CN.yml"]
           end
         end
 
@@ -80,8 +80,8 @@ module Alchemy
         before do
           expect(::I18n).to receive(:load_path) do
             [
-              "/Users/tvd/gems/alchemy_i18n/config/locales/alchemy.zh-CN.yml",
-              "/Users/tvd/gems/alchemy_i18n/config/locales/alchemy.de.yml"
+              "/Users/tvd/gems/laiss_cms_i18n/config/locales/laiss_cms.zh-CN.yml",
+              "/Users/tvd/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"
             ]
           end
         end
@@ -100,18 +100,18 @@ module Alchemy
     end
 
     describe ".localize" do
-      subject(:localize) { Alchemy::I18n.localize(date) }
+      subject(:localize) { LaissCms::I18n.localize(date) }
 
       let(:date) { Date.new(2026, 9, 22) }
 
       context "with just a date given" do
-        it "localizes by default alchemy date format" do
+        it "localizes by default laiss_cms date format" do
           is_expected.to eq("2026-09-22")
         end
       end
 
       context "with date and format given" do
-        subject(:localize) { Alchemy::I18n.localize(date, format: ":foo") }
+        subject(:localize) { LaissCms::I18n.localize(date, format: ":foo") }
 
         it "localizes by given format" do
           is_expected.to eq(":foo")
@@ -121,7 +121,7 @@ module Alchemy
       context "with time given" do
         let(:date) { Time.new(2026, 9, 22, 11, 43, 0, 0) }
 
-        it "localizes with default alchemy time format" do
+        it "localizes with default laiss_cms time format" do
           is_expected.to eq("22-09-2026 11:43am")
         end
       end

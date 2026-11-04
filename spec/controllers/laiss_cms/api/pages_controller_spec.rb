@@ -1,0 +1,509 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+module LaissCms
+  describe Api::PagesController do
+    routes { LaissCms::Engine.routes }
+
+    describe "#index" do
+      let(:result) { JSON.parse(response.body) }
+
+      context "without a default language present" do
+        it "returns JSON" do
+          get :index, params: {format: :json}
+          expect(result["pages"]).to eq([])
+        end
+      end
+
+      context "with a default language and a page present" do
+        let!(:default_language) { create(:laiss_cms_language, :english, default: true) }
+        let!(:page) { create(:laiss_cms_page, :public, language: default_language) }
+
+        it "returns JSON" do
+          get :index, params: {format: :json}
+
+          expect(response.status).to eq(200)
+          expect(response.media_type).to eq("application/json")
+          expect(result).to have_key("pages")
+        end
+
+        it "returns all public pages" do
+          get :index, params: {format: :json}
+
+          expect(result["pages"].size).to eq(2)
+        end
+
+        context "as author" do
+          before do
+            authorize_user(build(:laiss_cms_dummy_user, :as_author))
+          end
+
+          it "returns all pages" do
+            get :index, params: {format: :json}
+
+            expect(result["pages"].size).to eq(LaissCms::Page.count)
+          end
+        end
+
+        it "includes meta data" do
+          get :index, params: {format: :json}
+
+          expect(result["pages"].size).to eq(2)
+          expect(result["meta"]["page"]).to be_nil
+          expect(result["meta"]["per_page"]).to eq(2)
+          expect(result["meta"]["total_count"]).to eq(2)
+        end
+
+        context "with page param given" do
+          let!(:page1) { create(:laiss_cms_page, language: default_language) }
+          let!(:page2) { create(:laiss_cms_page, language: default_language) }
+
+          before do
+            expect(Kaminari.config).to receive(:default_per_page).at_least(:once) { 1 }
+          end
+
+          it "returns paginated result" do
+            get :index, params: {page: 2, format: :json}
+
+            expect(result["pages"].size).to eq(1)
+            expect(result["meta"]["page"]).to eq(2)
+            expect(result["meta"]["per_page"]).to eq(1)
+            expect(result["meta"]["total_count"]).to eq(2)
+          end
+        end
+
+        context "with ransack query param given" do
+          it "returns filtered result" do
+            get :index, params: {q: {name_eq: page.name}, format: :json}
+
+            expect(result["pages"].size).to eq(1)
+          end
+        end
+
+        context "with multiple sites" do
+          let(:site_2) { create(:laiss_cms_site) }
+          let(:language_2) { create(:laiss_cms_language, site: site_2) }
+          let!(:site_2_page) { create(:laiss_cms_page, :public, language: language_2) }
+          let!(:unpublished_page) { create(:laiss_cms_page, language: default_language) }
+          let!(:restricted_page) { create(:laiss_cms_page, :public, :restricted, language: default_language) }
+          let!(:role_restricted_page) do
+            create(:laiss_cms_page, :public, restricted: true, permitted_roles: %w[restricted_test],
+              name: "Role restricted", language: default_language)
+          end
+
+          context "as guest user" do
+            it "only returns published unrestricted pages for current site" do
+              get :index, format: :json
+              expect(result["pages"].map { |r| r["id"] }).to match_array([
+                page.parent_id,
+                page.id
+              ])
+            end
+          end
+
+          context "as member user" do
+            before do
+              authorize_user(build(:laiss_cms_dummy_user, :as_member))
+            end
+
+            it "returns published pages readable by the member role, but not those restricted to another role" do
+              get :index, format: :json
+              expect(result["pages"].map { |r| r["id"] }).to match_array([
+                page.parent_id,
+                page.id,
+                restricted_page.id
+              ])
+            end
+          end
+
+          context "as member user with an additional role" do
+            before do
+              authorize_user(build(:laiss_cms_dummy_user, laiss_cms_roles: %w[member restricted_test]))
+            end
+
+            it "also returns pages restricted to that role" do
+              get :index, format: :json
+              expect(result["pages"].map { |r| r["id"] }).to match_array([
+                page.parent_id,
+                page.id,
+                restricted_page.id,
+                role_restricted_page.id
+              ])
+            end
+          end
+
+          context "as author user" do
+            before do
+              authorize_user(build(:laiss_cms_dummy_user, :as_author))
+            end
+
+            it "returns all pages" do
+              get :index, format: :json
+              expect(result["pages"].map { |r| r["id"] }).to match_array(LaissCms::Page.pluck(:id))
+            end
+          end
+        end
+      end
+
+      describe "#nested" do
+        let!(:page) { create(:laiss_cms_page, :public, page_layout: "contact") }
+
+        it "returns all pages as nested json tree without admin related infos", :aggregate_failures do
+          get :nested, params: {format: :json}
+
+          expect(response.status).to eq(200)
+          expect(response.media_type).to eq("application/json")
+
+          result = JSON.parse(response.body)
+
+          expect(result).to have_key("pages")
+          expect(result["pages"].size).to eq(1)
+          expect(result["pages"][0]).to have_key("children")
+          expect(result["pages"][0]["children"].size).to eq(1)
+
+          child = result["pages"][0]["children"][0]
+
+          expect(child["name"]).to eq(page.name)
+          expect(child).to_not have_key("definition_missing")
+          expect(child).to_not have_key("folded")
+          expect(child).to_not have_key("locked")
+          expect(child).to_not have_key("permissions")
+          expect(child).to_not have_key("status_titles")
+        end
+
+        context "as author" do
+          before do
+            authorize_user(build(:laiss_cms_dummy_user, :as_author))
+          end
+
+          it "returns all pages as nested json tree with admin related infos", :aggregate_failures do
+            get :nested, params: {format: :json}
+
+            expect(response.status).to eq(200)
+            expect(response.media_type).to eq("application/json")
+
+            result = JSON.parse(response.body)
+
+            expect(result).to have_key("pages")
+            expect(result["pages"].size).to eq(1)
+            expect(result["pages"][0]).to have_key("children")
+            expect(result["pages"][0]["children"].size).to eq(1)
+
+            child = result["pages"][0]["children"][0]
+
+            expect(child["name"]).to eq(page.name)
+            expect(child).to have_key("definition_missing")
+            expect(child).to have_key("folded")
+            expect(child).to have_key("locked")
+            expect(child).to have_key("permissions")
+            expect(child).to have_key("status_titles")
+          end
+        end
+
+        context "with restricted and unpublished pages in the tree" do
+          let!(:restricted_page) do
+            create(:laiss_cms_page, :public, :restricted, name: "Restricted")
+          end
+
+          let!(:unpublished_page) do
+            create(:laiss_cms_page, name: "Unpublished")
+          end
+
+          def page_names(result)
+            names = []
+            collect = ->(pages) do
+              pages.each do |p|
+                names << p["name"]
+                collect.call(p["children"])
+              end
+            end
+            collect.call(result["pages"])
+            names
+          end
+
+          context "as a guest user" do
+            it "does not leak restricted pages" do
+              get :nested, params: {format: :json}
+
+              result = JSON.parse(response.body)
+              expect(page_names(result)).to_not include("Restricted")
+            end
+
+            it "does not leak unpublished pages" do
+              get :nested, params: {format: :json}
+
+              result = JSON.parse(response.body)
+              expect(page_names(result)).to_not include("Unpublished")
+            end
+
+            it "does not leak restricted page content via elements=true" do
+              element = create(
+                :laiss_cms_element,
+                name: "article",
+                page: restricted_page,
+                page_version: restricted_page.public_version
+              )
+              create(
+                :laiss_cms_ingredient_text,
+                element: element,
+                role: "intro",
+                value: "TOPSECRET_RESTRICTED_BODY_proof123"
+              )
+
+              get :nested, params: {elements: "true", format: :json}
+
+              expect(response.body).to_not include("TOPSECRET_RESTRICTED_BODY_proof123")
+            end
+
+            it "denies access to a restricted page requested by page_id" do
+              get :nested, params: {page_id: restricted_page.id, format: :json}
+
+              expect(response.status).to eq(403)
+            end
+          end
+
+          context "as author" do
+            before do
+              authorize_user(build(:laiss_cms_dummy_user, :as_author))
+            end
+
+            it "still returns restricted and unpublished pages" do
+              get :nested, params: {format: :json}
+
+              result = JSON.parse(response.body)
+              expect(page_names(result)).to include("Restricted", "Unpublished")
+            end
+
+            it "returns restricted page content via elements=true" do
+              element = create(
+                :laiss_cms_element,
+                name: "article",
+                page: restricted_page,
+                page_version: restricted_page.public_version
+              )
+              create(
+                :laiss_cms_ingredient_text,
+                element: element,
+                role: "intro",
+                value: "TOPSECRET_RESTRICTED_BODY_proof123"
+              )
+
+              get :nested, params: {elements: "true", format: :json}
+
+              expect(response.body).to include("TOPSECRET_RESTRICTED_BODY_proof123")
+            end
+          end
+        end
+
+        context "when a page_id is passed" do
+          it "returns all pages as nested json from this page only" do
+            get :nested, params: {page_id: page.id, format: :json}
+
+            expect(response.status).to eq(200)
+            expect(response.media_type).to eq("application/json")
+
+            result = JSON.parse(response.body)
+
+            expect(result).to have_key("pages")
+            expect(result["pages"][0]["name"]).to eq(page.name)
+          end
+        end
+
+        context "when `elements=true` is passed" do
+          it "returns all pages as nested json tree with elements included" do
+            get :nested, params: {elements: "true", format: :json}
+
+            expect(response.status).to eq(200)
+            expect(response.media_type).to eq("application/json")
+
+            result = JSON.parse(response.body)
+
+            expect(result).to have_key("pages")
+            expect(result["pages"][0]).to have_key("elements")
+          end
+        end
+
+        context "when elements is a comma separated list of element names" do
+          before do
+            %i[headline text contactform].map do |name|
+              create(:laiss_cms_element, name: name, page: page, page_version: page.public_version)
+            end
+          end
+
+          it "returns all pages as nested json tree with only these elements included" do
+            get :nested, params: {elements: "headline,text", format: :json}
+
+            result = JSON.parse(response.body)
+
+            elements = result["pages"][0]["children"][0]["elements"]
+            element_names = elements.collect { |element| element["name"] }
+            expect(element_names).to include("headline", "text")
+            expect(element_names).to_not include("contactform")
+          end
+        end
+      end
+    end
+
+    describe "#show" do
+      context "for existing page" do
+        let(:page) { create(:laiss_cms_page, :public, urlname: "a-page") }
+
+        it "returns page as json" do
+          get :show, params: {urlname: page.urlname, format: :json}
+
+          expect(response.status).to eq(200)
+          expect(response.media_type).to eq("application/json")
+
+          result = JSON.parse(response.body)
+
+          expect(result["id"]).to eq(page.id)
+          expect(result["url_path"]).to eq("/a-page")
+        end
+
+        context "requesting an restricted page" do
+          let(:page) { create(:laiss_cms_page, restricted: true, urlname: "a-page") }
+
+          it "responds with 403" do
+            get :show, params: {urlname: page.urlname, format: :json}
+
+            expect(response.status).to eq(403)
+            expect(response.media_type).to eq("application/json")
+
+            result = JSON.parse(response.body)
+
+            expect(result).to have_key("error")
+            expect(result["error"]).to eq("Not authorized")
+          end
+        end
+
+        context "requesting a not public page" do
+          let(:page) { create(:laiss_cms_page, urlname: "a-page") }
+
+          it "responds with 403" do
+            get :show, params: {urlname: page.urlname, format: :json}
+
+            expect(response.status).to eq(403)
+            expect(response.media_type).to eq("application/json")
+
+            result = JSON.parse(response.body)
+
+            expect(result).to have_key("error")
+            expect(result["error"]).to eq("Not authorized")
+          end
+        end
+      end
+
+      context "requesting an unknown page" do
+        it "responds with 404" do
+          get :show, params: {urlname: "not-existing", format: :json}
+
+          expect(response.status).to eq(404)
+          expect(response.media_type).to eq("application/json")
+
+          result = JSON.parse(response.body)
+
+          expect(result).to have_key("error")
+          expect(result["error"]).to eq("Record not found")
+        end
+
+        context "because of requesting not existing language" do
+          let(:page) { create(:laiss_cms_page, :public) }
+
+          it "responds with 404" do
+            get :show, params: {urlname: page.urlname, locale: "na", format: :json}
+            expect(response.status).to eq(404)
+          end
+        end
+      end
+
+      context "requesting a page with id" do
+        let(:page) { create(:laiss_cms_page, :public) }
+
+        it "responds with json" do
+          get :show, params: {urlname: page.id, format: :json}
+
+          expect(response.status).to eq(200)
+          expect(response.media_type).to eq("application/json")
+
+          result = JSON.parse(response.body)
+
+          expect(result["id"]).to eq(page.id)
+        end
+      end
+
+      context "in an environment with multiple languages" do
+        let!(:default_language) { create(:laiss_cms_language, :english, default: true) }
+        let(:klingon) { create(:laiss_cms_language, :klingon) }
+
+        context "having two pages with the same url names in different languages" do
+          let!(:english_page) { create(:laiss_cms_page, :public, language: default_language, name: "same-name") }
+          let!(:klingon_page) { create(:laiss_cms_page, :public, language: klingon, name: "same-name") }
+
+          context "when a locale is given" do
+            it "renders the page related to its language" do
+              get :show, params: {urlname: "same-name", locale: klingon_page.language_code, format: :json}
+              result = JSON.parse(response.body)
+              expect(result["id"]).to eq(klingon_page.id)
+            end
+          end
+
+          context "when no locale is given" do
+            it "renders the page of the default language" do
+              get :show, params: {urlname: "same-name", format: :json}
+              result = JSON.parse(response.body)
+              expect(result["id"]).to eq(english_page.id)
+            end
+          end
+        end
+      end
+    end
+
+    describe "#move" do
+      let!(:root_page) { create(:laiss_cms_page, :language_root) }
+      let!(:page) { create(:laiss_cms_page, parent: root_page) }
+      let!(:page_2) { create(:laiss_cms_page, parent: root_page) }
+      let!(:page_3) { create(:laiss_cms_page, parent: root_page) }
+
+      context "with authorized access" do
+        before do
+          authorize_user(:as_admin)
+        end
+
+        it "returns JSON and moves the page" do
+          expect(page.children).to be_empty
+          expect(page_3.lft).to eq(6)
+          patch :move, params: {id: page_3, target_parent_id: page.id, new_position: 0, format: :json}
+          expect(response.status).to eq(200)
+          response_json = JSON.parse(response.body)
+          expect(response_json["parent_id"]).to eq(page.id)
+          expect(response_json["url_path"]).to eq(page_3.reload.url_path)
+          expect(page.children).to include(page_3)
+        end
+
+        context "when moving causes error" do
+          it "returns JSON with error message" do
+            allow_any_instance_of(LaissCms::Page).to receive(:move_to_child_with_index).and_raise(CollectiveIdea::Acts::NestedSet::Move::ImpossibleMove.new("Impossible move"))
+            patch :move, params: {id: page_3, target_parent_id: page.id, new_position: 0, format: :json}
+            expect(response.status).to eq(422)
+            response_json = JSON.parse(response.body)
+            expect(response_json["message"]).to eq("Impossible move")
+          end
+        end
+      end
+
+      context "with unauthorized access" do
+        before do
+          authorize_user
+        end
+
+        it "returns an unauthorized error" do
+          patch :move, params: {id: page_3, target_parent_id: page.id, new_position: 0, format: :json}
+          expect(response).to be_forbidden
+          response_json = JSON.parse(response.body)
+          expect(response_json["error"]).to eq("Not authorized")
+        end
+      end
+    end
+  end
+end

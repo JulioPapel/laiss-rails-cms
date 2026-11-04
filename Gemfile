@@ -15,15 +15,15 @@ if ENV["DB"] == "mysql" || ENV["DB"] == "mariadb"
 end
 gem "pg", "~> 1.0" if ENV["DB"] == "postgresql"
 
-gem "alchemy_i18n", path: "i18n"
+gem "laiss_cms_i18n", path: "i18n"
 
 # Devise based authentication for the dummy app, so auth can be exercised
-# against local Alchemy core changes. The dummy app only requires it in
+# against local LaissCms core changes. The dummy app only requires it in
 # development and for the devise specs, because the core specs use the
 # DummyUser stub instead.
-gem "alchemy-devise", path: "devise", require: false
+gem "laiss-cms-devise", path: "devise", require: false
 
-if ENV.fetch("ALCHEMY_STORAGE_ADAPTER", "active_storage") == "active_storage"
+if ENV.fetch("LAISS_CMS_STORAGE_ADAPTER", "active_storage") == "active_storage"
   gem "ruby-vips"
 else
   gem "dragonfly", "~> 1.4"

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= LaissCms.t("Welcome to LaissCms") %></title>
+    <%= stylesheet_link_tag("laiss_cms/welcome", media: "all") %>
+  </head>
+  <body>
+    <div class="container">
+      <%= image_tag("laiss_cms/laiss-cms-logo.svg") %>
+      <% if @page.nil? %>
+        <h3>
+          <%= LaissCms.t("There are no pages yet") %>
+        </h3>
+        <p>
+          <%= link_to LaissCms.t("Create your first page"),
+            laiss_cms.admin_pages_path, class: "button" %>
+        </p>
+      <% else %>
+        <h3>
+          <%= LaissCms.t("There are no published pages yet") %>
+        </h3>
+        <p>
+          <%= link_to LaissCms.t("Publish your homepage"),
+            laiss_cms.edit_admin_page_path(@page), class: "button" %>
+        </p>
+      <% end %>
+    </div>
+  </body>
+</html>

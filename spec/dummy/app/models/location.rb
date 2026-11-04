@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class Location < ActiveRecord::Base
-  extend Alchemy::SearchableResource
-  include Alchemy::Taggable
+  extend LaissCms::SearchableResource
+  include LaissCms::Taggable
 
   has_many :events
 

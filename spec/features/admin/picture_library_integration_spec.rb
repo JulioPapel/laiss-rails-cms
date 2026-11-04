@@ -7,15 +7,15 @@ RSpec.describe "Picture Library", type: :system do
     authorize_user(:as_admin)
   end
 
-  let!(:language) { create(:alchemy_language) }
+  let!(:language) { create(:laiss_cms_language) }
 
   describe "Editing multiple pictures" do
-    let!(:picture_1) { create(:alchemy_picture, name: "Picture 1") }
-    let!(:picture_2) { create(:alchemy_picture, name: "Picture 2") }
-    let!(:picture_3) { create(:alchemy_picture, name: "Picture 3") }
+    let!(:picture_1) { create(:laiss_cms_picture, name: "Picture 1") }
+    let!(:picture_2) { create(:laiss_cms_picture, name: "Picture 2") }
+    let!(:picture_3) { create(:laiss_cms_picture, name: "Picture 3") }
 
     scenario "allows to select multiple pictures and edit them", :js do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
 
       find("#picture_#{picture_1.id}").hover
       find("#picture_#{picture_1.id} .select > input[type='checkbox']").check
@@ -26,7 +26,7 @@ RSpec.describe "Picture Library", type: :system do
 
       click_on "edit_multiple_pictures"
 
-      within ".alchemy-dialog" do
+      within ".laiss-cms-dialog" do
         add_tom_select_tag("newtag", from: "Tags")
         click_button "Save"
       end
@@ -45,12 +45,12 @@ RSpec.describe "Picture Library", type: :system do
   end
 
   describe "Editing multiple pictures" do
-    let!(:picture_1) { create(:alchemy_picture, name: "Picture 1") }
-    let!(:picture_2) { create(:alchemy_picture, name: "Picture 2") }
-    let!(:picture_3) { create(:alchemy_picture, name: "Picture 3") }
+    let!(:picture_1) { create(:laiss_cms_picture, name: "Picture 1") }
+    let!(:picture_2) { create(:laiss_cms_picture, name: "Picture 2") }
+    let!(:picture_3) { create(:laiss_cms_picture, name: "Picture 3") }
 
     scenario "keeps existing params", :js do
-      visit alchemy.admin_pictures_path(size: "large", q: {without_tag: 1})
+      visit laiss_cms.admin_pictures_path(size: "large", q: {without_tag: 1})
 
       find("#picture_#{picture_1.id}").hover
       find("#picture_#{picture_1.id} .select > input[type='checkbox']").check
@@ -61,7 +61,7 @@ RSpec.describe "Picture Library", type: :system do
 
       click_on "edit_multiple_pictures"
 
-      within ".alchemy-dialog" do
+      within ".laiss-cms-dialog" do
         add_tom_select_tag("newtag", from: "Tags")
         click_button "Save"
       end
@@ -79,12 +79,12 @@ RSpec.describe "Picture Library", type: :system do
   end
 
   describe "Deleting multiple pictures" do
-    let!(:picture_1) { create(:alchemy_picture, name: "Picture 1") }
-    let!(:picture_2) { create(:alchemy_picture, name: "Picture 2") }
-    let!(:picture_3) { create(:alchemy_picture, name: "Picture 3") }
+    let!(:picture_1) { create(:laiss_cms_picture, name: "Picture 1") }
+    let!(:picture_2) { create(:laiss_cms_picture, name: "Picture 2") }
+    let!(:picture_3) { create(:laiss_cms_picture, name: "Picture 3") }
 
     scenario "keeps existing params", :js do
-      visit alchemy.admin_pictures_path(size: "large", q: {without_tag: 1})
+      visit laiss_cms.admin_pictures_path(size: "large", q: {without_tag: 1})
 
       find("#picture_#{picture_1.id}").hover
       find("#picture_#{picture_1.id} .select > input[type='checkbox']").check
@@ -113,11 +113,11 @@ RSpec.describe "Picture Library", type: :system do
   end
 
   describe "Tagging" do
-    let!(:picture_1) { create(:alchemy_picture, tag_list: "tag1", name: "TaggedWith1") }
-    let!(:picture_2) { create(:alchemy_picture, tag_list: "tag2", name: "TaggedWith2") }
+    let!(:picture_1) { create(:laiss_cms_picture, tag_list: "tag1", name: "TaggedWith1") }
+    let!(:picture_2) { create(:laiss_cms_picture, tag_list: "tag2", name: "TaggedWith2") }
 
     scenario "it's possible to filter tags by clicking on its name in the tag list." do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
 
       click_on "tag1 (1)"
 
@@ -126,7 +126,7 @@ RSpec.describe "Picture Library", type: :system do
     end
 
     scenario "it's possible to undo tag filtering by clicking on an active tag name" do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
 
       click_on "tag1 (1)"
 
@@ -140,7 +140,7 @@ RSpec.describe "Picture Library", type: :system do
     end
 
     scenario "it's possible to tighten the tag scope by clicking on another tag name." do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
 
       click_on "tag1 (1)"
       click_on "tag2 (1)"
@@ -150,16 +150,16 @@ RSpec.describe "Picture Library", type: :system do
   end
 
   describe "Filter by tag" do
-    let!(:picture) { create(:alchemy_picture, tag_list: "bla") }
+    let!(:picture) { create(:laiss_cms_picture, tag_list: "bla") }
 
     scenario "lists all applied tags." do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
 
       expect(page).to have_content("bla")
     end
 
     scenario "it's possible to filter pictures by tag." do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
 
       click_on "bla (1)"
 
@@ -168,11 +168,11 @@ RSpec.describe "Picture Library", type: :system do
   end
 
   describe "Filter by format" do
-    let!(:picture1) { create(:alchemy_picture, name: "Ping", image_file: fixture_file_upload("image.png")) }
-    let!(:picture2) { create(:alchemy_picture, name: "Jay Peg", image_file: fixture_file_upload("image3.jpeg")) }
+    let!(:picture1) { create(:laiss_cms_picture, name: "Ping", image_file: fixture_file_upload("image.png")) }
+    let!(:picture2) { create(:laiss_cms_picture, name: "Jay Peg", image_file: fixture_file_upload("image3.jpeg")) }
 
     scenario "it's possible to filter pictures by format.", :js do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
       tom_select "PNG", from: "File Type"
       within "#pictures" do
         expect(page).to have_content("Ping")
@@ -182,11 +182,11 @@ RSpec.describe "Picture Library", type: :system do
   end
 
   describe "Sorting pictures", :js do
-    let!(:picture_a) { create(:alchemy_picture, name: "A Picture", created_at: 2.days.ago) }
-    let!(:picture_b) { create(:alchemy_picture, name: "B Picture", created_at: 1.day.ago) }
+    let!(:picture_a) { create(:laiss_cms_picture, name: "A Picture", created_at: 2.days.ago) }
+    let!(:picture_b) { create(:laiss_cms_picture, name: "B Picture", created_at: 1.day.ago) }
 
     scenario "it sorts pictures by latest by default." do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
 
       within "#pictures" do
         expect(page).to have_css("div.picture_thumbnail:nth-child(1) .picture_name", text: "B Picture")
@@ -195,7 +195,7 @@ RSpec.describe "Picture Library", type: :system do
     end
 
     scenario "it's possible to sort pictures by name." do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
 
       select "A-Z", from: "Sorting"
       within "#pictures" do
@@ -206,10 +206,10 @@ RSpec.describe "Picture Library", type: :system do
   end
 
   describe "Picture descriptions", :js do
-    let!(:picture) { create(:alchemy_picture) }
+    let!(:picture) { create(:laiss_cms_picture) }
 
     scenario "allows to add a picture description" do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
       page.find(".picture_thumbnail > a").click
       expect(page).to have_field("Description")
       fill_in "Description", with: "This is an amazing image."
@@ -221,8 +221,8 @@ RSpec.describe "Picture Library", type: :system do
     end
 
     scenario "allows to add multi language picture descriptions" do
-      german = create(:alchemy_language, :german)
-      visit alchemy.admin_pictures_path
+      german = create(:laiss_cms_language, :german)
+      visit laiss_cms.admin_pictures_path
       page.find(".picture_thumbnail > a").click
       expect(page).to have_field("Description")
       fill_in "Description", with: "This is an amazing image."
@@ -248,11 +248,11 @@ RSpec.describe "Picture Library", type: :system do
   end
 
   describe "Updating Pictures", :js do
-    let!(:picture_a) { create(:alchemy_picture, name: "A Picture", created_at: 1.day.ago) }
-    let!(:picture_b) { create(:alchemy_picture, name: "B Picture", created_at: 2.days.ago) }
+    let!(:picture_a) { create(:laiss_cms_picture, name: "A Picture", created_at: 1.day.ago) }
+    let!(:picture_b) { create(:laiss_cms_picture, name: "B Picture", created_at: 2.days.ago) }
 
     scenario "allows to update a pictures name" do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
       page.find("#picture_#{picture_a.id} > a").click
       page.find(".next-picture").click
       expect(page).to have_field("Name", with: "B Picture")
@@ -269,12 +269,12 @@ RSpec.describe "Picture Library", type: :system do
   end
 
   describe "Navigating pictures in the image overlay", :js do
-    let!(:picture_a) { create(:alchemy_picture, name: "A Picture", created_at: 1.day.ago) }
-    let!(:picture_b) { create(:alchemy_picture, name: "B Picture", created_at: 2.days.ago) }
-    let!(:picture_c) { create(:alchemy_picture, name: "C Picture", created_at: 3.days.ago) }
+    let!(:picture_a) { create(:laiss_cms_picture, name: "A Picture", created_at: 1.day.ago) }
+    let!(:picture_b) { create(:laiss_cms_picture, name: "B Picture", created_at: 2.days.ago) }
+    let!(:picture_c) { create(:laiss_cms_picture, name: "C Picture", created_at: 3.days.ago) }
 
     scenario "pages through the pictures with the navigation buttons" do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
       page.find("#picture_#{picture_a.id} > a").click
 
       expect(page).to have_field("Name", with: "A Picture")
@@ -290,7 +290,7 @@ RSpec.describe "Picture Library", type: :system do
     end
 
     scenario "pages through the pictures with the arrow keys" do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
       page.find("#picture_#{picture_a.id} > a").click
 
       expect(page).to have_field("Name", with: "A Picture")
@@ -303,41 +303,41 @@ RSpec.describe "Picture Library", type: :system do
     end
 
     scenario "keeps the picture details toggle working after navigating" do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
       page.find("#picture_#{picture_a.id} > a").click
 
       page.find(".next-picture").click
       expect(page).to have_field("Name", with: "B Picture")
 
       page.find(".picture-overlay-handle").click
-      expect(page).to have_css(".alchemy-image-overlay-dialog.hide-form")
+      expect(page).to have_css(".laiss-cms-image-overlay-dialog.hide-form")
     end
   end
 
   describe "Opening a picture in the image overlay" do
-    let!(:picture) { create(:alchemy_picture, name: "Picture 1") }
+    let!(:picture) { create(:laiss_cms_picture, name: "Picture 1") }
 
     scenario "opens the overlay when clicking the thumbnail", :js do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
 
       find("#picture_#{picture.id} > a").click
 
-      expect(page).to have_css(".alchemy-image-overlay-container")
+      expect(page).to have_css(".laiss-cms-image-overlay-container")
     end
 
     scenario "opens the overlay when the focused link is activated with enter", :js do
-      visit alchemy.admin_pictures_path
+      visit laiss_cms.admin_pictures_path
 
       page.execute_script(<<~JS)
         document
-          .querySelector("#picture_#{picture.id} alchemy-picture-thumbnail")
+          .querySelector("#picture_#{picture.id} laiss-cms-picture-thumbnail")
           .closest("a")
           .focus()
       JS
       page.driver.browser.action.send_keys(:enter).perform
 
-      expect(page).to have_css(".alchemy-image-overlay-container")
-      expect(page).to have_current_path(alchemy.admin_pictures_path)
+      expect(page).to have_css(".laiss-cms-image-overlay-container")
+      expect(page).to have_current_path(laiss_cms.admin_pictures_path)
     end
   end
 end

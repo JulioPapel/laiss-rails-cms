@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "rails_helper"
-require "alchemy/shell"
+require "laiss_cms/shell"
 
-module Alchemy
+module LaissCms
   # Class fixture
   class MyToDoList
     extend Shell
@@ -66,7 +66,7 @@ module Alchemy
     end
 
     describe ".log" do
-      before { Alchemy::Shell.verbose! }
+      before { LaissCms::Shell.verbose! }
 
       context 'if the message type is "skip"' do
         it "the output color should be yellow and cleared again" do

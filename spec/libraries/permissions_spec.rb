@@ -3,31 +3,31 @@
 require "rails_helper"
 require "cancan/matchers"
 
-describe Alchemy::Permissions do
+describe LaissCms::Permissions do
   subject { ability }
 
-  let(:ability) { Alchemy::Permissions.new(user) }
-  let(:attachment) { mock_model(Alchemy::Attachment, restricted?: false) }
-  let(:restricted_attachment) { mock_model(Alchemy::Attachment, restricted?: true) }
-  let(:picture) { mock_model(Alchemy::Picture, restricted?: false) }
-  let(:restricted_picture) { mock_model(Alchemy::Picture, restricted?: true) }
-  let(:public_page) { build(:alchemy_page, :public, restricted: false) }
-  let(:unpublic_page) { build(:alchemy_page) }
-  let(:restricted_page) { build(:alchemy_page, :public, restricted: true) }
+  let(:ability) { LaissCms::Permissions.new(user) }
+  let(:attachment) { mock_model(LaissCms::Attachment, restricted?: false) }
+  let(:restricted_attachment) { mock_model(LaissCms::Attachment, restricted?: true) }
+  let(:picture) { mock_model(LaissCms::Picture, restricted?: false) }
+  let(:restricted_picture) { mock_model(LaissCms::Picture, restricted?: true) }
+  let(:public_page) { build(:laiss_cms_page, :public, restricted: false) }
+  let(:unpublic_page) { build(:laiss_cms_page) }
+  let(:restricted_page) { build(:laiss_cms_page, :public, restricted: true) }
   let(:role_restricted_page) do
-    build(:alchemy_page, :public, restricted: true, permitted_roles: %w[restricted_test])
+    build(:laiss_cms_page, :public, restricted: true, permitted_roles: %w[restricted_test])
   end
   let(:roleless_restricted_page) do
-    build(:alchemy_page, :public, restricted: true, permitted_roles: [])
+    build(:laiss_cms_page, :public, restricted: true, permitted_roles: [])
   end
-  let(:published_element) { mock_model(Alchemy::Element, restricted?: false, public?: true) }
-  let(:restricted_element) { mock_model(Alchemy::Element, restricted?: true, public?: true) }
-  let(:language) { build(:alchemy_language) }
-  let(:public_node) { build(:alchemy_node, name: nil, page: public_page) }
-  let(:external_node) { build(:alchemy_node, :with_url) }
-  let(:restricted_node) { build(:alchemy_node, name: nil, page: restricted_page) }
-  let(:role_restricted_node) { build(:alchemy_node, name: nil, page: role_restricted_page) }
-  let(:unpublished_node) { build(:alchemy_node, name: nil, page: unpublic_page) }
+  let(:published_element) { mock_model(LaissCms::Element, restricted?: false, public?: true) }
+  let(:restricted_element) { mock_model(LaissCms::Element, restricted?: true, public?: true) }
+  let(:language) { build(:laiss_cms_language) }
+  let(:public_node) { build(:laiss_cms_node, name: nil, page: public_page) }
+  let(:external_node) { build(:laiss_cms_node, :with_url) }
+  let(:restricted_node) { build(:laiss_cms_node, name: nil, page: restricted_page) }
+  let(:role_restricted_node) { build(:laiss_cms_node, name: nil, page: role_restricted_page) }
+  let(:unpublished_node) { build(:laiss_cms_node, name: nil, page: unpublic_page) }
 
   context "A guest user" do
     let(:user) { nil }
@@ -65,7 +65,7 @@ describe Alchemy::Permissions do
   end
 
   context "A member" do
-    let(:user) { build(:alchemy_dummy_user, :as_member) }
+    let(:user) { build(:laiss_cms_dummy_user, :as_member) }
 
     it "can download all attachments" do
       is_expected.to be_able_to(:download, attachment)
@@ -113,12 +113,12 @@ describe Alchemy::Permissions do
     end
 
     it "can query accessible pages" do
-      expect { Alchemy::Page.accessible_by(ability, :read).to_a }.to_not raise_error
+      expect { LaissCms::Page.accessible_by(ability, :read).to_a }.to_not raise_error
     end
   end
 
   context "A member with an additional role" do
-    let(:user) { build(:alchemy_dummy_user, alchemy_roles: %w[member restricted_test]) }
+    let(:user) { build(:laiss_cms_dummy_user, laiss_cms_roles: %w[member restricted_test]) }
 
     it "can visit pages restricted to any of their roles" do
       is_expected.to be_able_to(:show, public_page)
@@ -137,7 +137,7 @@ describe Alchemy::Permissions do
   end
 
   context "A user having only the additional role" do
-    let(:user) { build(:alchemy_dummy_user, alchemy_roles: %w[restricted_test]) }
+    let(:user) { build(:laiss_cms_dummy_user, laiss_cms_roles: %w[restricted_test]) }
 
     # Restricted roles grant access within the member rules. They do not
     # promote a user to a member on their own.
@@ -148,86 +148,86 @@ describe Alchemy::Permissions do
   end
 
   context "An author" do
-    let(:user) { build(:alchemy_dummy_user, :as_author) }
+    let(:user) { build(:laiss_cms_dummy_user, :as_author) }
 
     it "can leave the admin area" do
-      is_expected.to be_able_to(:leave, :alchemy_admin)
+      is_expected.to be_able_to(:leave, :laiss_cms_admin)
     end
 
     it "can visit the dashboard" do
-      is_expected.to be_able_to(:index, :alchemy_admin_dashboard)
-      is_expected.to be_able_to(:info, :alchemy_admin_dashboard)
+      is_expected.to be_able_to(:index, :laiss_cms_admin_dashboard)
+      is_expected.to be_able_to(:info, :laiss_cms_admin_dashboard)
     end
 
     it "can edit page content" do
       is_expected.to be_able_to(:show, unpublic_page)
-      is_expected.to be_able_to(:index, Alchemy::Page)
-      is_expected.to be_able_to(:info, Alchemy::Page)
-      is_expected.to be_able_to(:configure, Alchemy::Page)
-      is_expected.to be_able_to(:update, Alchemy::Page)
-      is_expected.to be_able_to(:fold, Alchemy::Page)
-      is_expected.to be_able_to(:link, Alchemy::Page)
-      is_expected.to be_able_to(:visit, Alchemy::Page)
-      is_expected.to be_able_to(:unlock, Alchemy::Page)
+      is_expected.to be_able_to(:index, LaissCms::Page)
+      is_expected.to be_able_to(:info, LaissCms::Page)
+      is_expected.to be_able_to(:configure, LaissCms::Page)
+      is_expected.to be_able_to(:update, LaissCms::Page)
+      is_expected.to be_able_to(:fold, LaissCms::Page)
+      is_expected.to be_able_to(:link, LaissCms::Page)
+      is_expected.to be_able_to(:visit, LaissCms::Page)
+      is_expected.to be_able_to(:unlock, LaissCms::Page)
     end
 
     it "can not publish pages" do
-      is_expected.to_not be_able_to(:publish, Alchemy::Page)
+      is_expected.to_not be_able_to(:publish, LaissCms::Page)
     end
 
     it "can manage elements" do
-      is_expected.to be_able_to(:manage, Alchemy::Element)
+      is_expected.to be_able_to(:manage, LaissCms::Element)
     end
 
     it "can see all attachments" do
-      is_expected.to be_able_to(:read, Alchemy::Attachment)
-      is_expected.to be_able_to(:download, Alchemy::Attachment)
+      is_expected.to be_able_to(:read, LaissCms::Attachment)
+      is_expected.to be_able_to(:download, LaissCms::Attachment)
     end
 
     it "can see all pictures" do
-      is_expected.to be_able_to(:read, Alchemy::Picture)
-      is_expected.to be_able_to(:url, Alchemy::Picture)
+      is_expected.to be_able_to(:read, LaissCms::Picture)
+      is_expected.to be_able_to(:url, LaissCms::Picture)
     end
 
     it "can manage ingredients" do
-      is_expected.to be_able_to(:manage, Alchemy::Ingredient)
+      is_expected.to be_able_to(:manage, LaissCms::Ingredient)
     end
 
     it "can manage the clipboard" do
-      is_expected.to be_able_to(:manage, :alchemy_admin_clipboard)
+      is_expected.to be_able_to(:manage, :laiss_cms_admin_clipboard)
     end
 
     it "can see tags" do
-      is_expected.to be_able_to(:read, Alchemy::Tag)
-      is_expected.to be_able_to(:autocomplete, Alchemy::Tag)
+      is_expected.to be_able_to(:read, LaissCms::Tag)
+      is_expected.to be_able_to(:autocomplete, LaissCms::Tag)
     end
 
     it "can index layoutpages" do
-      is_expected.to be_able_to(:index, :alchemy_admin_layoutpages)
+      is_expected.to be_able_to(:index, :laiss_cms_admin_layoutpages)
     end
   end
 
   context "An editor" do
-    let(:user) { build(:alchemy_dummy_user, :as_editor) }
+    let(:user) { build(:laiss_cms_dummy_user, :as_editor) }
 
     it "can manage pages" do
-      is_expected.to be_able_to(:copy, Alchemy::Page)
-      is_expected.to be_able_to(:copy_language_tree, Alchemy::Page)
-      is_expected.to be_able_to(:create, Alchemy::Page)
-      is_expected.to be_able_to(:destroy, Alchemy::Page)
-      is_expected.to be_able_to(:flush, Alchemy::Page)
-      is_expected.to be_able_to(:order, Alchemy::Page)
-      is_expected.to be_able_to(:switch_language, Alchemy::Page)
-      is_expected.to be_able_to(:switch, Alchemy::Language)
+      is_expected.to be_able_to(:copy, LaissCms::Page)
+      is_expected.to be_able_to(:copy_language_tree, LaissCms::Page)
+      is_expected.to be_able_to(:create, LaissCms::Page)
+      is_expected.to be_able_to(:destroy, LaissCms::Page)
+      is_expected.to be_able_to(:flush, LaissCms::Page)
+      is_expected.to be_able_to(:order, LaissCms::Page)
+      is_expected.to be_able_to(:switch_language, LaissCms::Page)
+      is_expected.to be_able_to(:switch, LaissCms::Language)
     end
 
     it "can update layoutpages" do
-      is_expected.to be_able_to(:update, :alchemy_admin_layoutpages)
+      is_expected.to be_able_to(:update, :laiss_cms_admin_layoutpages)
     end
 
     context "if page language is public" do
-      let(:language) { create(:alchemy_language, :german, public: true) }
-      let(:page) { create(:alchemy_page, language: language) }
+      let(:language) { create(:laiss_cms_language, :german, public: true) }
+      let(:page) { create(:laiss_cms_page, language: language) }
 
       it "can publish pages" do
         is_expected.to be_able_to(:publish, page)
@@ -235,8 +235,8 @@ describe Alchemy::Permissions do
     end
 
     context "if page language is not public" do
-      let(:language) { create(:alchemy_language, :german, public: false) }
-      let(:page) { create(:alchemy_page, language: language) }
+      let(:language) { create(:laiss_cms_language, :german, public: false) }
+      let(:page) { create(:laiss_cms_page, language: language) }
 
       it "cannot publish pages" do
         is_expected.to_not be_able_to(:publish, page)
@@ -244,36 +244,36 @@ describe Alchemy::Permissions do
     end
 
     it "can manage attachments" do
-      is_expected.to be_able_to(:manage, Alchemy::Attachment)
+      is_expected.to be_able_to(:manage, LaissCms::Attachment)
     end
 
     it "can manage pictures" do
-      is_expected.to be_able_to(:manage, Alchemy::Picture)
+      is_expected.to be_able_to(:manage, LaissCms::Picture)
     end
 
     it "can manage tags" do
-      is_expected.to be_able_to(:manage, Alchemy::Tag)
+      is_expected.to be_able_to(:manage, LaissCms::Tag)
     end
   end
 
   context "An admin" do
-    let(:user) { build(:alchemy_dummy_user, :as_admin) }
+    let(:user) { build(:laiss_cms_dummy_user, :as_admin) }
 
-    it "can check for alchemy updates" do
-      is_expected.to be_able_to(:update_check, :alchemy_admin_dashboard)
+    it "can check for laiss_cms updates" do
+      is_expected.to be_able_to(:update_check, :laiss_cms_admin_dashboard)
     end
 
     it "can manage languages" do
-      is_expected.to be_able_to(:manage, Alchemy::Language)
+      is_expected.to be_able_to(:manage, LaissCms::Language)
     end
 
     it "can manage sites" do
-      is_expected.to be_able_to(:manage, Alchemy::Site)
+      is_expected.to be_able_to(:manage, LaissCms::Site)
     end
   end
 
   context "A logged in user without a role" do
-    let(:user) { mock_model(Alchemy.config.user_class, alchemy_roles: []) }
+    let(:user) { mock_model(LaissCms.config.user_class, laiss_cms_roles: []) }
 
     it "can only see public not restricted pages (like the guest role)" do
       is_expected.to be_able_to(:show, public_page)

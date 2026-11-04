@@ -1,0 +1,7 @@
+<div id="filter_bar">
+  <laiss-cms-auto-submit>
+    <% laiss_cms_filters.each do |filter| %>
+      <%= render filter.input_component(search_filter_params, @query) %>
+    <% end %>
+  </laiss-cms-auto-submit>
+</div>

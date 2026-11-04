@@ -6,14 +6,14 @@
       "fingerprint": "457ad4fe86dba31aef8b4668f98487fbd40df70b2dd0036a594c3bcb37415ab8",
       "check_name": "SendFile",
       "message": "Parameter value used in file name",
-      "file": "app/controllers/alchemy/attachments_controller.rb",
+      "file": "app/controllers/laiss_cms/attachments_controller.rb",
       "line": 42,
       "link": "https://brakemanscanner.org/docs/warning_types/file_access/",
       "code": "send_file(Attachment.find(params[:id]).file.path, :filename => Attachment.find(params[:id]).file_name, :type => Attachment.find(params[:id]).file_mime_type, :disposition => disposition)",
       "render_path": null,
       "location": {
         "type": "method",
-        "class": "Alchemy::AttachmentsController",
+        "class": "LaissCms::AttachmentsController",
         "method": "send_attachment_file"
       },
       "user_input": "params[:id]",
@@ -29,25 +29,25 @@
       "fingerprint": "6e6ed4f8b20c07868bc04a4dc419103ecce33bb514eff77790abd57246a4513f",
       "check_name": "LinkToHref",
       "message": "Potentially unsafe model attribute in `link_to` href",
-      "file": "app/views/alchemy/admin/nodes/_node.html.erb",
+      "file": "app/views/laiss_cms/admin/nodes/_node.html.erb",
       "line": 22,
       "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
       "code": "link_to((Unresolved Model).new.url, (Unresolved Model).new.url, :target => \"_blank\", :title => (Unresolved Model).new.url)",
       "render_path": [
         {
           "type": "template",
-          "name": "alchemy/admin/nodes/_node",
+          "name": "laiss_cms/admin/nodes/_node",
           "line": 95,
-          "file": "app/views/alchemy/admin/nodes/_node.html.erb",
+          "file": "app/views/laiss_cms/admin/nodes/_node.html.erb",
           "rendered": {
-            "name": "alchemy/admin/nodes/_node",
-            "file": "app/views/alchemy/admin/nodes/_node.html.erb"
+            "name": "laiss_cms/admin/nodes/_node",
+            "file": "app/views/laiss_cms/admin/nodes/_node.html.erb"
           }
         }
       ],
       "location": {
         "type": "template",
-        "template": "alchemy/admin/nodes/_node"
+        "template": "laiss_cms/admin/nodes/_node"
       },
       "user_input": "(Unresolved Model).new.url",
       "confidence": "Weak",
@@ -62,21 +62,21 @@
       "fingerprint": "c9db7cc83a6210bf4a715ce9f9ffabca1145d51db9fc1ca1e45d965e7151751b",
       "check_name": "ValidationRegex",
       "message": "Insufficient validation for `url` using `/\\A(\\/|\\D[a-z+\\d.-]+:)/`. Use `\\A` and `\\z` as anchors",
-      "file": "app/models/alchemy/node.rb",
+      "file": "app/models/laiss_cms/node.rb",
       "line": 99,
       "link": "https://brakemanscanner.org/docs/warning_types/format_validation/",
       "code": ":url, { :format => ({ :with => /\\A(\\/|\\D[a-z+\\d.-]+:)/ }), :unless => (lambda do\n url.nil?\n end) }",
       "render_path": null,
       "location": {
         "type": "model",
-        "model": "Alchemy::Node"
+        "model": "LaissCms::Node"
       },
       "user_input": null,
       "confidence": "High",
       "cwe_id": [
         777
       ],
-      "note": "VALID_URL_REGEX deliberately only checks the url prefix (a path or a scheme). It is anchored with \\A, so the multiline bypass does not apply, and executable schemes are rejected by Alchemy::SafeUrlValidator."
+      "note": "VALID_URL_REGEX deliberately only checks the url prefix (a path or a scheme). It is anchored with \\A, so the multiline bypass does not apply, and executable schemes are rejected by LaissCms::SafeUrlValidator."
     }
   ],
   "brakeman_version": "8.1.0"

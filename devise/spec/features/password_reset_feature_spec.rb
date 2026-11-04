@@ -1,7 +1,7 @@
 require "rails_helper"
 
 describe "Password reset feature." do
-  let(:user) { create(:alchemy_admin_user) }
+  let(:user) { create(:laiss_cms_admin_user) }
 
   it "User can visit password reset form." do
     visit admin_new_password_path
@@ -60,7 +60,7 @@ describe "Password reset feature." do
   end
 
   it "User can change password." do
-    allow(Alchemy::User)
+    allow(LaissCms::User)
       .to receive(:reset_password_by_token)
       .and_return(user)
 

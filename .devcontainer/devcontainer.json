@@ -1,9 +1,9 @@
 {
-  "name": "Alchemy CMS Development",
+  "name": "LaissCms CMS Development",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "web",
   "workspaceFolder": "/workspace",
-  "remoteUser": "alchemy",
+  "remoteUser": "laiss_cms",
   "postCreateCommand": "cp /usr/local/bundle/Gemfile.lock Gemfile.lock && pnpm install && cd spec/dummy && bin/rails db:prepare",
   "forwardPorts": [3000],
   "customizations": {

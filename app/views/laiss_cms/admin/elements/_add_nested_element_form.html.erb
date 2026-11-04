@@ -1,0 +1,26 @@
+<%= content_tag :div, class: 'add-nested-element', data: { element_id: element.id } do %>
+  <% if element.nestable_elements.length == 1 &&
+    (nestable_element = element.nestable_elements.first) &&
+    LaissCms::Element.all_from_clipboard_for_parent_element(clipboard, element).none?
+  %>
+    <%= turbo_frame_tag("new_nested_element_#{element.id}") do %>
+      <%= form_for [:admin, LaissCms::Element.new(name: nestable_element)], html: { class: 'add-nested-element-form', id: nil } do |f| %>
+        <%= f.hidden_field :name %>
+        <%= f.hidden_field :page_version_id, value: element.page_version_id %>
+        <%= f.hidden_field :parent_element_id, value: element.id %>
+        <%= button_tag class: "add-nestable-element-button", is: "laiss-cms-button", disabled: cannot?(:create, LaissCms::Element) do %>
+          <%= LaissCms.t(:add_nested_element, name: LaissCms.t(nestable_element.to_sym, scope: 'element_names')) %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% else %>
+    <%= link_to_dialog (nestable_element ? LaissCms.t(:add_nested_element, name: LaissCms.t(nestable_element.to_sym, scope: 'element_names')) : LaissCms.t("New Element")),
+      can?(:create, LaissCms::Element) ? laiss_cms.new_admin_element_path(
+        parent_element_id: element.id,
+        page_version_id: element.page_version_id
+      ) : nil, {
+        size: "380x125",
+        title: LaissCms.t("New Element")
+      }, class: "button add-nestable-element-button" %>
+  <% end %>
+<% end %>

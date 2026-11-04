@@ -1,0 +1,20 @@
+<sl-tab-group id="overlay_tabs">
+  <sl-tab slot="nav" panel="page_properties">
+    <%= LaissCms.t('Properties') %>
+  </sl-tab>
+  <sl-tab slot="nav" panel="nodes">
+    <%= render 'laiss_cms/admin/nodes/label', count: @page.nodes.size %>
+  </sl-tab>
+  <sl-tab slot="nav" panel="legacy_urls" id="legacy_urls_label">
+    <%= render 'laiss_cms/admin/legacy_page_urls/label', count: @page.legacy_urls.size %>
+  </sl-tab>
+  <sl-tab-panel name="page_properties">
+    <%= render 'form', page: @page %>
+  </sl-tab-panel>
+  <sl-tab-panel name="nodes">
+    <%= render 'laiss_cms/admin/nodes/page_nodes', page: @page %>
+  </sl-tab-panel>
+  <sl-tab-panel name="legacy_urls">
+    <%= render 'legacy_urls' %>
+  </sl-tab-panel>
+</sl-tab-group>

@@ -1,0 +1,11 @@
+<% LaissCms::Deprecation.warn(
+  "Rendering the `laiss_cms/admin/uploader/button` partial is deprecated! `render LaissCms::Admin::UploaderButton.new` instead."
+) %>
+<%= render LaissCms::Admin::UploaderButton.new(
+  object:,
+  file_attribute:,
+  redirect_url:,
+  accept: local_assigns[:accept],
+  dropzone: local_assigns[:dropzone],
+  layout: local_assigns[:layout],
+  label: local_assigns[:label]) %>

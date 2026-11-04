@@ -9,9 +9,9 @@ engines:
   duplication:
     enabled: true
     exclude_paths:
-      - "lib/alchemy/permissions.rb"
-      - "lib/alchemy/tasks/tidy.rb"
-      - "lib/tasks/alchemy/upgrade.rake"
+      - "lib/laiss_cms/permissions.rb"
+      - "lib/laiss_cms/tasks/tidy.rb"
+      - "lib/tasks/laiss_cms/upgrade.rake"
     config:
       languages:
         - ruby
@@ -30,6 +30,6 @@ exclude_paths:
   - "config/"
   - "db/"
   - "spec/"
-  - "lib/alchemy/upgrader/"
+  - "lib/laiss_cms/upgrader/"
   - "lib/rails/"
   - "vendor/assets/"

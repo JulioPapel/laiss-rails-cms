@@ -10,7 +10,7 @@ RSpec.describe "TinyMCE Editor", type: :system do
   it "base path should be set to tinymce asset folder" do
     visit admin_dashboard_path
     expect(page).to have_css(
-      "script#alchemy_tinymce_defaults",
+      "script#laiss_cms_tinymce_defaults",
       text: '"base_url":"/assets/tinymce","suffix":".min"',
       visible: false
     )
@@ -27,7 +27,7 @@ RSpec.describe "TinyMCE Editor", type: :system do
     it "base path should be set to tinymce asset folder" do
       visit admin_dashboard_path
       expect(page).to have_css(
-        "script#alchemy_tinymce_defaults",
+        "script#laiss_cms_tinymce_defaults",
         text: '"base_url":"http://myhost.com/assets/tinymce","suffix":".min"',
         visible: false
       )
@@ -38,7 +38,7 @@ RSpec.describe "TinyMCE Editor", type: :system do
     it "should preload assets" do
       visit admin_dashboard_path
       expect(page)
-        .to have_css('link[rel="preload"][href="/assets/tinymce/skins/ui/alchemy/skin.min.css"]')
+        .to have_css('link[rel="preload"][href="/assets/tinymce/skins/ui/laiss_cms/skin.min.css"]')
     end
 
     context "with asset host" do
@@ -52,13 +52,13 @@ RSpec.describe "TinyMCE Editor", type: :system do
       it "should preload assets from host" do
         visit admin_dashboard_path
         expect(page)
-          .to have_css('link[rel="preload"][href="https://myhost.com/assets/tinymce/skins/ui/alchemy/skin.min.css"]')
+          .to have_css('link[rel="preload"][href="https://myhost.com/assets/tinymce/skins/ui/laiss_cms/skin.min.css"]')
       end
     end
 
     context "when content_css is configured" do
       before do
-        Alchemy::Tinymce.init = {content_css: "/assets/custom-stylesheet.css"}
+        LaissCms::Tinymce.init = {content_css: "/assets/custom-stylesheet.css"}
       end
 
       it "should preload it" do

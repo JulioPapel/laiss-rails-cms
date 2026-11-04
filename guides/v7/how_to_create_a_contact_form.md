@@ -3,17 +3,17 @@
 This guide covers the configuration setup and create process of a
 regular contact form:
 
--   Setup Alchemy mailer
+-   Setup LaissCms mailer
 -   Customize the views
 
 ## Additional Rails and application setup
 
-Alchemy relies on Rails' [ActionMailer](https://guides.rubyonrails.org/action_mailer_basics.html) to send emails.
+LaissCms relies on Rails' [ActionMailer](https://guides.rubyonrails.org/action_mailer_basics.html) to send emails.
 You will need to configure ActionMailer to use an SMTP service like Gmail, Sendgrid, Mailgun, Mandrill, Amazon SES, etc.
 
 ## Mailer Settings
 
-This is the default mailer configuration in `config/alchemy/config.yml`:
+This is the default mailer configuration in `config/laiss_cms/config.yml`:
 
 ~~~ yaml
 mailer:
@@ -28,7 +28,7 @@ mailer:
 
 - **page_layout_name** `String` (Optional)
 
-  A `Alchemy::PageLayout` name. Used for rendering the contact form.
+  A `LaissCms::PageLayout` name. Used for rendering the contact form.
 
 - **forward_to_page** `Boolean` (Optional)
 
@@ -48,7 +48,7 @@ mailer:
 
 - **fields** `Array`
 
-  Field names of your contact form. These fields become attributes on the `Alchemy::Message` Model
+  Field names of your contact form. These fields become attributes on the `LaissCms::Message` Model
 
 - **validate_fields** `Array`
 
@@ -86,7 +86,7 @@ Describe a new Element with this options inside your `elements.yml` file:
 ~~~
 
 ::: tip NOTE
-The fields `mail_to`, `mail_from`, `subject` and `success_page` are recommended. The `Alchemy::MessagesController` uses them to send your mails. That way your customer has full control over these values inside his contact form element.
+The fields `mail_to`, `mail_from`, `subject` and `success_page` are recommended. The `LaissCms::MessagesController` uses them to send your mails. That way your customer has full control over these values inside his contact form element.
 :::
 
 ::: warning INFO
@@ -113,7 +113,7 @@ Disabling the page caching is **very important**!
 
 ## Example contact form
 
-Use the `rails g alchemy:elements --skip` generator to create the view files.
+Use the `rails g laiss_cms:elements --skip` generator to create the view files.
 
 ### The contact form view
 
@@ -125,11 +125,11 @@ If this gem is not already installed, you have to add
 bundle add simple_form
 ~~~
 
-Then open `app/views/alchemy/elements/_contactform.html.erb` in your text editor
+Then open `app/views/laiss_cms/elements/_contactform.html.erb` in your text editor
 and replace the content with:
 
 ~~~ erb
-<%= simple_form_for(@message ||= Alchemy::Message.new) do |form| %>
+<%= simple_form_for(@message ||= LaissCms::Message.new) do |form| %>
   <%= form.input :firstname %>
   <%= form.input :lastname %>
   <%= form.input :email %>
@@ -143,7 +143,7 @@ and replace the content with:
 See the `hidden_field`? This is important, or the messages mailer can't do all the magic for you.
 :::
 
-If you use different or additional input symbols like 'company' , 'age' etc. make sure to adapt the fields in the mailer configuration (`config/alchemy/config.yml`).
+If you use different or additional input symbols like 'company' , 'age' etc. make sure to adapt the fields in the mailer configuration (`config/laiss_cms/config.yml`).
 
 ::: tip
 Please have a look at the [simple form documentation](https://github.com/plataformatec/simple_form#readme) for further infos about the various config options.
@@ -159,12 +159,12 @@ All validation messages are passed through `::I18n.t` so you can translate it in
 de:
   activemodel:
     attributes:
-      alchemy/message:
+      laiss_cms/message:
         firstname: Vorname
         lastname: Nachname
 ~~~
 
-If you would like to use same vocabulary in different context: e.g in the `app/views/alchemy/elements/_contactform_view.html.erb`
+If you would like to use same vocabulary in different context: e.g in the `app/views/laiss_cms/elements/_contactform_view.html.erb`
 
 ~~~ erb
 <%= form.input ... %>

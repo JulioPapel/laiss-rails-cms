@@ -1,0 +1,612 @@
+import TomSelect from "tom-select"
+import "laiss_cms_admin/components/icon"
+import { escape_html } from "tom-select/utils"
+import { growl } from "laiss_cms_admin/growler"
+import { translate } from "laiss_cms_admin/i18n"
+import {
+  createDropdownPositioning,
+  dropdownMessages,
+  focusTomSelect,
+  teardownTomSelect
+} from "laiss_cms_admin/utils/tom_select"
+
+/**
+ * Escapes a string for literal use inside a `RegExp`, so a term with
+ * metacharacters (e.g. `(`) matches itself instead of being compiled as a
+ * pattern, which could match the wrong text or throw a SyntaxError.
+ * @param {string} value
+ * @returns {string}
+ */
+export function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+export function hightlightTerm(name, term) {
+  // The result is rendered raw as the option's primary text, so the name must
+  // be escaped before the term markup is woven in — otherwise a crafted name
+  // (e.g. a menu node title) is a stored XSS sink.
+  const escapedName = escape_html(name)
+  if (!term) return escapedName
+  return escapedName.replace(
+    new RegExp(escapeRegExp(term), "gi"),
+    (match) => `<em>${match}</em>`
+  )
+}
+
+/**
+ * Serializes a (possibly nested) params object into a Rails/Ransack style query
+ * string, e.g. `{ q: { name_cont: "x" }, page: 1 }` => `q%5Bname_cont%5D=x&page=1`.
+ * @param {object} params
+ * @param {string} [prefix]
+ * @returns {string}
+ */
+export function serializeParams(params, prefix) {
+  return Object.keys(params)
+    .map((key) => {
+      const value = params[key]
+      const scopedKey = prefix ? `${prefix}[${key}]` : key
+      if (value === null || value === undefined) return ""
+      if (Array.isArray(value)) {
+        return value
+          .map(
+            (item) =>
+              `${encodeURIComponent(`${scopedKey}[]`)}=${encodeURIComponent(item)}`
+          )
+          .join("&")
+      }
+      if (typeof value === "object") {
+        return serializeParams(value, scopedKey)
+      }
+      return `${encodeURIComponent(scopedKey)}=${encodeURIComponent(value)}`
+    })
+    .filter((part) => part !== "")
+    .join("&")
+}
+
+export class RemoteSelect extends HTMLElement {
+  #tomSelect = null
+  // The currently selected item, used to compute the added/removed delta that
+  // consumers of the RemoteSelect.Change event rely on.
+  #selectedItem = null
+  // In multiple mode the same delta is computed against this map of the
+  // currently selected records, keyed by their id.
+  #selectedItems = new Map()
+
+  connectedCallback() {
+    const element = this.input
+    element.classList.add("laiss_cms_selectbox")
+    if (element instanceof HTMLInputElement) {
+      // Preselection is driven by the `selection` attribute, not by the input's
+      // value. Clear the value during setup so Tom Select does not turn it into a
+      // stray option and does not overwrite it with the selected id — the link
+      // dialog renders a URL in this input and reads it back. Restore it afterwards.
+      const inputValue = element.value
+      element.value = ""
+      this.#tomSelect = new TomSelect(element, this.tomSelectConfig)
+      element.value = inputValue
+    } else {
+      // A multiple select wraps a <select>, which has no such value to protect.
+      this.#tomSelect = new TomSelect(element, this.tomSelectConfig)
+    }
+    // A spinner shown inside the control while results load. Tom Select toggles
+    // the wrapper's `loading` class, which reveals it (see the stylesheet).
+    this.#tomSelect.control.append(document.createElement("sl-spinner"))
+    // Open the dropdown on click, mirroring the native <laiss-cms-select> (Tom
+    // Select does not open on click on its own once openOnFocus is off).
+    this.#tomSelect.control.addEventListener(
+      "click",
+      this.#tomSelect.open.bind(this.#tomSelect)
+    )
+  }
+
+  disconnectedCallback() {
+    teardownTomSelect(this.#tomSelect)
+    this.#tomSelect = null
+  }
+
+  focus() {
+    focusTomSelect(this.#tomSelect, () => super.focus())
+  }
+
+  /**
+   * Optional on change handler.
+   * @param {{added: ?object, removed: ?object}} event
+   */
+  onChange(event) {
+    // Update selection attribute so re-attaching the component to the same
+    // input (e.g. after dragndrop) does not reset the selection. In multiple
+    // mode it holds the array of the currently selected records.
+    if (this.multiple) {
+      if (event.added) {
+        this.#selectedItems.set(String(event.added.id), event.added)
+      }
+      if (event.removed) {
+        this.#selectedItems.delete(String(event.removed.id))
+      }
+      this.setAttribute(
+        "selection",
+        JSON.stringify([...this.#selectedItems.values()])
+      )
+    } else if (event.added) {
+      this.setAttribute("selection", JSON.stringify(event.added))
+    }
+    this.dispatchCustomEvent("RemoteSelect.Change", {
+      removed: event.removed,
+      added: event.added
+    })
+  }
+
+  /**
+   * Optional on open handler, called when the dropdown opens.
+   * @param {Event} [event]
+   */
+  onOpen() {}
+
+  /**
+   * Dispatches a custom event with given name, namespaced under `LaissCms.`.
+   * Subclasses may call this to emit their own events.
+   * @param {string} name The name of the custom event
+   * @param {object} detail Optional event details
+   */
+  dispatchCustomEvent(name, detail = {}) {
+    this.dispatchEvent(
+      new CustomEvent(`LaissCms.${name}`, { bubbles: true, detail })
+    )
+  }
+
+  get allowClear() {
+    return this.hasAttribute("allow-clear")
+  }
+
+  get multiple() {
+    return this.hasAttribute("multiple")
+  }
+
+  get selection() {
+    return this.getAttribute("selection")
+  }
+
+  get placeholder() {
+    return this.getAttribute("placeholder") ?? ""
+  }
+
+  get queryParams() {
+    return this.getAttribute("query-params") ?? "{}"
+  }
+
+  get url() {
+    return this.getAttribute("url") ?? ""
+  }
+
+  get input() {
+    // The wrapped control is an <input> in single mode and a <select> in
+    // multiple mode. Tom Select keeps the original element in place and inserts
+    // its own control after it, so the original always comes first.
+    return this.querySelector("input, select")
+  }
+
+  /**
+   * Tom Select configuration.
+   * @returns {object}
+   */
+  get tomSelectConfig() {
+    const self = this
+    const ajax = this.ajaxConfig
+    const plugins = { virtual_scroll: {} }
+
+    if (this.multiple) {
+      plugins.remove_button = {}
+    }
+
+    if (this.allowClear) {
+      plugins.clear_button = {
+        html() {
+          return `<button type="button" class="clear-button" aria-label="${translate(
+            "Clear selection"
+          )}">
+            <laiss-cms-icon name="close" size="1x"></laiss-cms-icon>
+          </button>`
+        }
+      }
+    }
+
+    const { onDropdownOpen, onDropdownClose } = createDropdownPositioning()
+
+    return {
+      plugins,
+      // The server returns each item with an `id` used as the option value.
+      valueField: "id",
+      // A single item unless the multiple attribute lifts the limit.
+      maxItems: this.multiple ? null : 1,
+      // Close the dropdown after selecting a single item; in multiple mode keep
+      // it open so several items can be picked in a row.
+      closeAfterSelect: !this.multiple,
+      // Show every item returned by the server, not just the first 50.
+      maxOptions: null,
+      // Searching is done on the server, so keep every returned option.
+      searchField: [],
+      // Debounce the server requests while typing.
+      loadThrottle: ajax.quietMillis,
+      // Refresh the input state (hide the selection, show the loading dropdown)
+      // on every keystroke without delay. The server request stays debounced by
+      // loadThrottle, so this only affects the immediate UI feedback.
+      refreshThrottle: 0,
+      placeholder: this.placeholder,
+      // Behave like the local <laiss-cms-select>: focusing neither opens the
+      // dropdown nor fires a search. The first page of results is loaded when
+      // the dropdown opens (see onDropdownOpen), i.e. on click or typing.
+      openOnFocus: false,
+      // Load even for an empty search term to show the initial result list.
+      shouldLoad: () => true,
+      firstUrl: (query) => this.#requestUrl(query, 1),
+      load: (query, callback) => this.#load(query, callback),
+      onInitialize() {
+        if (!self.selection) return
+        // The preselection only carries enough data to label an item. Mark each
+        // one, so the option template can tell it apart from the complete records
+        // the server returns. Loading the record drops the mark again.
+        if (self.multiple) {
+          const items = JSON.parse(self.selection)
+          // Track the preselected items first, so the change handler recognizes
+          // them as unchanged. Adding them silently avoids a spurious change
+          // event while still rendering the items and marking the options.
+          self.#selectedItems = new Map(
+            items.map((item) => [String(item.id), item])
+          )
+          items.forEach((item) => {
+            this.addOption({ ...item, $preselection: true })
+            this.addItem(item.id, true)
+          })
+        } else {
+          const item = JSON.parse(self.selection)
+          // Track the preselected item first, so the change handler recognizes
+          // it as unchanged. Adding it silently avoids a spurious change event
+          // while still rendering the item and marking the option.
+          self.#selectedItem = item
+          this.addOption({ ...item, $preselection: true })
+          this.addItem(item.id, true)
+        }
+      },
+      onChange(value) {
+        self.#onChange(value, this)
+      },
+      onType(term) {
+        // While typing, give the search input an opaque background so it covers
+        // the selected item behind it. Without this the previous selection shows
+        // through the search box (see the `input-active` styles).
+        this.control_input.classList.toggle("has-value", term.length > 0)
+      },
+      onDropdownOpen() {
+        onDropdownOpen.call(this)
+        if (!this.loading) {
+          this.load(this.lastValue ?? "")
+        }
+        self.onOpen()
+      },
+      onDropdownClose,
+      render: {
+        option(item, _escape) {
+          // A preselection that the server has not returned yet only carries
+          // enough data to label the item, so render it like the control does.
+          // Everything else is a complete record and gets the list entry.
+          if (item.$preselection) {
+            return `<div>${self._renderResult(item)}</div>`
+          }
+          return self._renderListEntry(item, this.lastValue)
+        },
+        item(item, _escape) {
+          return `<div>${self._renderResult(item)}</div>`
+        },
+        ...dropdownMessages
+      }
+    }
+  }
+
+  /**
+   * Ajax configuration. Kept for API compatibility with subclasses that spread
+   * `super.ajaxConfig` and augment it (e.g. adding request `params`).
+   * @returns {object}
+   */
+  get ajaxConfig() {
+    return {
+      url: this.url,
+      datatype: "json",
+      quietMillis: 300,
+      data: (term, page) => this._searchQuery(term, page),
+      results: (response) => this._parseResponse(response)
+    }
+  }
+
+  /**
+   * Builds the request url for a given search term and page.
+   * @param {string} term
+   * @param {number} page
+   * @returns {string}
+   * @private
+   */
+  #requestUrl(term, page) {
+    const query = serializeParams(this.ajaxConfig.data(term, page))
+    const separator = this.url.includes("?") ? "&" : "?"
+    return query ? `${this.url}${separator}${query}` : this.url
+  }
+
+  /**
+   * Loads results from the server and registers the next page url for the
+   * virtual scroll plugin.
+   * @param {string} query
+   * @param {function} callback
+   * @private
+   */
+  async #load(query, callback) {
+    const ajax = this.ajaxConfig
+    const url = this.#tomSelect.getUrl(query)
+    const page = Number(
+      new URL(url, window.location.origin).searchParams.get("page")
+    )
+    try {
+      const response = await fetch(url, {
+        headers: { Accept: "application/json", ...(ajax.params?.headers ?? {}) }
+      })
+      // fetch only rejects on a network error, so an error response has to be
+      // turned into one. Its body often parses as JSON just fine and would
+      // otherwise reach the callback as an empty result set.
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`)
+      }
+      const { results, more } = ajax.results(await response.json())
+      if (more) {
+        this.#tomSelect.setNextUrl(query, this.#requestUrl(query, page + 1))
+      }
+      callback(results)
+    } catch (error) {
+      growl(error.message || error, "error")
+      console.error(`[laiss_cms] Loading ${url} failed`, error)
+      // Tom Select only clears its loading state once the callback ran.
+      callback()
+    }
+  }
+
+  /**
+   * Computes the added/removed delta from a Tom Select change and forwards it to
+   * the `onChange` handler.
+   * @param {string} value
+   * @param {TomSelect} tomSelect
+   * @private
+   */
+  #onChange(value, tomSelect) {
+    if (this.multiple) {
+      this.#onChangeMultiple(value, tomSelect)
+      return
+    }
+    const previous = this.#selectedItem
+    if (value === "" || value == null) {
+      if (!previous) return
+      this.#selectedItem = null
+      this.onChange({ added: null, removed: previous })
+    } else if (!previous || String(previous.id) !== String(value)) {
+      const added = this.#itemData(tomSelect.options[value])
+      this.#selectedItem = added
+      this.onChange({ added, removed: previous })
+    }
+  }
+
+  /**
+   * Computes the per item added/removed deltas from a multiple Tom Select change
+   * (whose value is the array of selected ids) by diffing it against the tracked
+   * selection, and forwards each delta to the `onChange` handler.
+   * @param {string[]} values
+   * @param {TomSelect} tomSelect
+   * @private
+   */
+  #onChangeMultiple(values, tomSelect) {
+    const ids = (values ?? []).map(String)
+    const previous = new Set(this.#selectedItems.keys())
+    const current = new Set(ids)
+    previous.forEach((id) => {
+      if (!current.has(id)) {
+        this.onChange({ added: null, removed: this.#selectedItems.get(id) })
+      }
+    })
+    ids.forEach((id) => {
+      if (!previous.has(id)) {
+        this.onChange({
+          added: this.#itemData(tomSelect.options[id]),
+          removed: null
+        })
+      }
+    })
+  }
+
+  /**
+   * An option also carries the bookkeeping Tom Select keeps on it, among it the
+   * node it was rendered into. Serializing that into the selection attribute
+   * breaks the render cache once a component is attached to it again, so keep
+   * the record itself only.
+   * @param {?object} option
+   * @returns {?object}
+   * @private
+   */
+  #itemData(option) {
+    if (!option) return null
+    return Object.fromEntries(
+      Object.entries(option).filter(([key]) => !key.startsWith("$"))
+    )
+  }
+
+  /**
+   * Search query send to server.
+   * @param {string} term
+   * @param {number} page
+   * @returns {object}
+   * @private
+   */
+  _searchQuery(term, page) {
+    return {
+      q: {
+        name_i_cont: term,
+        ...JSON.parse(this.queryParams)
+      },
+      page: page
+    }
+  }
+
+  /**
+   * Parses server response into a results object.
+   * @param {object} response
+   * @returns {{results: Array, more: boolean}}
+   * @private
+   */
+  _parseResponse(response) {
+    const meta = response.meta
+    return {
+      results: response.data,
+      more: meta.page * meta.per_page < meta.total_count
+    }
+  }
+
+  /**
+   * Renders a dropdown option from the slots a subclass describes in `_entry`.
+   * External subclasses that still override `_renderListEntry` directly keep
+   * their own markup and never reach this.
+   * @param {object} item
+   * @param {string} term
+   * @returns {string}
+   * @private
+   */
+  _renderListEntry(item, term) {
+    return this.#renderEntry(this._entry(item, term))
+  }
+
+  /**
+   * Renders the selected item (shown in the control) from the slots a subclass
+   * describes in `_selectedEntry`. External subclasses that still override
+   * `_renderResult` directly keep their own markup and never reach this.
+   * @param {object} item
+   * @returns {string}
+   * @private
+   */
+  _renderResult(item) {
+    return this.#renderSelection(this._selectedEntry(item))
+  }
+
+  /**
+   * Describes the slots of a dropdown option. Subclasses override this and
+   * return an object with any of `icon`/`media`, `primary`, `aside`,
+   * `secondary`, and `secondaryAside`. See `#renderEntry` for the accepted
+   * value shapes.
+   * @param {object} item
+   * @param {string} term
+   * @returns {object}
+   * @protected
+   */
+  _entry() {
+    throw new Error("You need to define an _entry function on your sub class!")
+  }
+
+  /**
+   * Describes the slots of the selected item shown in the control. Subclasses
+   * override this and return an object with `icon`/`media`, `primary`, and
+   * `secondary`.
+   * @param {object} item
+   * @returns {object}
+   * @protected
+   */
+  _selectedEntry() {
+    throw new Error(
+      "You need to define a _selectedEntry function on your sub class!"
+    )
+  }
+
+  /**
+   * Builds the two row grid markup of a dropdown option from its slots.
+   * @param {object} slots
+   * @returns {string}
+   * @private
+   */
+  #renderEntry(slots) {
+    return `
+      <div class="remote-select--entry">
+        ${this.#leadColumn(slots)}
+        ${this.#cell("remote-select--primary", slots.primary, { raw: true })}
+        ${this.#cell("remote-select--aside", slots.aside)}
+        ${this.#cell("remote-select--secondary", slots.secondary)}
+        ${this.#cell("remote-select--secondary-aside", slots.secondaryAside)}
+      </div>
+    `
+  }
+
+  /**
+   * Builds the single row markup of the selected item from its slots. Only the
+   * leading column, the primary text, and the (fast shrinking) secondary text
+   * are shown; the compact control has no room for more.
+   * @param {object} slots
+   * @returns {string}
+   * @private
+   */
+  #renderSelection(slots) {
+    return `
+      <div class="remote-select--selection">
+        ${this.#leadColumn(slots)}
+        ${this.#cell("remote-select--selection-name", slots.primary, { raw: true })}
+        ${this.#cell("remote-select--selection-aside", slots.secondary)}
+      </div>
+    `
+  }
+
+  /**
+   * Builds the leading column, either an icon or a media thumbnail. The two are
+   * mutually exclusive; the icon wins if a subclass passes both.
+   * @param {object} slots
+   * @returns {string}
+   * @private
+   */
+  #leadColumn(slots) {
+    if (slots.icon) {
+      return `<laiss-cms-icon class="remote-select--icon" name="${escape_html(slots.icon)}"></laiss-cms-icon>`
+    }
+    if (slots.media) {
+      return `<img class="remote-select--media" src="${escape_html(slots.media)}" alt="">`
+    }
+    return ""
+  }
+
+  /**
+   * Renders a single cell from a slot value. Omitted or empty values render
+   * nothing. A string is escaped, unless `raw` is set (the primary text is
+   * pre-highlighted HTML). `{ text, truncate: "head" }` wraps the text in
+   * `<bdi>` and truncates it from the head. `{ badge }` renders the pill style.
+   * @param {string} className
+   * @param {(string|object)} value
+   * @param {{raw?: boolean}} [options]
+   * @returns {string}
+   * @private
+   */
+  #cell(className, value, { raw = false } = {}) {
+    if (value == null || value === "") return ""
+
+    if (typeof value === "object") {
+      if (value.badge != null && value.badge !== "") {
+        return `<span class="${className} remote-select--badge">${escape_html(value.badge)}</span>`
+      }
+      if (value.text == null || value.text === "") return ""
+      const text = raw ? value.text : escape_html(value.text)
+      if (value.truncate === "head") {
+        return `<span class="${className} remote-select--truncate-head"><bdi>${text}</bdi></span>`
+      }
+      return `<span class="${className}">${text}</span>`
+    }
+
+    return `<span class="${className}">${raw ? value : escape_html(value)}</span>`
+  }
+
+  /**
+   * hightlighted search term
+   * @param {string} name
+   * @param {string} term
+   * @returns {string}
+   * @private
+   */
+  _hightlightTerm(name, term) {
+    return hightlightTerm(name, term)
+  }
+}

@@ -1,0 +1,4 @@
+<%= turbo_stream.replace "clipboard_button", partial: "button" %>
+<%= turbo_stream.update "clipboard_items",
+  LaissCms::Admin::Message.new(LaissCms.t('No items in your clipboard')).render_in(self) %>
+<%= render "update_nested_element_button" %>

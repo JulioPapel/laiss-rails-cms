@@ -2,22 +2,22 @@
 
 Basicly there are two ways to set up a module:
 
-* Use Alchemy as your Rails admin backend
+* Use LaissCms as your Rails admin backend
 * Create a new Engine
 
 ## Generator
 
-Alchemy provides a rails generator for custom modules, that can be invoked like this
+LaissCms provides a rails generator for custom modules, that can be invoked like this
 
 ~~~ bash
-bin/rails generate alchemy:module your_module_name
+bin/rails generate laiss_cms:module your_module_name
 ~~~
 
-## Using Alchemy as your Rails admin backend
+## Using LaissCms as your Rails admin backend
 
 Hence every module is a subsection of a Rails application or a gem you can roll out your own admin backend if you like.
 
-By using Alchemy's backend interface you get a whole bunch of things:
+By using LaissCms's backend interface you get a whole bunch of things:
 
   1. Authentication and Authorization
   2. A highly and fine grained customizable resource manager (CRUD interface)
@@ -27,7 +27,7 @@ And it's easy as this:
 
 ~~~ ruby
 module Admin
-  class YourResourcesController < Alchemy::Admin::ResourcesController
+  class YourResourcesController < LaissCms::Admin::ResourcesController
   end
 end
 ~~~
@@ -40,7 +40,7 @@ After you setting up your routes you have to take care for control access:
 ## Authorization
 
 Rights and roles are set in a CanCan Ability model.
-Create the file if it doesn't exist already. It has to be registered manually, by invoking `Alchemy.register_ability MyModuleAbility` in the module initializer.
+Create the file if it doesn't exist already. It has to be registered manually, by invoking `LaissCms.register_ability MyModuleAbility` in the module initializer.
 
 ~~~ ruby
 # app/models/my_module_ability.rb
@@ -67,8 +67,8 @@ More information about authorization can be found in the docs of the [`cancancan
 # config/routes.rb
 YourApp::Application.routes.draw do
   ...
-  mount YourAlchemyModule::Engine => '/'
-  mount Alchemy::Engine => '/'
+  mount YourLaissCmsModule::Engine => '/'
+  mount LaissCms::Engine => '/'
 end
 ~~~
 
@@ -84,23 +84,23 @@ YourApp::Application.routes.draw do
     resources :your_resource
   end
 
-  mount Alchemy::Engine => '/'
+  mount LaissCms::Engine => '/'
 end
 ~~~
 
 ::: tip
-Due to Alchemy's strong routes it is **strongly recommended** to mount your engine before Alchemy.
+Due to LaissCms's strong routes it is **strongly recommended** to mount your engine before LaissCms.
 :::
 
 ## Registering the module
 
-Last but not least the module needs to be registered to AlchemyCMS.
+Last but not least the module needs to be registered to LaissCMS.
 
 ### When using your host app
 
 ~~~ ruby
-# my_host_app/config/initializers/alchemy_modules.rb
-Alchemy::Modules.register_module({
+# my_host_app/config/initializers/laiss_cms_modules.rb
+LaissCms::Modules.register_module({
   name: 'name_of_your_module',
   order: 1,                             # The position in main navigation, if you have more than 1 module.
   navigation: {
@@ -124,16 +124,16 @@ Alchemy::Modules.register_module({
 })
 
 # Register the module ability
-Alchemy.register_ability MyModuleAbility
+LaissCms.register_ability MyModuleAbility
 ~~~
 
-NOTE: As an alternative to the module icon you can pass: `image: '/alchemy/icon_of_your_module.png'`
+NOTE: As an alternative to the module icon you can pass: `image: '/laiss_cms/icon_of_your_module.png'`
 
 ### Using a Rails engine
 
 ~~~ ruby
-# my_engine/config/initializers/alchemy.rb
-Alchemy::Modules.register_module({
+# my_engine/config/initializers/laiss_cms.rb
+LaissCms::Modules.register_module({
   name: 'name_of_your_module',
   engine_name: 'name_of_your_engine'    # The engine_name set in your Rails::Engine class.
   order: 1,                             # The position in main navigation, if you have more than 1 module.
@@ -158,12 +158,12 @@ Alchemy::Modules.register_module({
 })
 
 # Register the module ability
-Alchemy.register_ability MyModuleAbility
+LaissCms.register_ability MyModuleAbility
 ~~~
 
 ## Translate your module names
 
-All module names are passed through I18n within a `alchemy` namespace.
+All module names are passed through I18n within a `laiss_cms` namespace.
 The name will be used as translation key.
 You should namespace your module name (with i.e. `modules`), to prevent conflicts.
 
@@ -174,7 +174,7 @@ Given a module name `modules.products` your translation has to be:
 ~~~ yaml
 # config/locales/de.yml
 de:
-  alchemy:
+  laiss_cms:
     modules:
       products: Produkte
 ~~~

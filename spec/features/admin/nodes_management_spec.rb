@@ -7,12 +7,12 @@ RSpec.describe "Nodes management", type: :system, js: true do
     authorize_user(:as_admin)
   end
 
-  let!(:a_page) { create(:alchemy_page) }
-  let!(:a_menu) { create(:alchemy_node, name: "Menu") }
+  let!(:a_page) { create(:laiss_cms_page) }
+  let!(:a_menu) { create(:laiss_cms_node, name: "Menu") }
 
   def open_page_properties
     visit admin_pages_path
-    expect(page.find("alchemy-overlay")).to_not have_css(".visible")
+    expect(page.find("laiss-cms-overlay")).to_not have_css(".visible")
     page.find("a[href='#{configure_admin_page_path(a_page)}']", wait: 10).click
     find("[panel='nodes']").click
   end
@@ -41,7 +41,7 @@ RSpec.describe "Nodes management", type: :system, js: true do
       open_page_properties
 
       click_button "Add to menu"
-      within "alchemy-message[type='error']" do
+      within "laiss-cms-message[type='error']" do
         expect(page).to have_content("Menu Type can't be blank")
       end
     end
@@ -63,7 +63,7 @@ RSpec.describe "Nodes management", type: :system, js: true do
 
       within "#page_nodes table" do
         expect(page).to_not have_content("Menu node Menu#{a_page.name}")
-        expect(page).to have_content(Alchemy.t("No menu node for this page found"))
+        expect(page).to have_content(LaissCms.t("No menu node for this page found"))
       end
       within "[panel='nodes']" do
         expect(page).to have_content("(0) Menu nodes")
@@ -73,7 +73,7 @@ RSpec.describe "Nodes management", type: :system, js: true do
 
   context "with a evil menu node" do
     let!(:evil_node) do
-      create(:alchemy_node,
+      create(:laiss_cms_node,
         name: "<alert>Evil!</alert>",
         parent: a_menu,
         page: a_page)

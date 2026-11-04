@@ -37,12 +37,12 @@ RUN pnpm install
 # the whole dependency tree fresh to the latest allowed versions on every build.
 # The resulting lockfile ships with the gems, because re-resolving at runtime
 # can lock versions (e.g. a newer git revision) that the image does not hold.
-COPY Gemfile alchemy_cms.gemspec ./
-COPY lib/alchemy/version.rb lib/alchemy/version.rb
-COPY i18n/alchemy_i18n.gemspec i18n/
-COPY i18n/lib/alchemy_i18n/version.rb i18n/lib/alchemy_i18n/version.rb
-COPY devise/alchemy-devise.gemspec devise/
-COPY devise/lib/alchemy/devise/version.rb devise/lib/alchemy/devise/version.rb
+COPY Gemfile laiss_cms.gemspec ./
+COPY lib/laiss_cms/version.rb lib/laiss_cms/version.rb
+COPY i18n/laiss_cms_i18n.gemspec i18n/
+COPY i18n/lib/laiss_cms_i18n/version.rb i18n/lib/laiss_cms_i18n/version.rb
+COPY devise/laiss-cms-devise.gemspec devise/
+COPY devise/lib/laiss_cms/devise/version.rb devise/lib/laiss_cms/devise/version.rb
 # Upstream releases never change the inputs above, so a changing value is
 # needed to bust the layer cache and pick them up.
 ARG GEMS_RESOLVED_AT
@@ -58,27 +58,27 @@ FROM base
 # writable regardless of the container UID.
 ARG USER_ID=1000
 ARG GROUP_ID=1000
-RUN groupadd -g ${GROUP_ID} alchemy \
-    && useradd -u ${USER_ID} -g alchemy -m alchemy
+RUN groupadd -g ${GROUP_ID} laiss_cms \
+    && useradd -u ${USER_ID} -g laiss_cms -m laiss_cms
 
 ENV LD_PRELOAD=libjemalloc.so.2
 ENV RUBY_YJIT_ENABLE=1
 ENV LISTEN_GEM_ADAPTER_WARN_BEHAVIOR=silent
 
-COPY --from=builder --chown=alchemy:alchemy /usr/local/bundle /usr/local/bundle
-COPY --from=builder --chown=alchemy:alchemy /workspace/node_modules /workspace/node_modules
+COPY --from=builder --chown=laiss_cms:laiss_cms /usr/local/bundle /usr/local/bundle
+COPY --from=builder --chown=laiss_cms:laiss_cms /workspace/node_modules /workspace/node_modules
 
 # Create the storage directory Compose mounts the storage volume onto, owned by
-# the alchemy user. A fresh volume seeds from the image directory it covers, so
+# the laiss_cms user. A fresh volume seeds from the image directory it covers, so
 # this makes the storage volume (which holds active_storage files and the sqlite
 # database) writable instead of root-owned.
 RUN mkdir -p /workspace/spec/dummy/storage \
-    && chown -R alchemy:alchemy /workspace/spec
+    && chown -R laiss_cms:laiss_cms /workspace/spec
 
-USER alchemy
+USER laiss_cms
 
 # Bake the pnpm version pinned in package.json's packageManager field into the
-# alchemy user's corepack cache, so it is not downloaded at runtime in every
+# laiss_cms user's corepack cache, so it is not downloaded at runtime in every
 # service container.
 COPY package.json ./
 RUN corepack install

@@ -2,14 +2,14 @@
 
 require "rails_helper"
 
-module Alchemy
+module LaissCms
   module CacheDigests
     describe TemplateTracker do
       subject { TemplateTracker.call(name, nil) }
 
       describe "#dependencies" do
-        context "with alchemy/pages/show given as template name" do
-          let(:name) { "alchemy/pages/show" }
+        context "with laiss_cms/pages/show given as template name" do
+          let(:name) { "laiss_cms/pages/show" }
 
           before do
             allow(PageDefinition).to receive(:all) do
@@ -21,22 +21,22 @@ module Alchemy
           end
 
           it "returns all page layout view partial names" do
-            is_expected.to include("alchemy/page_layouts/_intro", "alchemy/page_layouts/_contact")
+            is_expected.to include("laiss_cms/page_layouts/_intro", "laiss_cms/page_layouts/_contact")
           end
         end
 
         context "with a page layout given as template name" do
-          let(:name) { "alchemy/page_layouts/_intro" }
+          let(:name) { "laiss_cms/page_layouts/_intro" }
           let(:page_layout) { PageDefinition.new(name: "intro", elements: ["text"]) }
 
           before { allow(PageDefinition).to receive(:get).and_return(page_layout) }
 
           it "returns all element layout view partial names for that layout" do
-            is_expected.to include("alchemy/elements/_text")
+            is_expected.to include("laiss_cms/elements/_text")
           end
         end
 
-        context "with not an alchemy template given as name" do
+        context "with not an laiss_cms template given as name" do
           let(:name) { "shop/cart" }
 
           it "calls rails template tracker" do

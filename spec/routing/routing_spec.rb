@@ -3,14 +3,14 @@
 require "rails_helper"
 
 describe "The Routing" do
-  routes { Alchemy::Engine.routes }
+  routes { LaissCms::Engine.routes }
 
   describe "root url" do
     it "routes to pages_controller#index" do
       expect({
         get: "/"
       }).to route_to(
-        controller: "alchemy/pages",
+        controller: "laiss_cms/pages",
         action: "index"
       )
     end
@@ -20,7 +20,7 @@ describe "The Routing" do
         expect({
           get: "/en"
         }).to route_to(
-          controller: "alchemy/pages",
+          controller: "laiss_cms/pages",
           action: "index",
           locale: "en"
         )
@@ -31,7 +31,7 @@ describe "The Routing" do
           expect({
             get: "/en-UK"
           }).to route_to(
-            controller: "alchemy/pages",
+            controller: "laiss_cms/pages",
             action: "index",
             locale: "en-UK"
           )
@@ -45,7 +45,7 @@ describe "The Routing" do
       expect({
         get: "/attachment/32/download/Presseveranstaltung.pdf"
       }).to route_to(
-        controller: "alchemy/attachments",
+        controller: "laiss_cms/attachments",
         action: "download",
         id: "32",
         name: "Presseveranstaltung",
@@ -59,7 +59,7 @@ describe "The Routing" do
       expect({
         get: "/attachment/32/show"
       }).to route_to(
-        controller: "alchemy/attachments",
+        controller: "laiss_cms/attachments",
         action: "show",
         id: "32"
       )
@@ -69,7 +69,7 @@ describe "The Routing" do
       expect({
         get: "/attachment/32/show/Presseveranstaltung.pdf"
       }).to route_to(
-        controller: "alchemy/attachments",
+        controller: "laiss_cms/attachments",
         action: "show",
         id: "32",
         name: "Presseveranstaltung",
@@ -84,7 +84,7 @@ describe "The Routing" do
         expect({
           get: "/products/my-product"
         }).to route_to(
-          controller: "alchemy/pages",
+          controller: "laiss_cms/pages",
           action: "show",
           urlname: "products/my-product"
         )
@@ -95,7 +95,7 @@ describe "The Routing" do
           expect({
             get: "/de/products/my-product"
           }).to route_to(
-            controller: "alchemy/pages",
+            controller: "laiss_cms/pages",
             action: "show",
             urlname: "products/my-product",
             locale: "de"
@@ -109,7 +109,7 @@ describe "The Routing" do
         expect({
           get: "/catalog/products/my-product"
         }).to route_to(
-          controller: "alchemy/pages",
+          controller: "laiss_cms/pages",
           action: "show",
           urlname: "catalog/products/my-product"
         )
@@ -120,7 +120,7 @@ describe "The Routing" do
           expect({
             get: "/de/catalog/products/my-product"
           }).to route_to(
-            controller: "alchemy/pages",
+            controller: "laiss_cms/pages",
             action: "show",
             urlname: "catalog/products/my-product",
             locale: "de"
@@ -134,7 +134,7 @@ describe "The Routing" do
         expect({
           get: "/2011/12/08/my-post"
         }).to route_to(
-          controller: "alchemy/pages",
+          controller: "laiss_cms/pages",
           action: "show",
           urlname: "2011/12/08/my-post"
         )
@@ -145,7 +145,7 @@ describe "The Routing" do
           expect({
             get: "/de/2011/12/08/my-post"
           }).to route_to(
-            controller: "alchemy/pages",
+            controller: "laiss_cms/pages",
             action: "show",
             urlname: "2011/12/08/my-post",
             locale: "de"
@@ -156,7 +156,7 @@ describe "The Routing" do
   end
 
   describe "image format requests" do
-    it "should not be handled by alchemy/pages controller" do
+    it "should not be handled by laiss_cms/pages controller" do
       expect({
         get: "/products/my-product.jpg"
       }).not_to be_routable
@@ -164,11 +164,11 @@ describe "The Routing" do
   end
 
   describe "unknown formats" do
-    it "should be handled by alchemy/pages controller" do
+    it "should be handled by laiss_cms/pages controller" do
       expect({
         get: "/index.php?id=234"
       }).to route_to(
-        controller: "alchemy/pages",
+        controller: "laiss_cms/pages",
         action: "show",
         urlname: "index",
         format: "php",
@@ -178,7 +178,7 @@ describe "The Routing" do
       expect({
         get: "/action.do"
       }).to route_to(
-        controller: "alchemy/pages",
+        controller: "laiss_cms/pages",
         action: "show",
         urlname: "action",
         format: "do"
@@ -187,7 +187,7 @@ describe "The Routing" do
   end
 
   describe "Rails info requests" do
-    it "should not be handled by alchemy/pages controller" do
+    it "should not be handled by laiss_cms/pages controller" do
       expect({
         get: "/rails/info/routes"
       }).not_to be_routable
@@ -195,7 +195,7 @@ describe "The Routing" do
   end
 
   describe "dotfile requests" do
-    it "should not be handled by alchemy/pages controller" do
+    it "should not be handled by laiss_cms/pages controller" do
       expect({
         get: "/.well-known/security.txt"
       }).not_to be_routable
@@ -228,7 +228,7 @@ describe "The Routing" do
         expect({
           get: "/admin/dashboard"
         }).to route_to(
-          controller: "alchemy/admin/dashboard",
+          controller: "laiss_cms/admin/dashboard",
           action: "index"
         )
       end
@@ -237,7 +237,7 @@ describe "The Routing" do
         expect({
           get: "/admin/pages/3/preview"
         }).to route_to(
-          controller: "alchemy/admin/pages",
+          controller: "laiss_cms/admin/pages",
           action: "preview",
           id: "3"
         )
@@ -247,7 +247,7 @@ describe "The Routing" do
         expect({
           post: "/admin/languages/switch"
         }).to route_to(
-          controller: "alchemy/admin/languages",
+          controller: "laiss_cms/admin/languages",
           action: "switch"
         )
       end
@@ -256,7 +256,7 @@ describe "The Routing" do
         expect({
           get: "/admin/languages/switch"
         }).not_to route_to(
-          controller: "alchemy/admin/languages",
+          controller: "laiss_cms/admin/languages",
           action: "switch"
         )
       end
@@ -265,7 +265,7 @@ describe "The Routing" do
         expect({
           get: "/admin/pages/create_language"
         }).not_to route_to(
-          controller: "alchemy/admin/pages",
+          controller: "laiss_cms/admin/pages",
           action: "create_language"
         )
       end
@@ -273,8 +273,8 @@ describe "The Routing" do
 
     context "customized" do
       before(:all) do
-        Alchemy.admin_path = "backend"
-        Alchemy.admin_constraints = {subdomain: "hidden"}
+        LaissCms.admin_path = "backend"
+        LaissCms.admin_constraints = {subdomain: "hidden"}
         Rails.application.reload_routes!
       end
 
@@ -282,7 +282,7 @@ describe "The Routing" do
         expect({
           get: "http://hidden.example.org/backend/dashboard"
         }).to route_to(
-          controller: "alchemy/admin/dashboard",
+          controller: "laiss_cms/admin/dashboard",
           action: "index",
           subdomain: "hidden"
         )
@@ -292,7 +292,7 @@ describe "The Routing" do
         expect({
           get: "http://hidden.example.org/backend/pages/3/preview"
         }).to route_to(
-          controller: "alchemy/admin/pages",
+          controller: "laiss_cms/admin/pages",
           action: "preview",
           id: "3",
           subdomain: "hidden"
@@ -300,8 +300,8 @@ describe "The Routing" do
       end
 
       after(:all) do
-        Alchemy.admin_path = "admin"
-        Alchemy.admin_constraints = {}
+        LaissCms.admin_path = "admin"
+        LaissCms.admin_constraints = {}
         Rails.application.reload_routes!
       end
     end

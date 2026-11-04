@@ -5,13 +5,13 @@ prev:
 next: false
 ---
 
-# Updating Alchemy
+# Updating LaissCms
 
-This guide describes how to update AlchemyCMS to a new version.
+This guide describes how to update LaissCMS to a new version.
 
 <ServiceAd href="https://blish.cloud/en/solutions/alchemycms">
 <template #before>Need help upgrading? Our sponsor</template>
-<template #after>offers professional <a href="https://blish.cloud/en/solutions/alchemycms" target="_blank">Alchemy upgrade services</a>.</template>
+<template #after>offers professional <a href="https://blish.cloud/en/solutions/alchemycms" target="_blank">LaissCms upgrade services</a>.</template>
 </ServiceAd>
 
 ## Update the Gem
@@ -19,23 +19,23 @@ This guide describes how to update AlchemyCMS to a new version.
 Update the version constraint in your `Gemfile` and run bundler.
 
 ~~~ diff
--gem 'alchemy_cms', '~> 8.0'
-+gem 'alchemy_cms', '~> 8.1'
+-gem 'laiss_cms', '~> 8.0'
++gem 'laiss_cms', '~> 8.1'
 ~~~
 
-If you use [alchemy-devise](extensions#alchemy-devise) for authentication, update it as well. The major and minor versions of `alchemy_cms` and `alchemy-devise` match.
+If you use [laiss-cms-devise](extensions#laiss-cms-devise) for authentication, update it as well. The major and minor versions of `laiss_cms` and `laiss-cms-devise` match.
 
 ~~~ diff
--gem 'alchemy_cms', '~> 8.0'
-+gem 'alchemy_cms', '~> 8.1'
--gem 'alchemy-devise', '~> 8.0'
-+gem 'alchemy-devise', '~> 8.1'
+-gem 'laiss_cms', '~> 8.0'
++gem 'laiss_cms', '~> 8.1'
+-gem 'laiss-cms-devise', '~> 8.0'
++gem 'laiss-cms-devise', '~> 8.1'
 ~~~
 
 Then run bundler.
 
 ~~~ bash
-bundle update alchemy_cms alchemy-devise
+bundle update laiss_cms laiss-cms-devise
 ~~~
 
 ## Run the Upgrade Task
@@ -43,15 +43,15 @@ bundle update alchemy_cms alchemy-devise
 The upgrade task runs all necessary migrations and adjustments.
 
 ~~~ bash
-bin/rails alchemy:upgrade
+bin/rails laiss_cms:upgrade
 ~~~
 
 Follow the on-screen instructions. The task will inform you about changes and any manual steps required.
 
-If you have `alchemy-devise` installed, re-run its install generator to pick up any changes.
+If you have `laiss-cms-devise` installed, re-run its install generator to pick up any changes.
 
 ~~~ bash
-bin/rails g alchemy:devise:install
+bin/rails g laiss_cms:devise:install
 ~~~
 
 ### Run Individual Upgrade Tasks
@@ -59,13 +59,13 @@ bin/rails g alchemy:devise:install
 Upgrade tasks can also be run individually. For example, to run only the config upgrade:
 
 ~~~ bash
-bin/rails alchemy:upgrade:config
+bin/rails laiss_cms:upgrade:config
 ~~~
 
 List all available upgrade tasks with:
 
 ~~~ bash
-bin/rails -T alchemy:upgrade
+bin/rails -T laiss_cms:upgrade
 ~~~
 
 ## Follow-ups
@@ -82,9 +82,9 @@ Before upgrading to the next major version, make sure you have addressed all dep
 
 ## Upgrading in Production
 
-After deploying a new version of the `alchemy_cms` gem, database migrations run automatically via `db:prepare`.
+After deploying a new version of the `laiss_cms` gem, database migrations run automatically via `db:prepare`.
 
-The `alchemy:upgrade` task bundles several individual upgrade tasks. Some of these (like data migrations) need to run in production, while others (like config or file changes) are meant for development only. Check the output of `bin/rails -T alchemy:upgrade` and run the relevant tasks individually in production as needed.
+The `laiss_cms:upgrade` task bundles several individual upgrade tasks. Some of these (like data migrations) need to run in production, while others (like config or file changes) are meant for development only. Check the output of `bin/rails -T laiss_cms:upgrade` and run the relevant tasks individually in production as needed.
 
 ## Verify the Upgrade
 
@@ -92,4 +92,4 @@ After upgrading:
 
 1. Review the changes with `git diff`
 2. Run your test suite
-3. Check the [CHANGELOG](https://github.com/AlchemyCMS/alchemy_cms/blob/main/CHANGELOG.md) for details on what changed
+3. Check the [CHANGELOG](https://github.com/LaissCMS/laiss_cms/blob/main/CHANGELOG.md) for details on what changed

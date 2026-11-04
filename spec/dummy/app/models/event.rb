@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class Event < ActiveRecord::Base
-  extend Alchemy::SearchableResource
-  include Alchemy::Taggable
+  extend LaissCms::SearchableResource
+  include LaissCms::Taggable
 
   validates_presence_of :name
   belongs_to :location
@@ -33,7 +33,7 @@ class Event < ActiveRecord::Base
     ]
   end
 
-  def self.alchemy_resource_relations
+  def self.laiss_cms_resource_relations
     {
       location: {attr_method: "name", attr_type: "string"}
     }

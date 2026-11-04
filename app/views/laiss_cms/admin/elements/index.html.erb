@@ -1,0 +1,64 @@
+<%= turbo_frame_tag "laiss_cms_elements_window" do %>
+  <laiss-cms-elements-window-handle></laiss-cms-elements-window-handle>
+  <laiss-cms-elements-window>
+    <div class="elements-window-toolbar toolbar">
+      <%= render LaissCms::Admin::ToolbarButton.new(
+        url: laiss_cms.new_admin_element_path(page_version_id: @page_version.id),
+        icon: :add,
+        hotkey: "alt+n",
+        label: LaissCms.t("New Element"),
+        dialog_options: {
+          title: LaissCms.t("New Element"),
+          size: "380x125"
+        },
+        tooltip_placement: "bottom-start",
+        if_permitted_to: [:create, LaissCms::Element]
+      ) %>
+      <%= render "laiss_cms/admin/clipboard/button", remarkable_type: "elements", tooltip_placement: "bottom-start" %>
+      <div class="right">
+        <%= render LaissCms::Admin::ListFilter.new(
+          "laiss-cms-element-editor",
+          name_attribute: "filter-text",
+          placeholder: LaissCms.t("Filter elements"),
+          hotkey: "alt+f"
+        ) %>
+        <div class="toolbar_spacer"></div>
+        <sl-tooltip content="<%= LaissCms.t("Collapse all elements") %>" placement="bottom-end">
+          <button id="collapse-all-elements-button" class="icon_button">
+            <laiss-cms-icon name="contract-up-down"></laiss-cms-icon>
+          </button>
+        </sl-tooltip>
+      </div>
+    </div>
+    <% if @page.element_definitions.any?(&:fixed) %>
+      <sl-tab-group id="fixed-elements">
+        <sl-tab slot="nav" panel="main-content-elements">
+          <%= LaissCms.t(:main_content) %>
+        </sl-tab>
+        <%= render partial: "fixed_element", collection: @fixed_elements, as: :element %>
+        <sl-tab-panel
+          name="main-content-elements"
+          style="--padding: 0"
+        >
+          <laiss-cms-sortable-elements
+            id="main-content-elements"
+            class="scrollable-elements"
+            data-droppable-elements="<%= @page.element_definition_names.join(' ') %>"
+            data-element-name="main-content-elements"
+          >
+            <%= render LaissCms::Admin::ElementEditor.with_collection(@elements) %>
+          </laiss-cms-sortable-elements>
+        </sl-tab-panel>
+      </sl-tab-group>
+    <% else %>
+      <laiss-cms-sortable-elements
+        id="main-content-elements"
+        class="scrollable-elements"
+        data-droppable-elements="<%= @page.element_definition_names.join(' ') %>"
+        data-element-name="main-content-elements"
+      >
+        <%= render LaissCms::Admin::ElementEditor.with_collection(@elements) %>
+      </laiss-cms-sortable-elements>
+    <% end %>
+  </laiss-cms-elements-window>
+<% end %>

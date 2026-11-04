@@ -1,0 +1,314 @@
+require "rails_helper"
+
+RSpec.describe LaissCms::StorageAdapter::Dragonfly, if: LaissCms.storage_adapter.dragonfly? do
+  describe "relations and callbacks" do
+    it { expect(LaissCms::Picture.new).to have_many(:thumbs).class_name("LaissCms::PictureThumb") }
+
+    context "with a png file" do
+      it "generates thumbnails after create" do
+        expect {
+          create(:laiss_cms_picture)
+        }.to change { LaissCms::PictureThumb.count }.by(3)
+      end
+    end
+
+    context "with a svg file" do
+      let :image_file do
+        fixture_file_upload("icon.svg")
+      end
+
+      it "does not generate any thumbnails" do
+        expect {
+          create(:laiss_cms_picture, image_file: image_file)
+        }.to_not change { LaissCms::PictureThumb.count }
+      end
+    end
+
+    context "with a webp file" do
+      let :image_file do
+        fixture_file_upload("image5.webp")
+      end
+
+      it "generates thumbnails after create" do
+        expect {
+          create(:laiss_cms_picture)
+        }.to change { LaissCms::PictureThumb.count }.by(3)
+      end
+    end
+  end
+
+  describe "Picture preprocessing" do
+    context "with enabled preprocess_image_resize config option" do
+      let(:image_file) do
+        fixture_file_upload("80x60.png")
+      end
+
+      context "with > geometry string" do
+        before do
+          allow(LaissCms.config).to receive(:preprocess_image_resize) do
+            "10x10>"
+          end
+        end
+
+        it "it resizes the image after upload" do
+          picture = LaissCms::Picture.new(image_file: image_file)
+          expect(picture.image_file.data[0x10..0x18].unpack("NN")).to eq([10, 8])
+        end
+      end
+
+      context "without > geometry string" do
+        before do
+          allow(LaissCms.config).to receive(:preprocess_image_resize) do
+            "10x10"
+          end
+        end
+
+        it "it resizes the image after upload" do
+          picture = LaissCms::Picture.new(image_file: image_file)
+          expect(picture.image_file.data[0x10..0x18].unpack("NN")).to eq([10, 8])
+        end
+      end
+    end
+  end
+
+  describe ".attachment_url_class" do
+    subject { described_class.attachment_url_class }
+
+    it { is_expected.to eq(LaissCms::StorageAdapter::Dragonfly::AttachmentUrl) }
+  end
+
+  describe ".attachment_url_class=" do
+    let(:custom_class) { Class.new }
+
+    subject { described_class.attachment_url_class }
+
+    around do |example|
+      described_class.attachment_url_class = custom_class
+      example.run
+      described_class.attachment_url_class = nil
+    end
+
+    it { is_expected.to eq(custom_class) }
+  end
+
+  describe ".picture_url_class" do
+    subject { described_class.picture_url_class }
+
+    it { is_expected.to eq(LaissCms::StorageAdapter::Dragonfly::PictureUrl) }
+  end
+
+  describe ".picture_url_class=" do
+    let(:custom_class) { Class.new }
+
+    subject { described_class.picture_url_class }
+
+    around do |example|
+      described_class.picture_url_class = custom_class
+      example.run
+      described_class.picture_url_class = nil
+    end
+
+    it { is_expected.to eq(custom_class) }
+  end
+
+  describe ".file_formats" do
+    subject(:file_formats) do
+      described_class.file_formats(class_name, scope: scope)
+    end
+
+    context "for a LaissCms::Picture" do
+      let(:class_name) { "LaissCms::Picture" }
+      let(:scope) { LaissCms::Picture.all }
+
+      let!(:picture1) { create(:laiss_cms_picture, name: "Ping", image_file: fixture_file_upload("image.png")) }
+      let!(:picture2) { create(:laiss_cms_picture, name: "Jay Peg", image_file: fixture_file_upload("image3.jpeg")) }
+
+      it "should return all picture file formats" do
+        is_expected.to match_array(["jpeg", "png"])
+      end
+
+      context "with a scope" do
+        let(:scope) { LaissCms::Picture.where(name: "Jay Peg") }
+
+        it "should only return scoped picture file formats" do
+          is_expected.to eq(["jpeg"])
+        end
+      end
+    end
+
+    context "for a LaissCms::Attachment" do
+      let(:class_name) { "LaissCms::Attachment" }
+      let(:scope) { LaissCms::Attachment.all }
+
+      let!(:attachment1) do
+        create(:laiss_cms_attachment, name: "Pee Dee Eff", file: fixture_file_upload("file.pdf"))
+      end
+
+      let!(:attachment2) do
+        create(:laiss_cms_attachment, name: "Zip File", file: fixture_file_upload("archive.zip"))
+      end
+
+      it "should return all attachment file formats" do
+        is_expected.to match_array [
+          "application/pdf",
+          "application/zip"
+        ]
+      end
+
+      context "with a scope" do
+        let(:scope) { LaissCms::Attachment.where(name: "Pee Dee Eff") }
+
+        it "should only return scoped attachment file formats" do
+          is_expected.to eq ["application/pdf"]
+        end
+      end
+    end
+  end
+
+  describe ".searchable_laiss_cms_resource_attributes" do
+    subject { described_class.searchable_laiss_cms_resource_attributes(class_name) }
+
+    context "for LaissCms::Picture" do
+      let(:class_name) { "LaissCms::Picture" }
+
+      it "returns an array of attributes for the search field query" do
+        is_expected.to eq(%w[name image_file_name])
+      end
+    end
+
+    context "for LaissCms::Attachment" do
+      let(:class_name) { "LaissCms::Attachment" }
+
+      it "returns an array of attributes for the search field query" do
+        is_expected.to eq(%w[name file_name])
+      end
+    end
+  end
+
+  describe ".ransackable_associations" do
+    subject { described_class.ransackable_associations("not_used") }
+
+    it { is_expected.to eq(%w[]) }
+  end
+
+  describe ".ransackable_attributes" do
+    subject { described_class.ransackable_attributes(class_name) }
+
+    context "for an LaissCms::Attachment" do
+      let(:class_name) { "LaissCms::Attachment" }
+
+      it "returns an array of ransackable attributes" do
+        is_expected.to eq(%w[name file_name])
+      end
+    end
+
+    context "for an LaissCms::Picture" do
+      let(:class_name) { "LaissCms::Picture" }
+
+      it "returns an array of ransackable attributes" do
+        is_expected.to eq(%w[name image_file_name])
+      end
+    end
+  end
+
+  describe ".image_file_present?" do
+    subject { described_class.image_file_present?(picture) }
+
+    let(:picture) { LaissCms::Picture.new }
+
+    context "when image_file is present" do
+      before do
+        expect(picture).to receive(:image_file) { fixture_file_upload("image.png") }
+      end
+
+      it { is_expected.to be(true) }
+    end
+
+    context "when image_file is not present" do
+      before do
+        expect(picture).to receive(:image_file) { nil }
+      end
+
+      it { is_expected.to be(false) }
+    end
+  end
+
+  describe ".set_attachment_name?" do
+    subject { described_class.set_attachment_name?(attachment) }
+
+    let(:attachment) { LaissCms::Attachment.new }
+
+    context "when file_name has changed" do
+      before do
+        expect(attachment).to receive(:file_name_changed?) { true }
+      end
+
+      it { is_expected.to be(true) }
+    end
+
+    context "when file_name has not changed" do
+      before do
+        expect(attachment).to receive(:file_name_changed?) { false }
+      end
+
+      it { is_expected.to be(false) }
+    end
+  end
+
+  describe ".file_extension" do
+    subject { described_class.file_extension(attachment) }
+
+    let(:attachment) do
+      LaissCms::Attachment.new.tap do |attachment|
+        attachment.write_attribute(:file_name, file_name)
+        attachment.write_attribute(:file_mime_type, file_mime_type)
+      end
+    end
+
+    context "when the mime type maps to a different canonical extension" do
+      let(:file_name) { "song.mp3" }
+      let(:file_mime_type) { "audio/mpeg" }
+
+      it { is_expected.to eq("mp3") }
+    end
+
+    context "with an uppercased extension" do
+      let(:file_name) { "REPORT.PDF" }
+      let(:file_mime_type) { "application/pdf" }
+
+      it { is_expected.to eq("pdf") }
+    end
+
+    context "when the file name has no extension" do
+      let(:file_name) { "report" }
+      let(:file_mime_type) { "application/pdf" }
+
+      it "falls back to the mime type" do
+        is_expected.to eq("pdf")
+      end
+    end
+
+    context "without a file name or mime type" do
+      let(:file_name) { nil }
+      let(:file_mime_type) { nil }
+
+      it { is_expected.to be_nil }
+    end
+  end
+
+  describe ".has_convertible_format?" do
+    subject { LaissCms.storage_adapter.has_convertible_format?(picture) }
+
+    context "for an convertible image" do
+      let(:picture) { build(:laiss_cms_picture) }
+
+      it { is_expected.to eq(true) }
+    end
+
+    context "for an non-convertible image" do
+      let(:picture) { build(:laiss_cms_picture, image_file: fixture_file_upload("icon.svg")) }
+
+      it { is_expected.to eq(false) }
+    end
+  end
+end

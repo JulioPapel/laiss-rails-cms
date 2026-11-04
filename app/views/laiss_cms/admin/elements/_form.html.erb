@@ -1,0 +1,20 @@
+<%- if @elements.blank? -%>
+  <%= render_message do %>
+    <%= LaissCms.t(:no_more_elements_to_add) %>
+  <% end %>
+<%- else -%>
+  <%= turbo_frame_tag @element do %>
+    <%= laiss_cms_form_for [:admin, @element] do |form| %>
+      <%= form.hidden_field :page_version_id %>
+      <%= form.input :name, label: LaissCms.t(:element_of_type) do %>
+        <%= render LaissCms::Admin::ElementSelect.new(
+          @elements,
+          field_name: form.field_name(:name),
+          autofocus: true
+        ) %>
+      <% end %>
+      <%= form.hidden_field :parent_element_id, value: @parent_element.try(:id) %>
+      <%= form.submit LaissCms.t(:add) %>
+    <%- end -%>
+  <%- end -%>
+<%- end -%>

@@ -5,7 +5,7 @@ module Dummy
     # app's logs and databases and any build caches.
     WATCHED_DIRS = %w[app vendor config/locales]
 
-    def root = Alchemy::Engine.root
+    def root = LaissCms::Engine.root
 
     # The inherited implementation tracks every file below the root, although
     # only files matching a watch pattern can ever trigger a reload. The whole

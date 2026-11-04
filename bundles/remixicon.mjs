@@ -119,7 +119,7 @@ const icons = [
 ]
 
 const config = {
-  dest: "app/assets/images/alchemy",
+  dest: "app/assets/images/laiss_cms",
   mode: {
     symbol: {
       dest: "",

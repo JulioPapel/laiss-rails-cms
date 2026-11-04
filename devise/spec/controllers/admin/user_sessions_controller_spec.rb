@@ -2,8 +2,8 @@
 
 require "rails_helper"
 
-describe Alchemy::Admin::UserSessionsController do
-  routes { Alchemy::Engine.routes }
+describe LaissCms::Admin::UserSessionsController do
+  routes { LaissCms::Engine.routes }
 
   before do
     @request.env["devise.mapping"] = Devise.mappings[:user]
@@ -19,7 +19,7 @@ describe Alchemy::Admin::UserSessionsController do
   end
 
   context "with users present" do
-    let(:user) { create(:alchemy_admin_user) }
+    let(:user) { create(:laiss_cms_admin_user) }
 
     describe "#create" do
       context "with valid user" do

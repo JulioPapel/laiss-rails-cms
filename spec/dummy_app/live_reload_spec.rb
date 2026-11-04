@@ -106,7 +106,7 @@ RSpec.describe Dummy::LiveReloadWatcher do
       pattern = RailsLiveReload.ignore_patterns.detect { |p| p.source.include?("spec") }
 
       expect("spec/dummy/log/development.log").to match(pattern)
-      expect("spec/models/alchemy/page_spec.rb").to match(pattern)
+      expect("spec/models/laiss_cms/page_spec.rb").to match(pattern)
       expect("spec/dummy/app/views/layouts/application.html.erb").to_not match(pattern)
     end
   end
@@ -122,12 +122,12 @@ RSpec.describe Dummy::LiveReloadWatcher do
 
     let(:fixtures) do
       %w[
-        app/views/alchemy/pages/show.html.erb
-        app/assets/builds/alchemy/admin.css
-        app/javascript/alchemy_admin/components/node_select.js
-        app/components/alchemy/foo_component.rb
-        app/models/alchemy/page.rb
-        config/locales/alchemy.en.yml
+        app/views/laiss_cms/pages/show.html.erb
+        app/assets/builds/laiss_cms/admin.css
+        app/javascript/laiss_cms_admin/components/node_select.js
+        app/components/laiss_cms/foo_component.rb
+        app/models/laiss_cms/page.rb
+        config/locales/laiss_cms.en.yml
         vendor/javascript/sortable.min.js
         node_modules/sortablejs/dist/sortable.js
       ]
@@ -151,11 +151,11 @@ RSpec.describe Dummy::LiveReloadWatcher do
 
     it "tracks only the files a watch pattern can match" do
       expect(tracked).to match_array(%w[
-        app/views/alchemy/pages/show.html.erb
-        app/assets/builds/alchemy/admin.css
-        app/javascript/alchemy_admin/components/node_select.js
-        app/components/alchemy/foo_component.rb
-        config/locales/alchemy.en.yml
+        app/views/laiss_cms/pages/show.html.erb
+        app/assets/builds/laiss_cms/admin.css
+        app/javascript/laiss_cms_admin/components/node_select.js
+        app/components/laiss_cms/foo_component.rb
+        config/locales/laiss_cms.en.yml
       ])
     end
 
@@ -164,7 +164,7 @@ RSpec.describe Dummy::LiveReloadWatcher do
     end
 
     it "does not track files no pattern can match" do
-      expect(tracked).to_not include("app/models/alchemy/page.rb")
+      expect(tracked).to_not include("app/models/laiss_cms/page.rb")
     end
 
     # The asset pattern expects a directory between `javascript/` and the file,

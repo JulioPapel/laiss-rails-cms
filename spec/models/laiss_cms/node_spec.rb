@@ -1,0 +1,425 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+module LaissCms
+  describe Node do
+    it { is_expected.to have_many(:node_ingredients) }
+    it { is_expected.to respond_to(:menu_type) }
+
+    it_behaves_like "a relatable resource",
+      resource_factory_name: "laiss_cms_node",
+      ingredient_factory_name: "laiss_cms_ingredient_node"
+
+    it "is only valid with language and name given" do
+      expect(Node.new).to be_invalid
+      expect(build(:laiss_cms_node)).to be_valid
+    end
+
+    describe ".language_root_nodes" do
+      context "with no current language present" do
+        before { expect(Current).to receive(:language) { nil } }
+
+        it "raises error if no current language is set" do
+          expect { Node.language_root_nodes }.to raise_error("No language found")
+        end
+      end
+
+      context "with current language present" do
+        let!(:root_node) { create(:laiss_cms_node) }
+        let!(:child_node) { create(:laiss_cms_node, parent_id: root_node.id) }
+
+        it "returns root nodes from current language" do
+          expect(Node.language_root_nodes).to include(root_node)
+          expect(Node.language_root_nodes).to_not include(child_node)
+        end
+      end
+    end
+
+    describe ".available_menu_names" do
+      subject { described_class.available_menu_names }
+
+      it { is_expected.to contain_exactly("main_menu", "footer_menu") }
+    end
+
+    describe ".from_current_public_site" do
+      subject { described_class.from_current_public_site }
+
+      let(:default_language) { LaissCms::Language.default || create(:laiss_cms_language) }
+      let(:other_site) { create(:laiss_cms_site) }
+      let(:other_site_language) { create(:laiss_cms_language, :german, site: other_site) }
+      let(:non_public_language) { create(:laiss_cms_language, :klingon, public: false) }
+
+      let!(:current_site_node) { create(:laiss_cms_node, language: default_language) }
+      let!(:other_site_node) { create(:laiss_cms_node, language: other_site_language) }
+      let!(:non_public_language_node) { create(:laiss_cms_node, language: non_public_language) }
+
+      it "only returns nodes of the current site in a published language" do
+        is_expected.to contain_exactly(current_site_node)
+      end
+    end
+
+    describe ".available_to_guests" do
+      subject { described_class.available_to_guests }
+
+      let(:default_language) { LaissCms::Language.default || create(:laiss_cms_language) }
+      let(:other_site) { create(:laiss_cms_site) }
+      let(:other_site_language) { create(:laiss_cms_language, :german, site: other_site) }
+      let(:non_public_language) { create(:laiss_cms_language, :klingon, public: false) }
+
+      let!(:public_page_node) do
+        create(:laiss_cms_node, name: nil, language: default_language,
+          page: create(:laiss_cms_page, :public, language: default_language))
+      end
+      let!(:external_node) { create(:laiss_cms_node, :with_url, language: default_language) }
+      let!(:restricted_page_node) do
+        create(:laiss_cms_node, name: nil, language: default_language,
+          page: create(:laiss_cms_page, :public, :restricted, language: default_language))
+      end
+      let!(:unpublished_page_node) do
+        create(:laiss_cms_node, name: nil, language: default_language,
+          page: create(:laiss_cms_page, language: default_language))
+      end
+      let!(:other_site_node) { create(:laiss_cms_node, :with_url, language: other_site_language) }
+      let!(:non_public_language_node) { create(:laiss_cms_node, :with_url, language: non_public_language) }
+
+      it "returns external nodes and nodes with a published, unrestricted page of the current site" do
+        is_expected.to contain_exactly(public_page_node, external_node)
+      end
+    end
+
+    describe ".available_to_members" do
+      subject { described_class.available_to_members }
+
+      let(:default_language) { LaissCms::Language.default || create(:laiss_cms_language) }
+      let(:other_site) { create(:laiss_cms_site) }
+      let(:other_site_language) { create(:laiss_cms_language, :german, site: other_site) }
+      let(:non_public_language) { create(:laiss_cms_language, :klingon, public: false) }
+
+      let!(:public_page_node) do
+        create(:laiss_cms_node, name: nil, language: default_language,
+          page: create(:laiss_cms_page, :public, language: default_language))
+      end
+      let!(:external_node) { create(:laiss_cms_node, :with_url, language: default_language) }
+      let!(:restricted_page_node) do
+        create(:laiss_cms_node, name: nil, language: default_language,
+          page: create(:laiss_cms_page, :public, :restricted, language: default_language))
+      end
+      let!(:unpublished_page_node) do
+        create(:laiss_cms_node, name: nil, language: default_language,
+          page: create(:laiss_cms_page, language: default_language))
+      end
+      let!(:other_site_node) { create(:laiss_cms_node, :with_url, language: other_site_language) }
+      let!(:non_public_language_node) { create(:laiss_cms_node, :with_url, language: non_public_language) }
+
+      it "also returns nodes with a restricted page but still excludes unpublished, foreign site and non-public language nodes" do
+        is_expected.to contain_exactly(public_page_node, external_node, restricted_page_node)
+      end
+    end
+
+    describe ".available_to" do
+      def user_with(*roles)
+        double("User", laiss_cms_roles: roles)
+      end
+
+      let(:default_language) { LaissCms::Language.default || create(:laiss_cms_language) }
+
+      let!(:public_page_node) do
+        create(:laiss_cms_node, name: nil, language: default_language,
+          page: create(:laiss_cms_page, :public, language: default_language))
+      end
+      let!(:external_node) { create(:laiss_cms_node, :with_url, language: default_language) }
+      let!(:member_page_node) do
+        create(:laiss_cms_node, name: nil, language: default_language,
+          page: create(:laiss_cms_page, :public, :restricted, language: default_language))
+      end
+      let!(:role_page_node) do
+        create(:laiss_cms_node, name: nil, language: default_language,
+          page: create(:laiss_cms_page, :public, restricted: true,
+            permitted_roles: %w[restricted_test], language: default_language))
+      end
+
+      it "returns external nodes and nodes to pages readable with the users roles" do
+        expect(described_class.available_to(user_with("member")))
+          .to contain_exactly(public_page_node, external_node, member_page_node)
+      end
+
+      it "includes nodes to pages restricted to one of the users additional roles" do
+        expect(described_class.available_to(user_with("member", "restricted_test")))
+          .to contain_exactly(public_page_node, external_node, member_page_node, role_page_node)
+      end
+
+      it "excludes every restricted page node for no user" do
+        expect(described_class.available_to(nil))
+          .to contain_exactly(public_page_node, external_node)
+      end
+    end
+
+    describe "#url" do
+      it "is valid with leading slash" do
+        expect(build(:laiss_cms_node, url: "/something")).to be_valid
+      end
+
+      it "is invalid without leading slash" do
+        expect(build(:laiss_cms_node, url: "something")).to be_invalid
+      end
+
+      it "is valid with an allowed protocol scheme" do
+        expect(build(:laiss_cms_node, url: "mailto:jane@example.com")).to be_valid
+        expect(build(:laiss_cms_node, url: "tel:+4912345")).to be_valid
+      end
+
+      it "is invalid with a scheme that is not allowed" do
+        expect(build(:laiss_cms_node, url: "i2+ts-z.app:widget.io")).to be_invalid
+      end
+
+      it "is invalid with an executable scheme" do
+        expect(build(:laiss_cms_node, url: "javascript:alert(document.domain)")).to be_invalid
+        expect(build(:laiss_cms_node, url: "data:text/html;base64,PHN2Zz4=")).to be_invalid
+        expect(build(:laiss_cms_node, url: "vbscript:msgbox(1)")).to be_invalid
+      end
+
+      it "is invalid with an executable scheme obfuscated by whitespace" do
+        expect(build(:laiss_cms_node, url: " javascript:alert(1)")).to be_invalid
+        expect(build(:laiss_cms_node, url: "java\tscript:alert(1)")).to be_invalid
+      end
+
+      it "is invalid with a javascript url disguised as an authority" do
+        expect(build(:laiss_cms_node, url: "javascript://%0aalert(1)")).to be_invalid
+      end
+
+      context "with a page attached" do
+        # #url returns the page path while a page is attached, so a raw url
+        # stored alongside it only becomes live once the page is detached.
+        it "rejects a stored unsafe url when the page gets detached" do
+          node = create(:laiss_cms_node, :with_page, name: "Detachable")
+          node.update_columns(url: "javascript:alert(1)")
+          node.reload
+          node.page = nil
+          expect(node).to be_invalid
+        end
+      end
+
+      context "with allowed_url_schemes configured" do
+        around do |example|
+          previous = LaissCms.config.allowed_url_schemes.to_a
+          LaissCms.config.allowed_url_schemes = previous + ["i2+ts-z.app"]
+          example.run
+          LaissCms.config.allowed_url_schemes = previous
+        end
+
+        it "is valid with the configured scheme" do
+          expect(build(:laiss_cms_node, url: "i2+ts-z.app:widget.io")).to be_valid
+        end
+      end
+
+      context "with page attached" do
+        let(:node) { create(:laiss_cms_node, :with_page) }
+
+        it "returns the url from page" do
+          expect(node.url).to eq("/#{node.page.urlname}")
+        end
+
+        context "and with url set" do
+          let(:node) { build(:laiss_cms_node, :with_page, url: "http://google.com") }
+
+          it "still returns the url from the page" do
+            expect(node.url).to eq("/#{node.page.urlname}")
+          end
+        end
+      end
+
+      context "without page attached" do
+        let(:node) { build(:laiss_cms_node, url: "http://google.com") }
+
+        it "returns the url from url attribute" do
+          expect(node.url).to eq("http://google.com")
+        end
+
+        context "and without url set" do
+          let(:node) { build(:laiss_cms_node) }
+
+          it do
+            expect(node.url).to be_nil
+          end
+        end
+      end
+    end
+
+    describe "#name" do
+      subject { node.name }
+
+      let(:parent) { build_stubbed(:laiss_cms_node) }
+      context "with page attached" do
+        let(:node) { build_stubbed(:laiss_cms_node, :with_page, parent: parent) }
+
+        it "returns the name from page" do
+          expect(node.name).to eq(node.page.name)
+        end
+
+        context "but with name set" do
+          let(:node) { build_stubbed(:laiss_cms_node, :with_page, name: "Google", parent: parent) }
+
+          it "still returns the name from name attribute" do
+            expect(node.name).to eq("Google")
+          end
+        end
+      end
+
+      context "without page attached" do
+        let(:node) { build_stubbed(:laiss_cms_node, name: "Google") }
+
+        it "returns the name from name attribute" do
+          expect(node.name).to eq("Google")
+        end
+      end
+    end
+
+    describe "#to_partial_path" do
+      let(:node) { build(:laiss_cms_node, name: "Main Menu") }
+
+      it "returns the path to the menu wrapper partial" do
+        expect(node.to_partial_path).to eq("laiss_cms/menus/main_menu/node")
+      end
+    end
+  end
+
+  describe "#destroy" do
+    context "if there are node ingredients present" do
+      let(:node) { create(:laiss_cms_node) }
+      let(:page) { create(:laiss_cms_page, :layoutpage, page_layout: :footer) }
+      let(:element) { create(:laiss_cms_element, name: "menu", page_version: page.draft_version) }
+
+      before do
+        create(:laiss_cms_ingredient_node, element: element, related_object: node)
+      end
+
+      it "does not destroy the node but adds an error" do
+        node.destroy
+        expect(node).not_to be_destroyed
+        expect(node.errors.full_messages).to eq(["This menu item is in use inside an LaissCms element on the following pages: #{page.name}."])
+      end
+
+      context "if there are node ingredients present on a child node" do
+        let!(:parent_node) { create(:laiss_cms_node, children: [node]) }
+
+        it "does not destroy the node and children either but adds an error" do
+          parent_node.reload.destroy
+          expect(parent_node).not_to be_destroyed
+          expect(parent_node.errors.full_messages).to eq(["This menu item is in use inside an LaissCms element on the following pages: #{page.name}."])
+        end
+      end
+    end
+
+    describe ".all_from_clipboard" do
+      let!(:node_1) { create(:laiss_cms_node) }
+      let!(:node_2) { create(:laiss_cms_node) }
+      let(:clipboard) { [{"id" => node_1.id.to_s}, {"id" => node_2.id.to_s}] }
+
+      it "returns all nodes from clipboard" do
+        expect(Node.all_from_clipboard(clipboard)).to contain_exactly(node_1, node_2)
+      end
+
+      context "with empty clipboard" do
+        let(:clipboard) { [] }
+
+        it "returns empty array" do
+          expect(Node.all_from_clipboard(clipboard)).to eq([])
+        end
+      end
+
+      context "with nil clipboard" do
+        let(:clipboard) { nil }
+
+        it "returns empty array" do
+          expect(Node.all_from_clipboard(clipboard)).to eq([])
+        end
+      end
+    end
+
+    describe ".copy_and_paste" do
+      let(:source) { create(:laiss_cms_node, name: "Source Node", url: "/source") }
+      let(:new_parent) { create(:laiss_cms_node) }
+      let(:node_name) { "Copied Node" }
+
+      subject { Node.copy_and_paste(source, new_parent, node_name) }
+
+      it "creates a copy of the source node with the given name under the new parent" do
+        expect(subject.name).to eq(node_name)
+        expect(subject.parent).to eq(new_parent)
+        expect(subject.language).to eq(new_parent.language)
+      end
+
+      it "copies the source node attributes" do
+        expect(subject.url).to eq(source.url)
+        expect(subject.menu_type).to eq(source.menu_type)
+      end
+
+      it "returns the copied node" do
+        expect(subject).to be_a(LaissCms::Node)
+        expect(subject).to be_persisted
+      end
+
+      context "when source node has children" do
+        let!(:child_node_1) { create(:laiss_cms_node, parent: source, name: "Child 1") }
+        let!(:child_node_2) { create(:laiss_cms_node, parent: source, name: "Child 2") }
+
+        it "also copies all descendant nodes" do
+          expect(subject.children.length).to eq(2)
+          expect(subject.children.map(&:name)).to contain_exactly("Child 1", "Child 2")
+        end
+
+        it "maintains the hierarchy structure" do
+          copied_child = subject.children.first
+          expect(copied_child.parent).to eq(subject)
+          expect(copied_child.language).to eq(subject.language)
+        end
+      end
+
+      context "with nested children" do
+        let!(:child_node) { create(:laiss_cms_node, parent: source, name: "Child") }
+        let!(:grandchild_node) { create(:laiss_cms_node, parent: child_node, name: "Grandchild") }
+
+        it "copies the entire nested structure" do
+          copied_child = subject.children.first
+          copied_grandchild = copied_child.children.first
+
+          expect(copied_grandchild.name).to eq("Grandchild")
+          expect(copied_grandchild.parent).to eq(copied_child)
+        end
+      end
+
+      context "when trying to paste node as child of itself" do
+        let(:new_parent) { source }
+
+        it "returns nil and does not create a copy" do
+          expect(subject).to be_nil
+          expect(Node.where(name: node_name)).to be_empty
+        end
+      end
+
+      context "when trying to paste node as child of its descendant" do
+        let!(:child_node) { create(:laiss_cms_node, parent: source, name: "Child") }
+        let(:new_parent) { child_node }
+
+        it "returns nil and does not create a copy" do
+          source.reload # Refresh nested set values after creating children
+          expect(subject).to be_nil
+          expect(Node.where(name: node_name)).to be_empty
+        end
+      end
+
+      context "when trying to paste node as child of its deep descendant" do
+        let!(:child_node) { create(:laiss_cms_node, parent: source, name: "Child") }
+        let!(:grandchild_node) { create(:laiss_cms_node, parent: child_node, name: "Grandchild") }
+        let(:new_parent) { grandchild_node }
+
+        it "returns nil and does not create a copy" do
+          source.reload # Refresh nested set values after creating children
+          expect(subject).to be_nil
+          expect(Node.where(name: node_name)).to be_empty
+        end
+      end
+    end
+  end
+end

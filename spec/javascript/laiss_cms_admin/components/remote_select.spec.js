@@ -1,0 +1,475 @@
+import { renderComponent } from "./component.helper"
+
+import "laiss_cms_admin/components/page_select"
+import {
+  RemoteSelect,
+  hightlightTerm,
+  escapeRegExp
+} from "laiss_cms_admin/components/remote_select"
+
+// A minimal subclass so the slot render helpers can be exercised through every
+// slot shape without depending on a real select's data.
+class TestRemoteSelect extends RemoteSelect {
+  entrySlots = {}
+  selectionSlots = {}
+
+  _entry() {
+    return this.entrySlots
+  }
+
+  _selectedEntry() {
+    return this.selectionSlots
+  }
+}
+customElements.define("laiss-cms-test-remote-select", TestRemoteSelect)
+
+const parse = (html) => {
+  const wrapper = document.createElement("div")
+  wrapper.innerHTML = html
+  return wrapper.firstElementChild
+}
+
+describe("RemoteSelect", () => {
+  /**
+   * @type {HTMLElement | undefined}
+   */
+  let component = undefined
+
+  describe("slot rendering", () => {
+    beforeEach(() => {
+      component = renderComponent(
+        "laiss-cms-test-remote-select",
+        `<laiss-cms-test-remote-select><input type="text"></laiss-cms-test-remote-select>`
+      )
+    })
+
+    describe("a dropdown option", () => {
+      it("renders an icon lead", () => {
+        component.entrySlots = { icon: "file-3", primary: "Home" }
+        const entry = parse(component._renderListEntry({}, ""))
+        const icon = entry.querySelector(".remote-select--icon")
+        expect(icon.getAttribute("name")).toEqual("file-3")
+        expect(entry.querySelector(".remote-select--media")).toBeNull()
+      })
+
+      it("renders a media lead when no icon is given", () => {
+        component.entrySlots = { media: "/thumb.png", primary: "Home" }
+        const entry = parse(component._renderListEntry({}, ""))
+        const media = entry.querySelector(".remote-select--media")
+        expect(media.tagName).toEqual("IMG")
+        expect(media.getAttribute("src")).toEqual("/thumb.png")
+      })
+
+      it("prefers the icon when both are given", () => {
+        component.entrySlots = { icon: "file-3", media: "/thumb.png" }
+        const entry = parse(component._renderListEntry({}, ""))
+        expect(entry.querySelector(".remote-select--icon")).not.toBeNull()
+        expect(entry.querySelector(".remote-select--media")).toBeNull()
+      })
+
+      it("keeps the pre-highlighted primary text raw", () => {
+        component.entrySlots = { primary: "H<em>om</em>e" }
+        const entry = parse(component._renderListEntry({}, ""))
+        expect(entry.querySelector(".remote-select--primary em")).not.toBeNull()
+      })
+
+      it("escapes a plain aside", () => {
+        component.entrySlots = { primary: "Home", aside: "<b>Site</b>" }
+        const aside = parse(component._renderListEntry({}, "")).querySelector(
+          ".remote-select--aside"
+        )
+        expect(aside.querySelector("b")).toBeNull()
+        expect(aside.textContent).toEqual("<b>Site</b>")
+      })
+
+      it("head truncates a secondary via a bdi wrapper", () => {
+        component.entrySlots = {
+          primary: "Home",
+          secondary: { text: "/a/b/c", truncate: "head" }
+        }
+        const secondary = parse(
+          component._renderListEntry({}, "")
+        ).querySelector(".remote-select--secondary")
+        expect(
+          secondary.classList.contains("remote-select--truncate-head")
+        ).toBe(true)
+        expect(secondary.querySelector("bdi").textContent).toEqual("/a/b/c")
+      })
+
+      it("renders a badge as a pill", () => {
+        component.entrySlots = {
+          primary: "Home",
+          secondaryAside: { badge: "en" }
+        }
+        const badge = parse(component._renderListEntry({}, "")).querySelector(
+          ".remote-select--secondary-aside"
+        )
+        expect(badge.classList.contains("remote-select--badge")).toBe(true)
+        expect(badge.textContent).toEqual("en")
+      })
+
+      it("omits a cell whose slot is falsy", () => {
+        component.entrySlots = {
+          primary: "Home",
+          aside: undefined,
+          secondary: { text: "" },
+          secondaryAside: { badge: null }
+        }
+        const entry = parse(component._renderListEntry({}, ""))
+        expect(entry.querySelector(".remote-select--aside")).toBeNull()
+        expect(entry.querySelector(".remote-select--secondary")).toBeNull()
+        expect(
+          entry.querySelector(".remote-select--secondary-aside")
+        ).toBeNull()
+      })
+    })
+
+    describe("the selected item", () => {
+      it("renders the lead, the name, and a shrinking secondary", () => {
+        component.selectionSlots = {
+          icon: "file-3",
+          primary: "Home",
+          secondary: { text: "/home", truncate: "head" }
+        }
+        const selection = parse(component._renderResult({}))
+        expect(selection.classList.contains("remote-select--selection")).toBe(
+          true
+        )
+        expect(selection.querySelector(".remote-select--icon")).not.toBeNull()
+        expect(
+          selection.querySelector(".remote-select--selection-name").textContent
+        ).toEqual("Home")
+        expect(
+          selection.querySelector(".remote-select--selection-aside bdi")
+            .textContent
+        ).toEqual("/home")
+      })
+
+      it("omits the secondary when it is not given", () => {
+        component.selectionSlots = { icon: "menu-2", primary: "A node" }
+        const selection = parse(component._renderResult({}))
+        expect(
+          selection.querySelector(".remote-select--selection-aside")
+        ).toBeNull()
+      })
+    })
+  })
+
+  describe("tomSelectConfig", () => {
+    // Reading the config must not connect the element, so Tom Select does not
+    // initialize (a multiple select wraps a <select>, not an <input>).
+    const build = (attributes, element) => {
+      const el = document.createElement("laiss-cms-test-remote-select")
+      Object.entries(attributes).forEach(([name, value]) =>
+        el.setAttribute(name, value)
+      )
+      el.innerHTML = element
+      return el
+    }
+
+    it("configures a single select by default", () => {
+      const config = build({}, `<input type="text">`).tomSelectConfig
+      expect(config.maxItems).toBe(1)
+      expect(config.closeAfterSelect).toBe(true)
+      expect(config.plugins.remove_button).toBeUndefined()
+    })
+
+    it("configures a multiple select when the multiple attribute is set", () => {
+      const config = build(
+        { multiple: "" },
+        `<select multiple></select>`
+      ).tomSelectConfig
+      expect(config.maxItems).toBeNull()
+      expect(config.closeAfterSelect).toBe(false)
+      expect(config.plugins.remove_button).toBeDefined()
+    })
+  })
+
+  describe("onChange", () => {
+    beforeEach(() => {
+      const html = `
+        <laiss-cms-page-select>
+          <input type="text">
+        </laiss-cms-page-select>
+      `
+      component = renderComponent("laiss-cms-page-select", html)
+    })
+
+    it("updates the selection attribute when an item is added", () => {
+      const added = { id: 1, name: "A page" }
+      component.onChange({ added, removed: null })
+      expect(component.getAttribute("selection")).toEqual(JSON.stringify(added))
+    })
+
+    it("does not change the selection attribute when nothing is added", () => {
+      const previous = JSON.stringify({ id: 1, name: "Previous" })
+      component.setAttribute("selection", previous)
+      component.onChange({ added: null, removed: { id: 1 } })
+      expect(component.getAttribute("selection")).toEqual(previous)
+    })
+
+    it("dispatches an LaissCms.RemoteSelect.Change event", () => {
+      const listener = vi.fn()
+      component.addEventListener("LaissCms.RemoteSelect.Change", listener)
+      const added = { id: 2, name: "Another page" }
+      component.onChange({ added, removed: null })
+      expect(listener).toHaveBeenCalledOnce()
+      expect(listener.mock.calls[0][0].detail).toEqual({
+        added,
+        removed: null
+      })
+    })
+  })
+
+  describe("multiple selection", () => {
+    let select = undefined
+    let form = undefined
+
+    beforeEach(() => {
+      component = renderComponent(
+        "laiss-cms-test-remote-select",
+        `<form>
+          <laiss-cms-test-remote-select multiple>
+            <select multiple name="ids[]"></select>
+          </laiss-cms-test-remote-select>
+        </form>`
+      )
+      form = component.closest("form")
+      select = component.querySelector("select")
+      select.tomselect.addOption({ id: 1, name: "One" })
+      select.tomselect.addOption({ id: 2, name: "Two" })
+    })
+
+    it("shows every selected item in the control", () => {
+      select.tomselect.addItem("1")
+      select.tomselect.addItem("2")
+      expect(component.querySelectorAll(".ts-control .item").length).toEqual(2)
+    })
+
+    it("serializes the selected ids into the array param", () => {
+      select.tomselect.addItem("1")
+      select.tomselect.addItem("2")
+      expect(new FormData(form).getAll("ids[]")).toEqual(["1", "2"])
+    })
+
+    it("stores the selection as an array of records", () => {
+      select.tomselect.addItem("1")
+      select.tomselect.addItem("2")
+      expect(JSON.parse(component.getAttribute("selection"))).toEqual([
+        { id: 1, name: "One" },
+        { id: 2, name: "Two" }
+      ])
+    })
+
+    it("drops a removed item from the stored selection", () => {
+      select.tomselect.addItem("1")
+      select.tomselect.addItem("2")
+      select.tomselect.removeItem("1")
+      expect(JSON.parse(component.getAttribute("selection"))).toEqual([
+        { id: 2, name: "Two" }
+      ])
+    })
+
+    it("dispatches a change event for each added item", () => {
+      const listener = vi.fn()
+      component.addEventListener("LaissCms.RemoteSelect.Change", listener)
+      select.tomselect.addItem("1")
+      expect(listener).toHaveBeenCalledOnce()
+      expect(listener.mock.calls[0][0].detail).toEqual({
+        added: { id: 1, name: "One" },
+        removed: null
+      })
+    })
+  })
+
+  describe("while a search is loading", () => {
+    it("keeps showing the results it already has", async () => {
+      let respond
+      const body = (data) => ({
+        ok: true,
+        status: 200,
+        statusText: "OK",
+        json: () =>
+          Promise.resolve({
+            data,
+            meta: { page: 1, per_page: 25, total_count: data.length }
+          })
+      })
+      global.fetch = vi.fn(
+        () =>
+          new Promise((resolve) => (respond = () => resolve(body([{ id: 2 }]))))
+      )
+      document.body.innerHTML = `
+        <laiss-cms-test-remote-select url="/api/things">
+          <input type="text" name="thing_id">
+        </laiss-cms-test-remote-select>`
+      const select = document.querySelector("input").tomselect
+      select.open()
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      respond()
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      const before = Object.keys(select.options).length
+
+      select.control_input.value = "a term"
+      select.onInput(new Event("input"))
+      await new Promise((resolve) => setTimeout(resolve, 400))
+
+      expect(Object.keys(select.options).length).toEqual(before)
+    })
+  })
+
+  describe("a failing load", () => {
+    const renderAndSearch = async () => {
+      document.body.innerHTML = `
+        <div id="flash_notices"></div>
+        <laiss-cms-test-remote-select url="/api/things">
+          <input type="text" name="thing_id">
+        </laiss-cms-test-remote-select>`
+      const select = document.querySelector("input").tomselect
+      select.open()
+      await new Promise((resolve) => setTimeout(resolve, 400))
+      return select
+    }
+
+    beforeEach(() => {
+      vi.spyOn(console, "error").mockImplementation(() => {})
+    })
+
+    it("reports a response body that is not JSON", async () => {
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          json: () => Promise.reject(new SyntaxError("Unexpected token <"))
+        })
+      )
+      await renderAndSearch()
+      expect(console.error).toHaveBeenCalled()
+      expect(
+        document.querySelector("#flash_notices laiss-cms-message")?.textContent
+      ).toContain("Unexpected token <")
+    })
+
+    it("reports an error response that carries a valid JSON body", async () => {
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: false,
+          status: 401,
+          statusText: "Unauthorized",
+          json: () => Promise.resolve({ error: "Invalid API key" })
+        })
+      )
+      await renderAndSearch()
+      expect(console.error).toHaveBeenCalled()
+      expect(
+        document.querySelector("#flash_notices laiss-cms-message")?.textContent
+      ).toContain("401 Unauthorized")
+    })
+
+    it("stops the loading state so the control does not spin forever", async () => {
+      global.fetch = vi.fn(() => Promise.reject(new Error("Network down")))
+      const select = await renderAndSearch()
+      expect(select.loading).toEqual(0)
+      expect(select.wrapper.classList.contains("loading")).toBe(false)
+    })
+  })
+
+  describe("single preselection", () => {
+    // Renders into a form that is already listening, because the preselection
+    // is restored while the component upgrades.
+    const renderIntoForm = (html) => {
+      document.body.innerHTML = `<form></form>`
+      const form = document.querySelector("form")
+      const listener = vi.fn()
+      form.addEventListener("change", listener)
+      form.innerHTML = html
+      return { form, listener }
+    }
+
+    const html = `
+      <laiss-cms-test-remote-select selection='{"id":1,"name":"One"}'>
+        <input type="text" name="page_id">
+      </laiss-cms-test-remote-select>
+    `
+
+    it("shows the preselected item", () => {
+      renderIntoForm(html)
+      component = document.querySelector("laiss-cms-test-remote-select")
+      expect(component.querySelectorAll(".ts-control .item").length).toEqual(1)
+    })
+
+    it("does not fire a change event on the surrounding form", () => {
+      // The element editor listens for change on its form and would mark the
+      // element dirty, so every element holding a preselected page, node or
+      // file would come up with unsaved changes right after loading.
+      const { listener } = renderIntoForm(html)
+      expect(listener).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("multiple preselection", () => {
+    it("shows every preselected item", () => {
+      const selection = [
+        { id: 1, name: "One" },
+        { id: 2, name: "Two" }
+      ]
+      component = renderComponent(
+        "laiss-cms-test-remote-select",
+        `<laiss-cms-test-remote-select multiple selection='${JSON.stringify(selection)}'>
+          <select multiple name="ids[]"></select>
+        </laiss-cms-test-remote-select>`
+      )
+      expect(component.querySelectorAll(".ts-control .item").length).toEqual(2)
+    })
+  })
+})
+
+describe("hightlightTerm", () => {
+  const render = (html) => {
+    const el = document.createElement("div")
+    el.innerHTML = html
+    return el
+  }
+
+  it("escapes HTML in the name so a payload does not become an element", () => {
+    const el = render(hightlightTerm("<img src=x onerror=alert(1)>", ""))
+    expect(el.querySelector("img")).toBeNull()
+    expect(el.textContent).toEqual("<img src=x onerror=alert(1)>")
+  })
+
+  it("highlights the matching term with an em", () => {
+    const el = render(hightlightTerm("Home", "om"))
+    expect(el.querySelector("em").textContent).toEqual("om")
+    expect(el.textContent).toEqual("Home")
+  })
+
+  it("highlights the term without unescaping the surrounding name", () => {
+    const el = render(hightlightTerm("<b>Home</b>", "Home"))
+    expect(el.querySelector("b")).toBeNull()
+    expect(el.querySelector("em").textContent).toEqual("Home")
+    expect(el.textContent).toEqual("<b>Home</b>")
+  })
+
+  it("treats a term with regex metacharacters literally instead of throwing", () => {
+    expect(() => hightlightTerm("a(b", "(")).not.toThrow()
+    const el = render(hightlightTerm("a(b", "("))
+    expect(el.querySelector("em").textContent).toEqual("(")
+  })
+})
+
+describe("escapeRegExp", () => {
+  it("escapes regex metacharacters so they match literally", () => {
+    expect(escapeRegExp("a(b")).toEqual("a\\(b")
+  })
+
+  it("leaves a plain string unchanged", () => {
+    expect(escapeRegExp("home")).toEqual("home")
+  })
+
+  it("produces a pattern that matches the term literally", () => {
+    const pattern = new RegExp(escapeRegExp("a.c"))
+    expect(pattern.test("a.c")).toBe(true)
+    expect(pattern.test("axc")).toBe(false)
+  })
+})

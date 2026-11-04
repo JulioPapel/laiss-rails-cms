@@ -1,0 +1,24 @@
+<%= laiss_cms_form_for @tag, as: 'tag', url: laiss_cms.admin_tag_path(@tag), html: {method: 'patch'} do |f| %>
+  <h3>
+    <%= LaissCms.t(:you_can_rename_this_tag) %>
+  </h3>
+  <%= f.input :name %>
+  <%= f.submit LaissCms.t(:rename) %>
+<% end %>
+<% if @tags.any? -%>
+  <%= laiss_cms_form_for @tag, as: 'tag', url: laiss_cms.admin_tag_path(@tag), html: {method: 'patch'} do |f| %>
+    <h3>
+      <%= LaissCms.t(:or_replace_it_with_an_existing_tag) %>
+    </h3>
+    <div class="input tags">
+      <label class="control-label"><%= LaissCms.t('Tags') %></label>
+      <div class="control_group" id="tags_tag_list">
+        <%= render LaissCms::Admin::ListFilter.new(".tag-list li", placeholder: LaissCms.t("Filter tags")) %>
+        <ul class="tags tag-list">
+          <%= render partial: "radio_tag", collection: @tags, locals: {name: "tag"} %>
+        </ul>
+      </div>
+    </div>
+    <%= f.submit LaissCms.t(:replace) %>
+  <% end %>
+<% end %>

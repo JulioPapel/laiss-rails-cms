@@ -5,14 +5,14 @@ next: about
 
 # Getting Started
 
-This guide covers getting up and running with AlchemyCMS. After reading it, you should be familiar with:
+This guide covers getting up and running with LaissCMS. After reading it, you should be familiar with:
 
-* Installing and creating a new application with AlchemyCMS
+* Installing and creating a new application with LaissCMS
 * Creating a user and logging in for the first time.
 
 ## Prerequisites
 
-This guide is designed for beginners who want to get started with AlchemyCMS from scratch. It does not assume that you have any prior experience with AlchemyCMS. However, to get the most out of it, you need to have some prerequisites installed:
+This guide is designed for beginners who want to get started with LaissCMS from scratch. It does not assume that you have any prior experience with LaissCMS. However, to get the most out of it, you need to have some prerequisites installed:
 
 * The [Ruby](http://www.ruby-lang.org/en/downloads) programming language
 * At least one of these databases: [SQLite](https://sqlite.org), [MariaDB](https://www.mariadb.org) or [PostgreSQL](https://www.postgresql.org)
@@ -36,7 +36,7 @@ The most common ways to install Ruby on your computer nowadays are:
 
 ### Learning Rails
 
-It is highly recommended to familiarize yourself with Ruby on Rails before using AlchemyCMS.
+It is highly recommended to familiarize yourself with Ruby on Rails before using LaissCMS.
 You will understand much more and see things clearer if you know about the basics of Ruby on Rails.
 
 There are many excellent resources on the internet for learning Ruby on Rails, including:
@@ -46,17 +46,17 @@ There are many excellent resources on the internet for learning Ruby on Rails, i
 * [Rails for Zombies](http://railsforzombies.org)
 * [Railscasts](http://railscasts.com)
 
-## Installing Alchemy
+## Installing LaissCms
 
 ### Create the Rails application
 
-The installation of AlchemyCMS is very easy. You just need to run Ruby's `gem` command.
+The installation of LaissCMS is very easy. You just need to run Ruby's `gem` command.
 
 ~~~ bash
-gem install alchemy_cms
+gem install laiss_cms
 ~~~
 
-Alchemy is a Rails 4 engine, so at first you need to generate a fresh Rails 4 application, by running this command
+LaissCms is a Rails 4 engine, so at first you need to generate a fresh Rails 4 application, by running this command
 
 ~~~ bash
 rails new YOUR_APP_NAME
@@ -66,30 +66,30 @@ rails new YOUR_APP_NAME
 The `rails` command has lots of parameters like choosing the database you want to work with. Please follow [the official Rails guides](https://guides.rubyonrails.org/getting_started.html) for further information.
 :::
 
-### Install Alchemy into the Rails application
+### Install LaissCms into the Rails application
 
-In your existing Rails application, you can need to require the AlchemyCMS gem.
+In your existing Rails application, you can need to require the LaissCMS gem.
 
 Just add this line to your `Gemfile`.
 
 ~~~ ruby
-gem 'alchemy_cms'
+gem 'laiss_cms'
 ~~~
 
-Since AlchemyCMS is a mountable engine, you need to define the mountpoint in your `config/routes.rb` file.
+Since LaissCMS is a mountable engine, you need to define the mountpoint in your `config/routes.rb` file.
 
 ~~~ ruby
 MyApp::Application.routes.draw do
-  mount Alchemy::Engine => '/'
+  mount LaissCms::Engine => '/'
 end
 ~~~
 
 ::: tip
-You can mount Alchemy on every route you want. `pages`, `cms`, what ever you want. Most of the time you go with the root route.
+You can mount LaissCms on every route you want. `pages`, `cms`, what ever you want. Most of the time you go with the root route.
 :::
 
 ::: warning NOTE
-Please be aware that Alchemy has a very strong catch all route. It is *highly recommended* that you mount Alchemy at last position in your app, so your existing routes are still available.
+Please be aware that LaissCms has a very strong catch all route. It is *highly recommended* that you mount LaissCms at last position in your app, so your existing routes are still available.
 :::
 
 Now you need to run bundler for installing the dependencies.
@@ -101,20 +101,20 @@ bundle install
 Then run the install task.
 
 ~~~ bash
-bin/rake alchemy:install
+bin/rake laiss_cms:install
 ~~~
 
 #### Authentication
 
-If you already have your own user class in your application, you have to tell Alchemy about it. Please follow [this guide](how_to_add_custom_authentication) to learn how to achieve that.
+If you already have your own user class in your application, you have to tell LaissCms about it. Please follow [this guide](how_to_add_custom_authentication) to learn how to achieve that.
 
-If you don't have a authentication solution, you can use the alchemy-devise gem.
+If you don't have a authentication solution, you can use the laiss-cms-devise gem.
 
 Just add it to your apps `Gemfile`
 
 ~~~ ruby
 # Gemfile
-gem 'alchemy-devise'
+gem 'laiss-cms-devise'
 ~~~
 
 ~~~ bash
@@ -124,12 +124,12 @@ bundle install
 and run the installer
 
 ~~~ bash
-bin/rails g alchemy:devise:install
+bin/rails g laiss_cms:devise:install
 ~~~
 
-## Starting AlchemyCMS
+## Starting LaissCMS
 
-Now that you have AlchemyCMS successfully installed, let's move on by creating your first user with administrative privilegs.
+Now that you have LaissCMS successfully installed, let's move on by creating your first user with administrative privilegs.
 
 You just need to start a local ruby server on your development machine.
 

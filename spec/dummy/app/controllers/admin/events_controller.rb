@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-class Admin::EventsController < Alchemy::Admin::ResourcesController
-  add_alchemy_filter :by_timeframe, type: :select, options: ["starting_today", "future"]
-  add_alchemy_filter :by_location_id,
+class Admin::EventsController < LaissCms::Admin::ResourcesController
+  add_laiss_cms_filter :by_timeframe, type: :select, options: ["starting_today", "future"]
+  add_laiss_cms_filter :by_location_id,
     type: :select,
     options: ->(query) { Location.joins(:events).merge(query.result.reorder(nil)).distinct.map { |l| [l.name, l.id] } }
-  add_alchemy_filter :starts_at_lteq, type: :datepicker
+  add_laiss_cms_filter :starts_at_lteq, type: :datepicker
 
   before_action :set_default_filter, only: :index
 

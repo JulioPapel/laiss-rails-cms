@@ -2,15 +2,15 @@
 
 require "rails_helper"
 
-module Alchemy
+module LaissCms
   describe "Paths" do
     describe "defaults" do
-      it "has default value for Alchemy.admin_path" do
-        expect(Alchemy.admin_path).to eq("admin")
+      it "has default value for LaissCms.admin_path" do
+        expect(LaissCms.admin_path).to eq("admin")
       end
 
-      it "has default value for Alchemy.admin_constraints" do
-        expect(Alchemy.admin_constraints).to eq({})
+      it "has default value for LaissCms.admin_constraints" do
+        expect(LaissCms.admin_constraints).to eq({})
       end
     end
   end

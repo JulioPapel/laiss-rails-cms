@@ -1,0 +1,36 @@
+<% content_for :toolbar do %>
+  <%= render "laiss_cms/admin/pages/toolbar" %>
+<% end %>
+
+<% if @view == "list" && @current_language.root_page %>
+  <%= render "laiss_cms/admin/resources/table_header", resources_instance_variable: @pages %>
+
+  <% if @pages.any? %>
+    <div class="resources-table-wrapper">
+      <%= render "table" %>
+    </div>
+  <% else %>
+    <%= render_message do %>
+      <%= LaissCms.t("No pages found") %>
+    <% end %>
+  <% end %>
+
+  <%= render "laiss_cms/admin/resources/pagination", resources: @pages %>
+
+  <div id="library_sidebar">
+    <%= render "filter_bar" if resource_has_filters %>
+    <%= render "tag_list" if resource_has_tags %>
+  </div>
+<% elsif @root_page %>
+  <h2 id="page_filter_result">Page filter display</h2>
+  <%= turbo_frame_tag "laiss_cms_pages_tree", src: laiss_cms.tree_admin_pages_path do %>
+    <laiss-cms-spinner></laiss-cms-spinner>
+  <% end %>
+<% elsif can?(:create, LaissCms::Page) %>
+  <%= render partial: "create_language_form" %>
+<% else %>
+  <%= render_message :warn do %>
+    <h2>No language root page found.</h2>
+    <p>Please ask the admin to create one.</p>
+  <% end %>
+<% end %>

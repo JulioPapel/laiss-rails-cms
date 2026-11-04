@@ -1,0 +1,24 @@
+<%= tag.script(type: "application/json", id: "laiss_cms_routes") do %>
+  <%== {
+    collection: {
+      order_admin_elements_path: laiss_cms.order_admin_elements_path,
+      link_admin_pages_path: laiss_cms.link_admin_pages_path,
+      api_pages_path: laiss_cms.api_pages_path,
+      api_elements_path: laiss_cms.api_elements_path,
+      api_ingredients_path: laiss_cms.api_ingredients_path
+    },
+    member: {
+      admin_picture_path: laiss_cms.admin_picture_path(id: 1),
+      url_admin_picture_path: laiss_cms.url_admin_picture_path(id: 1),
+      collapse_admin_element_path: laiss_cms.collapse_admin_element_path(id: 1),
+      expand_admin_element_path: laiss_cms.expand_admin_element_path(id: 1),
+      publish_admin_element_path: laiss_cms.publish_admin_element_path(id: 1),
+      move_admin_page_path: laiss_cms.move_api_page_path(id: 1),
+      fold_admin_page_path: laiss_cms.fold_admin_page_path(id: 1),
+      node: {
+        toggle_folded_api_path: laiss_cms.toggle_folded_api_node_path(id: 1),
+        move_api_path: laiss_cms.move_api_node_path(id: 1)
+      }
+    }
+  }.to_json %>
+<% end %>

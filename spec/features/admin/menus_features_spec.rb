@@ -9,10 +9,10 @@ RSpec.describe "Admin Menus Features", type: :system do
 
   describe "adding a new menu" do
     context "on the index page" do
-      let!(:default_language) { create(:alchemy_language) }
+      let!(:default_language) { create(:laiss_cms_language) }
 
       it "creates menu" do
-        visit alchemy.admin_nodes_path
+        visit laiss_cms.admin_nodes_path
 
         select "Main Menu", from: "Menu Type"
         click_button "create"
@@ -22,18 +22,18 @@ RSpec.describe "Admin Menus Features", type: :system do
     end
 
     context "with pages", :js do
-      let(:default_language) { create(:alchemy_language) }
-      let!(:contentpage) { create(:alchemy_page, language: default_language) }
-      let!(:layoutpage) { create(:alchemy_page, :layoutpage, language: default_language) }
-      let!(:main_menu) { create(:alchemy_node, name: "Main Menu") }
+      let(:default_language) { create(:laiss_cms_language) }
+      let!(:contentpage) { create(:laiss_cms_page, language: default_language) }
+      let!(:layoutpage) { create(:laiss_cms_page, :layoutpage, language: default_language) }
+      let!(:main_menu) { create(:laiss_cms_node, name: "Main Menu") }
 
       it "can assign contentpages" do
-        visit alchemy.admin_nodes_path
+        visit laiss_cms.admin_nodes_path
         expect(page).to have_selector(".node_name", text: "Main Menu")
         within ".nodes_tree" do
-          click_link_with_tooltip Alchemy.t(:create_node)
+          click_link_with_tooltip LaissCms.t(:create_node)
         end
-        within ".alchemy-dialog" do
+        within ".laiss-cms-dialog" do
           tom_select_search contentpage.name, from: "Page"
           click_button "create"
         end
@@ -41,12 +41,12 @@ RSpec.describe "Admin Menus Features", type: :system do
       end
 
       it "can not assign layoutpages" do
-        visit alchemy.admin_nodes_path
+        visit laiss_cms.admin_nodes_path
         expect(page).to have_selector(".node_name", text: "Main Menu")
         within ".nodes_tree" do
-          click_link_with_tooltip Alchemy.t(:create_node)
+          click_link_with_tooltip LaissCms.t(:create_node)
         end
-        within ".alchemy-dialog" do
+        within ".laiss-cms-dialog" do
           tom_select_search layoutpage.name, from: "Page", select: false
         end
         expect(page).to have_selector(".ts-dropdown .no-results", text: "No results found")
@@ -54,15 +54,15 @@ RSpec.describe "Admin Menus Features", type: :system do
     end
 
     context "without pages", :js do
-      let!(:main_menu) { create(:alchemy_node, name: "Main Menu") }
+      let!(:main_menu) { create(:laiss_cms_node, name: "Main Menu") }
 
       it "can add node with absolute url path" do
-        visit alchemy.admin_nodes_path
+        visit laiss_cms.admin_nodes_path
         expect(page).to have_selector(".node_name", text: "Main Menu")
         within ".nodes_tree" do
-          click_link_with_tooltip Alchemy.t(:create_node)
+          click_link_with_tooltip LaissCms.t(:create_node)
         end
-        within ".alchemy-dialog" do
+        within ".laiss-cms-dialog" do
           fill_in "Name", with: "Internal Link"
           fill_in "URL", with: "/custom-url"
           click_button "create"
@@ -71,12 +71,12 @@ RSpec.describe "Admin Menus Features", type: :system do
       end
 
       it "can add node with full external url" do
-        visit alchemy.admin_nodes_path
+        visit laiss_cms.admin_nodes_path
         expect(page).to have_selector(".node_name", text: "Main Menu")
         within ".nodes_tree" do
-          click_link_with_tooltip Alchemy.t(:create_node)
+          click_link_with_tooltip LaissCms.t(:create_node)
         end
-        within ".alchemy-dialog" do
+        within ".laiss-cms-dialog" do
           fill_in "Name", with: "External Link"
           fill_in "URL", with: "https://example.com/index.php?page=123"
           click_button "create"
@@ -88,14 +88,14 @@ RSpec.describe "Admin Menus Features", type: :system do
 
   describe "adding a new menu" do
     context "with multiple sites" do
-      let!(:default_site) { create(:alchemy_site, :default) }
-      let!(:default_language) { create(:alchemy_language, site: default_site) }
-      let!(:site_2) { create(:alchemy_site, host: "another-site.com") }
-      let!(:site_2_language) { create(:alchemy_language, site: site_2) }
-      let(:node) { Alchemy::Node.last }
+      let!(:default_site) { create(:laiss_cms_site, :default) }
+      let!(:default_language) { create(:laiss_cms_language, site: default_site) }
+      let!(:site_2) { create(:laiss_cms_site, host: "another-site.com") }
+      let!(:site_2_language) { create(:laiss_cms_language, site: site_2) }
+      let(:node) { LaissCms::Node.last }
 
       it "creates menu for current site" do
-        visit alchemy.new_admin_node_path
+        visit laiss_cms.new_admin_node_path
 
         select "Main Menu", from: "Menu Type"
         click_button "create"

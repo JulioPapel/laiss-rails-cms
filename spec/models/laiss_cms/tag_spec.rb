@@ -1,0 +1,31 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+module LaissCms
+  describe Tag do
+    describe ".replace" do
+      let(:picture) { Picture.new }
+      let(:element) { Element.new }
+      let(:tag) { Tag.new(name: "red") }
+      let(:new_tag) { Tag.new(name: "green") }
+
+      before do
+        picture.tag_names = ["red"]
+        element.tag_names = ["red"]
+        allow(picture).to receive(:save).and_return(true)
+        allow(element).to receive(:save).and_return(true)
+        allow(tag).to receive(:taggings).and_return([
+          mock_model(Gutentag::Tagging, taggable: picture),
+          mock_model(Gutentag::Tagging, taggable: element)
+        ])
+      end
+
+      it "should replace given tag with new one on all models tagged with tag" do
+        Tag.replace(tag, new_tag)
+        expect(picture.tag_names).to eq(["green"])
+        expect(element.tag_names).to eq(["green"])
+      end
+    end
+  end
+end

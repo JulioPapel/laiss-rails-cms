@@ -7,11 +7,11 @@ next: false
 
 [Kamal](https://kamal-deploy.org) deploys Docker containers to your own servers via SSH. It handles zero-downtime deploys, SSL certificates, and rolling restarts out of the box.
 
-This guide walks through deploying an Alchemy app with Kamal, based on a real production setup.
+This guide walks through deploying an LaissCms app with Kamal, based on a real production setup.
 
 <ServiceAd href="https://blish.cloud/en/solutions/alchemycms">
 <template #before>Don't want to manage your own infrastructure? Our sponsor</template>
-<template #after>offers <a href="https://blish.cloud/en/solutions/alchemycms" target="_blank">managed Alchemy hosting</a>.</template>
+<template #after>offers <a href="https://blish.cloud/en/solutions/alchemycms" target="_blank">managed LaissCms hosting</a>.</template>
 </ServiceAd>
 
 ### Prerequisites
@@ -31,7 +31,7 @@ bin/kamal init
 
 ## Dockerfile
 
-Kamal deploys Docker images, so you need a `Dockerfile`. Rails 7.1+ generates one for you. The key parts for Alchemy:
+Kamal deploys Docker images, so you need a `Dockerfile`. Rails 7.1+ generates one for you. The key parts for LaissCms:
 
 ~~~dockerfile
 FROM docker.io/library/ruby:3.4.8-slim AS base
@@ -79,8 +79,8 @@ This runs `db:prepare` only when starting the web server, which handles both ini
 Configure `config/deploy.yml`:
 
 ~~~yaml
-service: my-alchemy-app
-image: your-registry-user/my-alchemy-app
+service: my-laiss-cms-app
+image: your-registry-user/my-laiss-cms-app
 
 servers:
   web:
@@ -105,7 +105,7 @@ env:
     SOLID_QUEUE_IN_PUMA: true
 
 volumes:
-  - "my_alchemy_app_storage:/rails/storage"
+  - "my_laiss_cms_app_storage:/rails/storage"
 
 asset_path: /rails/public/assets
 
@@ -141,7 +141,7 @@ For a simple deployment, SQLite with a persistent Docker volume works well. The 
 
 ~~~yaml
 volumes:
-  - "my_alchemy_app_storage:/rails/storage"
+  - "my_laiss_cms_app_storage:/rails/storage"
 ~~~
 
 For PostgreSQL or MySQL, configure an accessory in `config/deploy.yml` or use an external managed database and set `DB_HOST` in your environment.
@@ -187,7 +187,7 @@ bin/kamal console
 bin/kamal logs -f
 
 # Run a one-off command
-bin/kamal app exec "bin/rails alchemy:generate:thumbnails"
+bin/kamal app exec "bin/rails laiss_cms:generate:thumbnails"
 
 # SSH into the running container
 bin/kamal app exec -i bash

@@ -7,19 +7,19 @@ RSpec.describe "Attachment Library", type: :system do
     authorize_user(:as_admin)
   end
 
-  let!(:language) { create(:alchemy_language) }
+  let!(:language) { create(:laiss_cms_language) }
 
   describe "Filter by format" do
     let!(:attachment1) do
-      create(:alchemy_attachment, name: "Pee Dee Eff", file: fixture_file_upload("file.pdf"))
+      create(:laiss_cms_attachment, name: "Pee Dee Eff", file: fixture_file_upload("file.pdf"))
     end
 
     let!(:attachment2) do
-      create(:alchemy_attachment, name: "Zip File", file: fixture_file_upload("archive.zip"))
+      create(:laiss_cms_attachment, name: "Zip File", file: fixture_file_upload("archive.zip"))
     end
 
     scenario "it's possible to filter attachments by type.", :js do
-      visit alchemy.admin_attachments_path
+      visit laiss_cms.admin_attachments_path
       tom_select "PDF Document", from: "File Type"
       within "#main_content" do
         expect(page).to have_content("file")
@@ -28,7 +28,7 @@ RSpec.describe "Attachment Library", type: :system do
     end
 
     scenario "the list of file types can be constraint by passing the `only` param" do
-      visit alchemy.admin_attachments_path(only: ["zip"])
+      visit laiss_cms.admin_attachments_path(only: ["zip"])
 
       within "#library_sidebar" do
         expect(page).to have_css("option", text: "ZIP Archive")
@@ -37,7 +37,7 @@ RSpec.describe "Attachment Library", type: :system do
     end
 
     scenario "the list of file types can be constraint by passing the `except` param" do
-      visit alchemy.admin_attachments_path(except: ["zip"])
+      visit laiss_cms.admin_attachments_path(except: ["zip"])
 
       within "#library_sidebar" do
         expect(page).to_not have_css("option", text: "ZIP Archive")
@@ -47,11 +47,11 @@ RSpec.describe "Attachment Library", type: :system do
   end
 
   describe "Sorting attachments", :js do
-    let!(:attachment_a) { create(:alchemy_attachment, name: "A File", created_at: 2.days.ago) }
-    let!(:attachment_b) { create(:alchemy_attachment, name: "B File", created_at: 1.day.ago) }
+    let!(:attachment_a) { create(:laiss_cms_attachment, name: "A File", created_at: 2.days.ago) }
+    let!(:attachment_b) { create(:laiss_cms_attachment, name: "B File", created_at: 1.day.ago) }
 
     scenario "it sorts attachments by latest by default." do
-      visit alchemy.admin_attachments_path
+      visit laiss_cms.admin_attachments_path
 
       within "table.list" do
         expect(page).to have_css("tr:nth-child(1) td.name", text: "B File")
@@ -60,7 +60,7 @@ RSpec.describe "Attachment Library", type: :system do
     end
 
     scenario "it's possible to sort attachments by name." do
-      visit alchemy.admin_attachments_path
+      visit laiss_cms.admin_attachments_path
 
       select "A-Z", from: "Sorting"
       within "table.list" do
@@ -71,20 +71,20 @@ RSpec.describe "Attachment Library", type: :system do
   end
 
   describe "Assigning an attachment", :js do
-    let!(:attachment) { create(:alchemy_attachment, name: "Pee Dee Eff", file: fixture_file_upload("file.pdf")) }
-    let(:element) { create(:alchemy_element, :with_ingredients, name: "download") }
+    let!(:attachment) { create(:laiss_cms_attachment, name: "Pee Dee Eff", file: fixture_file_upload("file.pdf")) }
+    let(:element) { create(:laiss_cms_element, :with_ingredients, name: "download") }
 
     scenario "assigns the attachment to the ingredient" do
-      visit alchemy.admin_elements_path(page_version_id: element.page_version_id)
+      visit laiss_cms.admin_elements_path(page_version_id: element.page_version_id)
 
       within "#element_#{element.id}" do
         find("a[href*='/admin/attachments']").click
       end
-      within ".alchemy-dialog" do
+      within ".laiss-cms-dialog" do
         find("li", text: attachment.name).click
       end
 
-      expect(page).to have_no_css(".alchemy-dialog")
+      expect(page).to have_no_css(".laiss-cms-dialog")
       expect(page).to have_css("#element_#{element.id}.dirty .file_name", text: attachment.name)
       expect(page).to have_css("#element_#{element.id} .remove_file_link")
       expect(find("[id$='attachment_id']", visible: :hidden).value).to eq(attachment.id.to_s)
@@ -92,11 +92,11 @@ RSpec.describe "Attachment Library", type: :system do
   end
 
   describe "Sorting attachments", :js do
-    let!(:attachment_a) { create(:alchemy_attachment, name: "A File", created_at: 2.days.ago) }
-    let!(:attachment_b) { create(:alchemy_attachment, name: "B File", created_at: 1.day.ago) }
+    let!(:attachment_a) { create(:laiss_cms_attachment, name: "A File", created_at: 2.days.ago) }
+    let!(:attachment_b) { create(:laiss_cms_attachment, name: "B File", created_at: 1.day.ago) }
 
     scenario "it sorts attachments by latest by default." do
-      visit alchemy.admin_attachments_path
+      visit laiss_cms.admin_attachments_path
 
       within "table.list" do
         expect(page).to have_css("tr:nth-child(1) td.name", text: "B File")
@@ -105,7 +105,7 @@ RSpec.describe "Attachment Library", type: :system do
     end
 
     scenario "it's possible to sort attachments by name." do
-      visit alchemy.admin_attachments_path
+      visit laiss_cms.admin_attachments_path
 
       select "A-Z", from: "Sorting"
       within "table.list" do

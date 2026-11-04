@@ -1,16 +1,16 @@
 de:
   activerecord:
     attributes:
-      alchemy/user:
+      laiss_cms/user:
         current_password: "Ihr Passwort"
     errors:
       models:
-        alchemy/user:
+        laiss_cms/user:
           attributes:
             current_password:
               blank: "wird zum Ändern der Rollen benötigt"
               invalid: "ist nicht korrekt"
-  alchemy:
+  laiss_cms:
     admin:
       login:
         remember_me: "Für %{days} Tage angemeldet bleiben"

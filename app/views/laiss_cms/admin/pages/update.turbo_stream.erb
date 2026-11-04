@@ -1,0 +1,28 @@
+<laiss-cms-growl><%= @notice %></laiss-cms-growl>
+<turbo-stream action="close_current_dialog"></turbo-stream>
+
+<% if @while_page_edit -%>
+  <%= turbo_stream.replace "locked_page_#{@page.id}" do %>
+    <%= render("laiss_cms/admin/pages/current_page", current_page: @page) %>
+  <% end %>
+  <%= turbo_stream.replace "publish_page_button" do %>
+    <%= render LaissCms::Admin::PublishPageButton.new(page: @page) %>
+  <% end %>
+  <turbo-stream action="reload_preview"></turbo-stream>
+<% else %>
+  <%= turbo_stream.replace "locked_page_#{@page.id}" do %>
+    <%= render("laiss_cms/admin/pages/locked_page", locked_page: @page) %>
+  <% end %>
+
+  <% if @view == "list" %>
+    <turbo-stream action="refresh"></turbo-stream>
+  <% else -%>
+    <% if @page.layoutpage %>
+      <%= turbo_stream.replace "page_#{@page.id}" do %>
+        <%= render("laiss_cms/admin/layoutpages/layoutpage", layoutpage: @page) %>
+      <% end %>
+    <% else %>
+      <turbo-stream action="refresh"></turbo-stream>
+    <% end %>
+  <% end -%>
+<% end %>

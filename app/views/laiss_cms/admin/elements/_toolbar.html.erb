@@ -1,0 +1,47 @@
+<% remarkable_type = "elements" %>
+<div class="element-toolbar">
+  <sl-tooltip
+    placement="top-start"
+    content="<%= LaissCms.t(:copy_element) %>"
+    <%= "disabled" if cannot?(:create, element) %>
+  >
+    <%= button_to(
+      render_icon("file-copy"),
+      laiss_cms.insert_admin_clipboard_path(remarkable_type: remarkable_type, remarkable_id: element.id),
+      "data-turbo-method": :post,
+      class: "icon_button",
+      disabled: cannot?(:create, element)
+    ) %>
+  </sl-tooltip>
+  <sl-tooltip
+    content="<%= LaissCms.t(:cut_element) %>"
+    <%= "disabled" if cannot?(:create, element) %>
+  >
+    <%= button_to(
+      render_icon("scissors-cut"),
+      laiss_cms.insert_admin_clipboard_path(remarkable_type: remarkable_type, remarkable_id: element.id, remove: true),
+      "data-turbo-method": :post,
+      class: "icon_button",
+      disabled: cannot?(:create, element)
+    ) %>
+  </sl-tooltip>
+  <sl-tooltip
+    content="<%= LaissCms.t("Delete element") %>"
+    <%= "disabled" if cannot?(:destroy, element) %>
+  >
+    <laiss-cms-delete-element-button
+      href="<%= laiss_cms.admin_element_path(element) %>"
+      message="<%= LaissCms.t(:confirm_to_delete_element) %>"
+    >
+      <button
+        class="icon_button"
+        data-turbo="false"
+        type="button"
+        <%= "disabled" if cannot?(:destroy, element) %>
+      >
+        <%= render_icon('delete-bin-2') %>
+      </button>
+    </laiss-cms-delete-element-button>
+  </sl-tooltip>
+  <%= render LaissCms.config.admin_components.element_publish_button.new(element:) %>
+</div>

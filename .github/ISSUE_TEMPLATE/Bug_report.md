@@ -18,5 +18,5 @@ Tell us what happens instead
 
 ### System configuration
 
-- Alchemy Version:
+- LaissCms Version:
 - Rails Version:

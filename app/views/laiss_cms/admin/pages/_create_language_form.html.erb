@@ -1,0 +1,36 @@
+<%= render "laiss_cms/admin/resources/empty_state" do %>
+  <%- if @languages_with_page_tree.size >= 1 -%>
+    <%= form_tag(laiss_cms.copy_language_tree_admin_pages_path) do %>
+      <h3><%= LaissCms.t(:copy_language_tree_heading) %></h3>
+      <p><%= LaissCms.t(:want_to_make_copy_of_existing_language) %></p>
+      <div class="input select">
+        <%= label_tag('languages[old_lang_id]', LaissCms.t('Language tree'), class: 'control-label') %>
+        <%= select_tag("languages[old_lang_id]", options_for_select(@languages_with_page_tree.map{ |l| [l.name, l.id] }), is: "laiss-cms-select") %>
+        <%= hidden_field_tag("languages[new_lang_id]", @language.id) %>
+      </div>
+      <div class="submit">
+        <%= button_tag LaissCms.t(:copy) %>
+      </div>
+    <% end %>
+  <%- end -%>
+
+  <%= laiss_cms_form_for([:admin, LaissCms::Page.new], id: 'create_language_tree') do |form| %>
+    <% if @languages_with_page_tree.size >= 1 %>
+      <h3><%= LaissCms.t(:create_language_tree_heading) %></h3>
+      <p><%= LaissCms.t(:want_to_create_new_language) %></p>
+    <% end %>
+    <%= form.input :name, input_html: {value: @language.frontpage_name} %>
+    <%= form.input :page_layout,
+      collection: @page_layouts,
+      selected: @language.page_layout,
+      label: LaissCms.t(:page_type),
+      include_blank: LaissCms.t('Please choose'),
+      required: true,
+      input_html: {is: 'laiss-cms-select'} %>
+    <%= form.hidden_field :language_id, value: @language.id %>
+    <%= form.hidden_field :language_code, value: @language.code %>
+    <%= form.hidden_field :language_root, value: true %>
+    <%= form.hidden_field :public, value: LaissCms::Language.all.size == 1 %>
+    <%= form.submit LaissCms.t(:create), autofocus: true %>
+  <% end %>
+<% end %>

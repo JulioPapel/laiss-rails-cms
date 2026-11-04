@@ -17,8 +17,8 @@ require "active_storage/engine"
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
-require "alchemy_cms"
-require "alchemy/devise" if Rails.env.development? || ENV["ALCHEMY_DEVISE"]
+require "laiss_cms"
+require "laiss_cms/devise" if Rails.env.development? || ENV["LAISS_CMS_DEVISE"]
 
 module Dummy
   class Application < Rails::Application
@@ -37,9 +37,9 @@ module Dummy
     # at boot. The dragonfly adapter doesn't use ActiveStorage variants, so
     # disable it there to avoid needing an image backend; active_storage uses vips.
     # Mirror the engine's adapter resolution, which defaults to active_storage
-    # when the env var is unset (see Alchemy::Engine), so the default setup gets
+    # when the env var is unset (see LaissCms::Engine), so the default setup gets
     # a working variant processor rather than a disabled one.
-    config.active_storage.variant_processor = if ENV.fetch("ALCHEMY_STORAGE_ADAPTER", "active_storage") == "active_storage"
+    config.active_storage.variant_processor = if ENV.fetch("LAISS_CMS_STORAGE_ADAPTER", "active_storage") == "active_storage"
       :vips
     else
       :disabled

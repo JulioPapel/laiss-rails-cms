@@ -9,17 +9,17 @@ next:
 
 # Rendering Images
 
-Images are stored as originals in the Alchemy picture library. Editors assign these images to [Picture ingredients](ingredients#picture) on elements. You control the rendering dimensions, cropping, and output format through ingredient settings and rendering options.
+Images are stored as originals in the LaissCms picture library. Editors assign these images to [Picture ingredients](ingredients#picture) on elements. You control the rendering dimensions, cropping, and output format through ingredient settings and rendering options.
 
-Alchemy supports two storage adapters: **ActiveStorage** and **Dragonfly**. Both use the same rendering API, so you can switch between them without changing your templates.
+LaissCms supports two storage adapters: **ActiveStorage** and **Dragonfly**. Both use the same rendering API, so you can switch between them without changing your templates.
 
 ## Configuration
 
 Image rendering is configured in your initializer. See the [Configuration guide](configuration#images) for all available options.
 
 ~~~ ruby
-# config/initializers/alchemy.rb
-Alchemy.configure do |config|
+# config/initializers/laiss_cms.rb
+LaissCms.configure do |config|
   config.output_image_quality = 85
   config.preprocess_image_resize = "1000x1000"
   config.image_output_format = "original"
@@ -36,7 +36,7 @@ You can override the output format and quality per ingredient by passing `format
 In most cases, rendering a Picture ingredient through `el.render(:image)` in your element view is all you need. It generates the correct image URL with all configured options applied.
 
 ~~~ erb
-<%# app/views/alchemy/elements/_article.html.erb %>
+<%# app/views/laiss_cms/elements/_article.html.erb %>
 <%= el.render(:hero_image) %>
 ~~~
 
@@ -110,7 +110,7 @@ This renders an `<img>` tag with a `srcset` attribute containing URLs for each s
 
 ### Formats <Badge type="tip" text="8.4+" />
 
-Since Alchemy 8.4, the `format` setting converts the image into another format, and `srcset` entries can be a hash with a `size` and their own `format`.
+Since LaissCms 8.4, the `format` setting converts the image into another format, and `srcset` entries can be a hash with a `size` and their own `format`.
 
 ~~~ yaml
 - role: photo
@@ -133,7 +133,7 @@ All entries end up in the `srcset` of a single `<img>` tag, where the browser ch
 New formats create new image variants. Generate them upfront instead of on the first request with:
 
 ~~~ bash
-bin/rake alchemy:generate:ingredient_picture_thumbnails
+bin/rake laiss_cms:generate:ingredient_picture_thumbnails
 ~~~
 
 Set `ELEMENTS=element1,element2` to only generate thumbnails for some elements and `ASYNC=true` to enqueue them as background jobs (ActiveStorage only).
@@ -160,7 +160,7 @@ amazon:
 config.active_storage.service = :amazon
 ~~~
 
-**With Dragonfly**, use the [alchemy-dragonfly-s3](extensions#alchemy-dragonfly-s3) extension to store images on S3 compatible services.
+**With Dragonfly**, use the [laiss-cms-dragonfly-s3](extensions#laiss-cms-dragonfly-s3) extension to store images on S3 compatible services.
 
 ::: tip
 See [Extensions](extensions) for all available storage add-ons.
@@ -168,10 +168,10 @@ See [Extensions](extensions) for all available storage add-ons.
 
 ## Caching
 
-Alchemy caches rendered image variants automatically. The caching strategy depends on your storage adapter.
+LaissCms caches rendered image variants automatically. The caching strategy depends on your storage adapter.
 
 **ActiveStorage** uses Rails' built-in variant caching. Variants are generated on first request and stored alongside the original blob.
 
-**Dragonfly** uses Alchemy's `PictureThumb` model to cache rendered variants in the database. Three admin thumbnail sizes are pregenerated on upload.
+**Dragonfly** uses LaissCms's `PictureThumb` model to cache rendered variants in the database. Three admin thumbnail sizes are pregenerated on upload.
 
 In both cases, adding a CDN in front of your application is recommended for production to avoid hitting the application server for repeated image requests.

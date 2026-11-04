@@ -1,16 +1,16 @@
 nl:
   activerecord:
     attributes:
-      alchemy/user:
+      laiss_cms/user:
         current_password: "Je wachtwoord"
     errors:
       models:
-        alchemy/user:
+        laiss_cms/user:
           attributes:
             current_password:
               blank: "is vereist om rollen te wijzigen"
               invalid: "is niet juist"
-  alchemy:
+  laiss_cms:
     admin:
       users:
         confirm_password_for_role_change:

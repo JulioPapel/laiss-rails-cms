@@ -1,0 +1,6 @@
+<div class="page_status_and_name" id="locked_page_<%= current_page.id %>">
+  <%= render 'laiss_cms/admin/pages/page_infos', page: current_page %>
+  <%= render 'laiss_cms/admin/pages/page_status',
+    published: local_assigns.fetch(:published, false),
+    page: current_page %>
+</div>

@@ -1,0 +1,11 @@
+<span class="edit-ingredient-anchor-link">
+  <% disabled = cannot?(:edit, ingredient) %>
+  <%= content_tag "sl-tooltip", content: LaissCms.t(:edit_anchor), disabled: disabled do %>
+    <%= link_to_dialog render_icon(:bookmark, { style: ingredient.dom_id.present? ? "fill" : "line" }),
+      disabled ? nil : laiss_cms.edit_admin_ingredient_path(id: ingredient.id),
+      {
+        title: LaissCms.t(:edit_anchor),
+        size: "380x125"
+      } %>
+  <% end %>
+</span>

@@ -3,12 +3,12 @@
 require "rails_helper"
 
 RSpec.shared_examples_for "a controller with clipboard functionality" do |resource_type|
-  let(:clipboard) { session[:alchemy_clipboard] = {} }
-  let!(:language) { create(:alchemy_language) }
+  let(:clipboard) { session[:laiss_cms_clipboard] = {} }
+  let!(:language) { create(:laiss_cms_language) }
 
   describe "clipboard functionality" do
     context "with clipboard items" do
-      let(:resource_in_clipboard) { create(:"alchemy_#{resource_type}", language: language) }
+      let(:resource_in_clipboard) { create(:"laiss_cms_#{resource_type}", language: language) }
 
       before do
         allow_any_instance_of(described_class).to receive(:get_clipboard).with(resource_type.to_s.pluralize) do
@@ -30,8 +30,8 @@ RSpec.shared_examples_for "a controller with clipboard functionality" do |resour
     end
 
     context "with paste_from_clipboard in parameters" do
-      let(:resource_in_clipboard) { create(:"alchemy_#{resource_type}", name: "Clipboard #{resource_type.to_s.humanize}", language: language) }
-      let(:parent_resource) { create(:"alchemy_#{resource_type}", language: language) }
+      let(:resource_in_clipboard) { create(:"laiss_cms_#{resource_type}", name: "Clipboard #{resource_type.to_s.humanize}", language: language) }
+      let(:parent_resource) { create(:"laiss_cms_#{resource_type}", language: language) }
       let(:resource_params) do
         {
           name: "New #{resource_type.to_s.humanize}",
@@ -47,7 +47,7 @@ RSpec.shared_examples_for "a controller with clipboard functionality" do |resour
       end
 
       it "calls #{resource_type.to_s.classify}.copy_and_paste" do
-        expect("Alchemy::#{resource_type.to_s.classify}".constantize).to receive(:copy_and_paste).with(
+        expect("LaissCms::#{resource_type.to_s.classify}".constantize).to receive(:copy_and_paste).with(
           resource_in_clipboard,
           parent_resource,
           resource_params[:name]
@@ -60,14 +60,14 @@ RSpec.shared_examples_for "a controller with clipboard functionality" do |resour
       end
 
       it "creates a copy of the #{resource_type}" do
-        initial_count = "Alchemy::#{resource_type.to_s.classify}".constantize.count
+        initial_count = "LaissCms::#{resource_type.to_s.classify}".constantize.count
         post :create, params: {
           resource_type.to_s.to_sym => resource_params,
           :paste_from_clipboard => resource_in_clipboard.id
         }
 
-        expect("Alchemy::#{resource_type.to_s.classify}".constantize.count).to eq(initial_count + 1)
-        new_resource = "Alchemy::#{resource_type.to_s.classify}".constantize.last
+        expect("LaissCms::#{resource_type.to_s.classify}".constantize.count).to eq(initial_count + 1)
+        new_resource = "LaissCms::#{resource_type.to_s.classify}".constantize.last
         expect(new_resource.name).to eq(resource_params[:name])
         expect(new_resource.parent).to eq(parent_resource)
       end
@@ -82,21 +82,21 @@ RSpec.shared_examples_for "a controller with clipboard functionality" do |resour
       end
 
       context "with child #{resource_type.to_s.pluralize}" do
-        let(:child_resource) { create(:"alchemy_#{resource_type}", parent: resource_in_clipboard, name: "Child #{resource_type.to_s.humanize}") }
+        let(:child_resource) { create(:"laiss_cms_#{resource_type}", parent: resource_in_clipboard, name: "Child #{resource_type.to_s.humanize}") }
 
         before do
           child_resource # Create the child
         end
 
         it "copies all descendants" do
-          initial_count = "Alchemy::#{resource_type.to_s.classify}".constantize.count
+          initial_count = "LaissCms::#{resource_type.to_s.classify}".constantize.count
           post :create, params: {
             resource_type.to_s.to_sym => resource_params,
             :paste_from_clipboard => resource_in_clipboard.id
           }
 
-          expect("Alchemy::#{resource_type.to_s.classify}".constantize.count).to eq(initial_count + 2) # parent + child
-          new_parent = "Alchemy::#{resource_type.to_s.classify}".constantize.where(name: resource_params[:name]).first
+          expect("LaissCms::#{resource_type.to_s.classify}".constantize.count).to eq(initial_count + 2) # parent + child
+          new_parent = "LaissCms::#{resource_type.to_s.classify}".constantize.where(name: resource_params[:name]).first
           expect(new_parent.children.count).to eq(1)
           expect(new_parent.children.first.name).to eq("Child #{resource_type.to_s.humanize}")
         end

@@ -2,13 +2,13 @@
 
 require "rails_helper"
 
-RSpec.describe Alchemy::Forms::Builder, type: :controller do
+RSpec.describe LaissCms::Forms::Builder, type: :controller do
   let(:object_name) { "Ding" }
   let(:form_object) { double("FormObject", foo: "Baz") }
 
   shared_examples_for "datepicker expect" do
-    it "has the alchemy-datepicker" do
-      expect(template).to receive(:content_tag).with("alchemy-datepicker", "<alchemy-datepicker>", {"input-type" => type})
+    it "has the laiss-cms-datepicker" do
+      expect(template).to receive(:content_tag).with("laiss-cms-datepicker", "<laiss-cms-datepicker>", {"input-type" => type})
       subject
     end
 
@@ -37,7 +37,7 @@ RSpec.describe Alchemy::Forms::Builder, type: :controller do
         controller: controller,
         label: "<label>",
         text_field: "<input>",
-        content_tag: "<alchemy-datepicker>"
+        content_tag: "<laiss-cms-datepicker>"
       )
     end
 
@@ -102,13 +102,13 @@ RSpec.describe Alchemy::Forms::Builder, type: :controller do
         label: "<label>",
         textarea: "<textarea>",
         text_area: "<textarea>", # need to support Rails 7
-        content_tag: "<alchemy-tinymce>"
+        content_tag: "<laiss-cms-tinymce>"
       )
     end
 
     subject { builder.richtext(attribute) }
 
-    it "uses a alchemy-tinymce" do
+    it "uses a laiss-cms-tinymce" do
       receiving_method = (Rails::VERSION::MAJOR >= 8) ? :textarea : :text_area
       expect(template).to receive(receiving_method).with(
         "Ding",
@@ -117,7 +117,7 @@ RSpec.describe Alchemy::Forms::Builder, type: :controller do
           class: [:text, :required]
         )
       )
-      expect(template).to receive(:content_tag).with("alchemy-tinymce", "<alchemy-tinymce>")
+      expect(template).to receive(:content_tag).with("laiss-cms-tinymce", "<laiss-cms-tinymce>")
       subject
     end
   end

@@ -1,6 +1,6 @@
 <template>
   <div class="footer">
-    AlchemyCMS is sponsored by
+    LaissCMS is sponsored by
     <a href="https://blish.cloud" class="blish-link" target="_blank">
       <BlishLogo />
     </a>

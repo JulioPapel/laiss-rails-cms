@@ -1,0 +1,12 @@
+laiss-cms-picture-thumbnail {
+  &[loading] {
+    > img {
+      opacity: 0;
+    }
+  }
+
+  > img {
+    opacity: 1;
+    transition: opacity var(--transition-duration);
+  }
+}

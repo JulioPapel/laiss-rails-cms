@@ -1,0 +1,410 @@
+@use "../extends";
+@use "../mixins";
+
+laiss-cms-uploader {
+  display: inline-block;
+}
+
+.resources-header {
+  padding: 0 var(--spacing-2);
+
+  #main_content:has(.resources-table-wrapper) & {
+    padding: var(--spacing-2) var(--spacing-2) 0 var(--spacing-5);
+  }
+
+  h2 {
+    margin: var(--spacing-3) 0;
+  }
+}
+
+.resources-table-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  padding: var(--spacing-2);
+}
+
+.selected_item_tools {
+  margin: calc(-1 * var(--spacing-2));
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: var(--spacing-4);
+  padding: var(--spacing-4);
+
+  .button {
+    vertical-align: middle;
+  }
+}
+
+.thumbnail_background {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--picture-thumbnail-background-color, transparent);
+  transition: all var(--transition-duration);
+
+  &:not(:has(laiss-cms-icon)) {
+    box-shadow: 0 0 1px 1px var(--border-color);
+  }
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  laiss-cms-icon:not(.error) {
+    display: flex;
+    width: var(--picture-width);
+    height: var(--picture-height);
+  }
+}
+
+.picture_thumbnail {
+  --picture-thumbnail-border-radius: var(--border-radius_medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--picture-thumbnail-width);
+  height: var(--picture-thumbnail-height);
+  position: relative;
+  border-radius: var(--picture-thumbnail-border-radius);
+  padding: var(--spacing-2);
+  padding-bottom: 2.5em;
+  transition: all var(--transition-duration);
+
+  img,
+  .thumbnail_background {
+    border-radius: var(--picture-thumbnail-border-radius);
+  }
+
+  img {
+    max-width: var(--picture-width);
+    max-height: var(--picture-height);
+
+    &:not([src*="laiss_cms/missing-image"]) {
+      background: var(--thumbnail-background);
+    }
+
+    &[src*=".svg"]:not([src*="laiss_cms/missing-image"]) {
+      width: var(--picture-width);
+      max-height: var(--picture-height);
+    }
+  }
+
+  > a {
+    width: var(--picture-width, 100%);
+    height: var(--picture-height, 100%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .picture_name {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    bottom: 0;
+    left: 0;
+    line-height: 2.5;
+    padding: 0 var(--spacing-1);
+    text-overflow: ellipsis;
+  }
+
+  &:hover,
+  &:focus-within {
+    .picture_tool,
+    .picture_tags {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+
+  &:hover,
+  &:focus-within,
+  &.active {
+    box-shadow: 0 0 4px 2px var(--border-color);
+
+    .picture_tool.select {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+}
+
+#pictures,
+#overlay_picture_list {
+  --picture-width: 160px;
+  --picture-height: 120px;
+  --picture-thumbnail-width: calc(var(--picture-width) + var(--spacing-2));
+  --picture-thumbnail-height: calc(
+    var(--picture-height) + var(--spacing-2) + 2.5em
+  );
+
+  display: grid;
+  gap: var(--spacing-2);
+  grid-auto-rows: min-content;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--picture-thumbnail-width), auto)
+  );
+  justify-items: center;
+
+  &.picture-size--small {
+    --picture-width: 80px;
+    --picture-height: 60px;
+  }
+
+  &.picture-size--large {
+    --picture-width: 240px;
+    --picture-height: 180px;
+  }
+}
+
+laiss-cms-picture-archive {
+  display: block;
+  overflow: visible;
+}
+
+#pictures {
+  .thumbnail_background {
+    @include mixins.zoom-in;
+  }
+}
+
+div.assign_image_list_image {
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+
+  img {
+    border-style: none;
+  }
+}
+
+.picture_tool {
+  display: flex;
+  width: var(--spacing-6);
+  height: var(--spacing-6);
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  background-color: var(--picture-tool-background-color);
+  top: var(--spacing-1);
+  padding: var(--spacing-1);
+  z-index: 10;
+  border-radius: var(--border-radius_medium);
+  box-shadow: 0 0 1px var(--color-grey_dark);
+  border: 0;
+
+  &:hover {
+    text-decoration: none;
+    background-color: var(--picture-tool-hover-background-color);
+    transition: background-color var(--transition-duration);
+  }
+
+  &.visible {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  &.hidden {
+    // Overwrite the `.hidden { display: none }` style
+    display: block;
+  }
+
+  &.select {
+    left: var(--spacing-1);
+
+    input {
+      margin: 0;
+      padding: 0;
+    }
+  }
+
+  &.delete {
+    cursor: pointer;
+    right: var(--spacing-1);
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+}
+
+.picture_tags {
+  overflow: hidden;
+  position: absolute;
+  bottom: 28px;
+  left: 0;
+  width: 100%;
+  max-height: 80%;
+  padding: var(--spacing-1);
+  pointer-events: none;
+
+  .tag {
+    box-shadow: 0 0 2px 2px var(--border-color);
+  }
+}
+
+.picture_tags,
+.picture_tool {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity var(--transition-duration);
+}
+
+div#library_sidebar {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  border-left: 1px solid var(--border-color);
+  top: var(--top-menu-height);
+  right: 0;
+  width: var(--sidebar-width);
+  overflow-y: auto;
+
+  padding: var(--spacing-2) var(--spacing-4) var(--spacing-2) var(--spacing-4);
+  height: calc(100% - var(--top-menu-height));
+  background-color: var(--sidebar-background-color);
+
+  #main_content:has(.pagination-wrapper) & {
+    height: calc(100% - var(--top-menu-height) - var(--pagination-height));
+  }
+
+  h2 {
+    margin-top: var(--spacing-4);
+  }
+
+  h3 {
+    margin: var(--spacing-4) 0 var(--spacing-3) 0;
+    font-size: var(--font-size_medium);
+  }
+}
+
+.laiss-cms-dialog #library_sidebar {
+  position: absolute;
+  top: 0;
+  height: calc(100% - var(--pagination-height));
+  padding: 0 var(--spacing-4);
+}
+
+#assign_image_list,
+#assign_file_list {
+  position: relative;
+  height: 558px;
+}
+
+#assign_image_list {
+  padding-right: 240px;
+  padding-bottom: 60px;
+}
+
+#assign_file_list {
+  padding-left: var(--spacing-1);
+}
+
+#overlay_picture_list {
+  height: 100%;
+  overflow: auto;
+
+  .picture_thumbnail:hover {
+    box-shadow: none;
+
+    .thumbnail_background {
+      box-shadow: 0 0 4px 4px var(--border-color);
+    }
+  }
+
+  .assign_picture {
+    // Not `display: contents`. The tooltip needs a box to anchor on.
+    display: flex;
+
+    > button {
+      display: flex;
+      height: auto;
+      margin: 0;
+      padding: 0;
+      background: none;
+      border: 0;
+      box-shadow: none;
+
+      &:focus {
+        @include mixins.default-focus-style;
+      }
+    }
+  }
+}
+
+#overlay_file_list {
+  max-height: 100%;
+  overflow-x: visible;
+  overflow-y: auto;
+  height: calc(100% - var(--pagination-height));
+  padding-left: var(--spacing-1);
+
+  .assign_file_file {
+    display: block;
+    margin-bottom: var(--spacing-1);
+    word-break: break-all;
+
+    &:hover {
+      background-color: var(--table-row-hover-color);
+    }
+  }
+
+  > ul {
+    margin: 0;
+    padding: var(--spacing-1) 0;
+
+    .assign_file > button {
+      @extend %text-overflow;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      height: auto;
+      margin: 0;
+      padding: var(--spacing-1) var(--spacing-2);
+      background: none;
+      border: 0;
+      box-shadow: none;
+      color: inherit;
+      font: inherit;
+      line-height: 25px;
+
+      &:focus {
+        @include mixins.default-focus-style;
+      }
+    }
+
+    laiss-cms-icon {
+      margin-right: var(--spacing-2);
+      vertical-align: bottom;
+    }
+  }
+}
+
+#all_files td.name a {
+  @include mixins.zoom-in;
+}
+
+.picture-form {
+  .inline-label {
+    float: right;
+    justify-content: end;
+    width: 200px;
+
+    select {
+      max-width: 160px;
+    }
+  }
+}

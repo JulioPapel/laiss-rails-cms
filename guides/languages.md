@@ -5,7 +5,7 @@ next: false
 
 # Languages
 
-Alchemy has built-in multi-language support. Each [site](sites) can have multiple languages, each with its own page tree, menus, and content.
+LaissCms has built-in multi-language support. Each [site](sites) can have multiple languages, each with its own page tree, menus, and content.
 
 ## How Languages Work
 
@@ -23,7 +23,7 @@ Every language belongs to a site and is defined by a language code (e.g. `en`, `
 
 ## Creating a New Language
 
-Add languages through the admin interface under the Languages module. When you create a new language, Alchemy creates a root page for it using the configured page layout.
+Add languages through the admin interface under the Languages module. When you create a new language, LaissCms creates a root page for it using the configured page layout.
 
 ## Switching Languages in the Admin
 

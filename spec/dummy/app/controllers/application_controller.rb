@@ -7,13 +7,13 @@ class ApplicationController < ActionController::Base
 
   private
 
-  # When loaded, the alchemy-devise engine handles authentication and
+  # When loaded, the laiss-cms-devise engine handles authentication and
   # provides its own +current_user+ helper, so we must not shadow it.
-  unless defined?(Alchemy::Devise::Engine)
+  unless defined?(LaissCms::Devise::Engine)
     def current_user
       return if Rails.env.test?
 
-      @_dummy_user ||= DummyUser.find_or_create_by(email: "dummy@alchemy.com")
+      @_dummy_user ||= DummyUser.find_or_create_by(email: "dummy@laiss_cms.com")
     end
   end
 end

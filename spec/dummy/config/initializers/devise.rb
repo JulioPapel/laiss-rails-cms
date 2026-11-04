@@ -9,7 +9,7 @@
 # Use this hook to configure devise mailer, warden hooks and so forth.
 # Many of these configuration options can be set straight in your model.
 
-# The alchemy-devise gem is only loaded in development and for the devise
+# The laiss-cms-devise gem is only loaded in development and for the devise
 # specs, so skip this initializer whenever Devise is absent.
 return unless defined?(Devise)
 
@@ -23,16 +23,16 @@ Devise.setup do |config|
 
   # ==> Controller configuration
   # Configure the parent class to the devise controllers.
-  config.parent_controller = "Alchemy::BaseController"
+  config.parent_controller = "LaissCms::BaseController"
 
   # ==> Mailer Configuration
   # Configure the e-mail address which will be shown in Devise::Mailer,
   # note that it will be overwritten if you use your own mailer class
   # with default "from" parameter.
-  config.mailer_sender = Alchemy.config.mailer.mail_from
+  config.mailer_sender = LaissCms.config.mailer.mail_from
 
   # Configure the class responsible to send e-mails.
-  config.mailer = "Alchemy::Notifications"
+  config.mailer = "LaissCms::Notifications"
 
   # Configure the parent class responsible to send e-mails.
   # config.parent_mailer = 'ActionMailer::Base'
@@ -90,7 +90,7 @@ Devise.setup do |config|
   config.http_authenticatable_on_xhr = true
 
   # The realm used in Http Basic Authentication. 'Application' by default.
-  config.http_authentication_realm = 'Alchemy CMS'
+  config.http_authentication_realm = 'LaissCms CMS'
 
   # It will change confirmation, password recovery and other workflows
   # to behave the same regardless if the e-mail provided was right or wrong.
@@ -193,7 +193,7 @@ Devise.setup do |config|
   # ==> Configuration for :timeoutable
   # The time you want to timeout the user session without activity. After this
   # time the user will be asked for credentials again. Default is 30 minutes.
-  config.timeout_in = Rails.env.development? ? nil : Alchemy.config.auto_logout_time.minutes
+  config.timeout_in = Rails.env.development? ? nil : LaissCms.config.auto_logout_time.minutes
 
   # ==> Configuration for :lockable
   # Defines which strategy will be used to lock an account.

@@ -1,0 +1,37 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+module LaissCms
+  class NonArDummyUser; end
+
+  describe FoldedPage do
+    describe "folded_for_user" do
+      subject(:folded_for_user) { described_class.folded_for_user(user) }
+      let(:user) { create(:laiss_cms_dummy_user) }
+
+      context "with a non-AR user_class" do
+        before do
+          stub_laiss_cms_config(user_class: "NonArDummyUser")
+        end
+        let(:user) { NonArDummyUser.new }
+
+        it "does not raise an error" do
+          expect {
+            folded_for_user
+          }.not_to raise_error
+        end
+      end
+
+      context "with folded pages" do
+        let(:page) { create(:laiss_cms_page) }
+        let(:other_user) { create(:laiss_cms_dummy_user) }
+        let!(:user_folded) { FoldedPage.create(user: user, page: page, folded: true) }
+        let!(:other_user_folded) { FoldedPage.create(user: other_user, page: page, folded: true) }
+
+        it { is_expected.to include(user_folded) }
+        it { is_expected.to_not include(other_user_folded) }
+      end
+    end
+  end
+end

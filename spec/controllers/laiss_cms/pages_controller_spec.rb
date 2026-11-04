@@ -1,0 +1,491 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+module LaissCms
+  describe PagesController do
+    routes { LaissCms::Engine.routes }
+
+    let(:default_language) { create(:laiss_cms_language) }
+
+    let(:default_language_root) do
+      create(:laiss_cms_page, :public, :language_root, language: default_language, name: "Home")
+    end
+
+    let(:page) do
+      create :laiss_cms_page, :public,
+        parent_id: default_language_root.id,
+        page_layout: "news",
+        name: "News",
+        urlname: "news",
+        language: default_language,
+        autogenerate_elements: true
+    end
+
+    describe "#index" do
+      context "without a site or language present" do
+        context "with no admin users present" do
+          context "user class respond to laiss_cms_admins" do
+            before do
+              allow(LaissCms.config.user_class).to receive(:laiss_cms_admins).and_return(double(empty?: true))
+            end
+
+            it "returns a welcome page" do
+              expect(get(:index)).to render_template("laiss_cms/welcome")
+            end
+          end
+
+          context "user class does not respond to laiss_cms_admins" do
+            context "user class respond to admins" do
+              before do
+                allow(LaissCms.config.user_class).to receive(:respond_to?).with(:laiss_cms_admins).and_return(false)
+                allow(LaissCms.config.user_class).to receive(:respond_to?).with(:admins).and_return(true)
+                allow(LaissCms.config.user_class).to receive(:admins).and_return(double(empty?: true))
+                allow(LaissCms::Deprecation).to receive(:warn)
+              end
+
+              it "returns a welcome page" do
+                expect(get(:index)).to render_template("laiss_cms/welcome")
+              end
+
+              it "warns that the admins method is deprecated" do
+                expect(LaissCms::Deprecation).to receive(:warn).with(/admins` is deprecated/)
+                get(:index)
+              end
+            end
+
+            context "user class does not respond to admins" do
+              before do
+                allow(LaissCms.config.user_class).to receive(:respond_to?).with(:laiss_cms_admins).and_return(false)
+                allow(LaissCms.config.user_class).to receive(:respond_to?).with(:admins).and_return(false)
+              end
+
+              it "returns no_index page" do
+                expect(get(:index)).to render_template("laiss_cms/no_index")
+              end
+            end
+          end
+        end
+      end
+
+      context "with site and language root present" do
+        before do
+          default_language_root
+        end
+
+        it "renders :show template" do
+          expect(get(:index)).to render_template(:show)
+        end
+
+        context "requesting nothing" do
+          it "loads default language root page" do
+            get :index
+            expect(assigns(:page)).to eq(default_language_root)
+          end
+
+          context "and the root page is not public" do
+            let(:default_language_root) do
+              create(:laiss_cms_page, :language_root, public_on: nil, language: default_language, name: "Home")
+            end
+
+            it "returns a no_index page" do
+              expect(get(:index)).to render_template("laiss_cms/no_index")
+            end
+
+            context "when a page layout callback is set" do
+              before do
+                ApplicationController.extend LaissCms::OnPageLayout
+                ApplicationController.class_eval do
+                  on_page_layout("index") { "do something" }
+                end
+              end
+
+              it 'does not raise "undefined method for nil" error' do
+                expect { get :index }.to_not raise_error
+              end
+            end
+          end
+        end
+
+        context "requesting non default locale" do
+          let!(:klingon) do
+            create(:laiss_cms_language, :klingon, default: false)
+          end
+
+          let!(:start_page) do
+            create :laiss_cms_page, :language_root,
+              language: klingon,
+              name: "Start Page"
+          end
+
+          before do
+            allow(::I18n).to receive(:default_locale) { "de" }
+          end
+
+          it "loads the root page of that language" do
+            get :index, params: {locale: "kl"}
+            expect(assigns(:page)).to eq(start_page)
+          end
+        end
+      end
+
+      describe "requesting a not yet public page" do
+        let(:not_yet_public) do
+          create :laiss_cms_page,
+            parent: default_language_root,
+            public_on: 1.day.from_now
+        end
+
+        it "renders 404" do
+          expect {
+            get :show, params: {urlname: not_yet_public.urlname}
+          }.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      describe "requesting a no longer public page" do
+        let(:no_longer_public) do
+          create :laiss_cms_page, :public,
+            parent: default_language_root,
+            public_on: 2.days.ago,
+            public_until: 1.day.ago
+        end
+
+        it "renders 404" do
+          expect {
+            get :show, params: {urlname: no_longer_public.urlname}
+          }.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      describe "requesting a still public page" do
+        let(:still_public_page) do
+          create :laiss_cms_page,
+            parent: default_language_root,
+            public_on: 2.days.ago,
+            public_until: 1.day.from_now
+        end
+
+        it "renders page" do
+          get :show, params: {urlname: still_public_page.urlname}
+          expect(response).to be_successful
+        end
+      end
+
+      describe "requesting a page without time limit" do
+        let(:still_public_page) do
+          create :laiss_cms_page,
+            parent: default_language_root,
+            public_on: 2.days.ago,
+            public_until: nil
+        end
+
+        it "renders page" do
+          get :show, params: {urlname: still_public_page.urlname}
+          expect(response).to be_successful
+        end
+      end
+
+      describe "Layout rendering" do
+        context "with ajax request" do
+          it "should not render a layout" do
+            get :show, params: {urlname: page.urlname}, xhr: true
+            expect(response).to render_template(:show)
+            expect(response).not_to render_template(layout: "application")
+          end
+        end
+      end
+
+      describe "url nesting" do
+        render_views
+
+        let(:catalog) { create(:laiss_cms_page, :public, name: "Catalog", urlname: "catalog", parent: default_language_root, language: default_language) }
+        let(:products) { create(:laiss_cms_page, :public, name: "Products", urlname: "products", parent: catalog, language: default_language) }
+        let(:product) { create(:laiss_cms_page, :public, name: "Screwdriver", urlname: "screwdriver", parent: products, language: default_language, autogenerate_elements: true) }
+
+        before do
+          allow(LaissCms.config.user_class).to receive(:laiss_cms_admins).and_return(double(count: 1))
+          product.elements.find_by(name: "article").ingredients.texts.first.update_column(:value, "screwdriver")
+        end
+
+        context "with correct levelnames in params" do
+          it "should show the requested page" do
+            get :show, params: {urlname: "catalog/products/screwdriver"}
+            expect(response.status).to eq(200)
+            expect(response.body).to have_content("screwdriver")
+          end
+        end
+
+        context "with incorrect levelnames in params" do
+          it "should render a 404 page" do
+            expect {
+              get :show, params: {urlname: "catalog/faqs/screwdriver"}
+            }.to raise_error(ActionController::RoutingError)
+          end
+        end
+      end
+
+      describe "nested element rendering" do
+        render_views
+
+        let(:nested_page) do
+          create(:laiss_cms_page, :public, name: "Nested", urlname: "nested",
+            page_layout: "standard", parent: default_language_root, language: default_language)
+        end
+
+        # Builds a chain of `gallery` containers `depth` levels deep, each
+        # holding a `text` leaf, on the page's public version.
+        def build_nested_chain(page, depth)
+          page.public_version.elements.destroy_all
+          parent = nil
+          depth.times do
+            container = create(:laiss_cms_element, name: "gallery",
+              page_version: page.public_version, parent_element: parent)
+            create(:laiss_cms_element, :with_ingredients, name: "text",
+              page_version: page.public_version, parent_element: container)
+            parent = container
+          end
+          page.reload
+        end
+
+        before do
+          allow(LaissCms.config.user_class).to receive(:admins).and_return(double(count: 1))
+        end
+
+        it "reuses the preloaded element set instead of querying per nesting level" do
+          build_nested_chain(nested_page, 6)
+          element_selects = 0
+          sub = ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
+            payload = args.last
+            next if payload[:cached]
+            element_selects += 1 if /SELECT.*FROM ["`]?laiss_cms_elements["`]?/i.match?(payload[:sql])
+          end
+          get :show, params: {urlname: "nested"}
+          ActiveSupport::Notifications.unsubscribe(sub)
+          expect(element_selects).to eq(1)
+        end
+
+        it "renders the deeply nested leaf content" do
+          build_nested_chain(nested_page, 4)
+          get :show, params: {urlname: "nested"}
+          expect(Capybara.string(response.body))
+            .to have_css("div.gallery_images div.gallery_images div.gallery_images div.gallery_images")
+        end
+      end
+
+      context "when a non-existent page is requested" do
+        it "should rescue a RoutingError with rendering a 404 page." do
+          expect {
+            get :show, params: {urlname: "doesntexist"}
+          }.to raise_error(ActionController::RoutingError)
+        end
+      end
+
+      describe "while redirecting" do
+        context "not in multi language mode" do
+          before do
+            allow_any_instance_of(PagesController).to receive(:multi_language?).and_return(false)
+          end
+
+          context "with no lang parameter present" do
+            it "should store default language as class var." do
+              get :show, params: {urlname: page.urlname}
+              expect(Current.language).to eq(Language.default)
+            end
+          end
+        end
+      end
+
+      context "in an environment with multiple languages" do
+        let(:klingon) { create(:laiss_cms_language, :klingon) }
+
+        context "having two pages with the same url names in different languages" do
+          render_views
+
+          let!(:klingon_page) { create(:laiss_cms_page, :public, language: klingon, name: "same-name", autogenerate_elements: true) }
+          let!(:english_page) { create(:laiss_cms_page, :public, language: default_language, name: "same-name") }
+
+          before do
+            # Set a text in an ingredient rendered on the page so we can match against that
+            klingon_page.ingredients.texts.first.update_column(:value, "klingon page")
+          end
+
+          it "renders the page related to its language" do
+            get :show, params: {urlname: "same-name", locale: klingon_page.language_code}
+            expect(response.body).to have_content("klingon page")
+          end
+        end
+      end
+
+      describe "#page_etag" do
+        subject { controller.send(:page_etag) }
+
+        before do
+          controller.instance_variable_set(:@page, page)
+        end
+
+        it "returns the etag for response headers" do
+          expect(subject).to include(page)
+        end
+
+        context "with user logged in" do
+          before do
+            authorize_user(mock_model(LaissCms.config.user_class, cache_key_with_version: "bbb"))
+          end
+
+          it "returns another etag for response headers" do
+            expect(subject).to include(an_instance_of(LaissCms.config.user_class))
+          end
+        end
+      end
+    end
+
+    describe "Wildcard URL matching" do
+      before do
+        PageDefinition.reset!
+      end
+
+      context "with a child page that has wildcard_url (replaces slug)" do
+        let!(:products_page) do
+          create(
+            :laiss_cms_page,
+            :public,
+            name: "Products",
+            page_layout: "standard",
+            parent: default_language_root,
+            language: default_language
+          )
+        end
+
+        let!(:product_detail_page) do
+          create(
+            :laiss_cms_page,
+            :public,
+            name: "Product Details",
+            page_layout: "page_with_wildcard_url",
+            parent: products_page,
+            language: default_language
+          )
+        end
+
+        it "matches a dynamic path and sets params" do
+          get :show, params: {urlname: "products/42"}
+          expect(assigns(:page)).to eq(product_detail_page)
+          expect(controller.params[:slug]).to eq("42")
+        end
+      end
+
+      context "exact page match takes priority over pattern" do
+        let!(:products_page) do
+          create(
+            :laiss_cms_page,
+            :public,
+            name: "Products",
+            page_layout: "standard",
+            parent: default_language_root,
+            language: default_language
+          )
+        end
+
+        let!(:product_detail_page) do
+          create(
+            :laiss_cms_page,
+            :public,
+            name: "Product Details",
+            page_layout: "page_with_wildcard_url",
+            parent: products_page,
+            language: default_language
+          )
+        end
+
+        let!(:child_page) do
+          create(
+            :laiss_cms_page,
+            :public,
+            name: "Featured",
+            page_layout: "standard",
+            parent: product_detail_page,
+            language: default_language
+          )
+        end
+
+        it "loads the exact page match, not the pattern match" do
+          get :show, params: {urlname: child_page.urlname}
+          expect(assigns(:page)).to eq(child_page)
+        end
+      end
+
+      context "with hierarchical patterns (grandchild under pattern page)" do
+        let!(:products_page) do
+          create(
+            :laiss_cms_page,
+            :public,
+            name: "Products",
+            page_layout: "standard",
+            parent: default_language_root,
+            language: default_language
+          )
+        end
+
+        let!(:product_detail_page) do
+          create(
+            :laiss_cms_page,
+            :public,
+            name: "Product Details",
+            page_layout: "page_with_wildcard_url",
+            parent: products_page,
+            language: default_language
+          )
+        end
+
+        let!(:comments_page) do
+          create(
+            :laiss_cms_page,
+            :public,
+            name: "Comments",
+            page_layout: "standard",
+            parent: product_detail_page,
+            language: default_language
+          )
+        end
+
+        it "matches a grandchild page with parent's pattern segment" do
+          get :show, params: {urlname: "products/42/comments"}
+          expect(assigns(:page)).to eq(comments_page)
+          expect(controller.params[:slug]).to eq("42")
+        end
+      end
+    end
+
+    # TODO: Remove in LaissCms 9.0 together with LaissCms::PagesController#sitemap
+    describe "#sitemap" do
+      render_views
+
+      # LaissCms routes /sitemap.xml to LaissCms::SitemapController now, so this
+      # stands in for an app that kept pointing its own route at this action.
+      routes do
+        ActionDispatch::Routing::RouteSet.new.tap do |set|
+          set.draw do
+            get "/sitemap.xml", to: "laiss_cms/pages#sitemap", format: "xml"
+          end
+        end
+      end
+
+      let!(:sitemap_page) { create(:laiss_cms_page, :public, sitemap: true) }
+
+      it "is deprecated" do
+        expect(LaissCms::Deprecation).to receive(:warn)
+        get :sitemap, format: :xml
+      end
+
+      it "still renders the sitemap" do
+        allow(LaissCms::Deprecation).to receive(:warn)
+        get :sitemap, format: :xml
+
+        xml_doc = Nokogiri::XML(response.body)
+        expect(xml_doc.namespaces["xmlns"]).to eq("http://www.sitemaps.org/schemas/sitemap/0.9")
+        expect(xml_doc.css("urlset url loc").length).to eq(2)
+      end
+    end
+  end
+end

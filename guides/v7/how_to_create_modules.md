@@ -2,22 +2,22 @@
 
 Basicly there are two ways to set up a module:
 
-* Use Alchemy as your Rails admin backend
+* Use LaissCms as your Rails admin backend
 * Create a new Engine
 
 ## Generator
 
-Alchemy provides a rails generator for custom modules, that can be invoked like this
+LaissCms provides a rails generator for custom modules, that can be invoked like this
 
 ~~~ bash
-bin/rails generate alchemy:module your_module_name
+bin/rails generate laiss_cms:module your_module_name
 ~~~
 
-## Using Alchemy as your Rails admin backend
+## Using LaissCms as your Rails admin backend
 
 Hence every module is a subsection of a Rails application or a gem you can roll out your own admin backend if you like.
 
-By using Alchemy's backend interface you get a whole bunch of things:
+By using LaissCms's backend interface you get a whole bunch of things:
 
   1. Authentication and Authorization
   2. A highly and fine grained customizable resource manager (CRUD interface)
@@ -27,7 +27,7 @@ And it's easy as this:
 
 ~~~ ruby
 module Admin
-  class YourResourcesController < Alchemy::Admin::ResourcesController
+  class YourResourcesController < LaissCms::Admin::ResourcesController
   end
 end
 ~~~
@@ -40,7 +40,7 @@ After you setting up your routes you have to take care for control access:
 ## Authorization
 
 Rights and roles are set in a CanCan Ability model.
-Create the file if it doesn't exist already. It has to be registered manually, by invoking `Alchemy.register_ability MyModuleAbility` in the module initializer.
+Create the file if it doesn't exist already. It has to be registered manually, by invoking `LaissCms.register_ability MyModuleAbility` in the module initializer.
 
 ~~~ ruby
 # app/models/my_module_ability.rb
@@ -67,8 +67,8 @@ More information about authorization can be found in the docs of the [`cancancan
 # config/routes.rb
 YourApp::Application.routes.draw do
   ...
-  mount YourAlchemyModule::Engine => '/'
-  mount Alchemy::Engine => '/'
+  mount YourLaissCmsModule::Engine => '/'
+  mount LaissCms::Engine => '/'
 end
 ~~~
 
@@ -84,23 +84,23 @@ YourApp::Application.routes.draw do
     resources :your_resource
   end
 
-  mount Alchemy::Engine => '/'
+  mount LaissCms::Engine => '/'
 end
 ~~~
 
 ::: tip
-Due to Alchemy's strong routes it is **strongly recommended** to mount your engine before Alchemy.
+Due to LaissCms's strong routes it is **strongly recommended** to mount your engine before LaissCms.
 :::
 
 ## Registering the module
 
-Last but not least the module needs to be registered to AlchemyCMS.
+Last but not least the module needs to be registered to LaissCMS.
 
 ### When using your host app
 
 ~~~ ruby
-# my_host_app/config/initializers/alchemy_modules.rb
-Alchemy::Modules.register_module({
+# my_host_app/config/initializers/laiss_cms_modules.rb
+LaissCms::Modules.register_module({
   name: 'name_of_your_module',
   order: 1,                             # The position in main navigation, if you have more than 1 module.
   navigation: {
@@ -124,16 +124,16 @@ Alchemy::Modules.register_module({
 })
 
 # Register the module ability
-Alchemy.register_ability MyModuleAbility
+LaissCms.register_ability MyModuleAbility
 ~~~
 
-NOTE: As an alternative to the module icon you can pass: `image: '/alchemy/icon_of_your_module.png'`
+NOTE: As an alternative to the module icon you can pass: `image: '/laiss_cms/icon_of_your_module.png'`
 
 ### Using a Rails engine
 
 ~~~ ruby
-# my_engine/config/initializers/alchemy.rb
-Alchemy::Modules.register_module({
+# my_engine/config/initializers/laiss_cms.rb
+LaissCms::Modules.register_module({
   name: 'name_of_your_module',
   engine_name: 'name_of_your_engine'    # The engine_name set in your Rails::Engine class.
   order: 1,                             # The position in main navigation, if you have more than 1 module.
@@ -158,12 +158,12 @@ Alchemy::Modules.register_module({
 })
 
 # Register the module ability
-Alchemy.register_ability MyModuleAbility
+LaissCms.register_ability MyModuleAbility
 ~~~
 
 ## Translate your module names
 
-All module names are passed through I18n within a `alchemy` namespace.
+All module names are passed through I18n within a `laiss_cms` namespace.
 The name will be used as translation key.
 You should namespace your module name (with i.e. `modules`), to prevent conflicts.
 
@@ -174,51 +174,51 @@ Given a module name `modules.products` your translation has to be:
 ~~~ yaml
 # config/locales/de.yml
 de:
-  alchemy:
+  laiss_cms:
     modules:
       products: Produkte
 ~~~
 
 ## Customizing the built in views
 
-Alchemy makes use of Rails templates and partials to render your model's resource views. You can overwrite each of them in your app or engine.
+LaissCms makes use of Rails templates and partials to render your model's resource views. You can overwrite each of them in your app or engine.
 
-Just place a file with the same name in your `app/views/admin/plural-name-of-your-resource/` folder and Rails will pick that up instead of the Alchemy one.
+Just place a file with the same name in your `app/views/admin/plural-name-of-your-resource/` folder and Rails will pick that up instead of the LaissCms one.
 
-You can find the list of all templates and partials Alchemy provides [on GitHub](https://github.com/AlchemyCMS/alchemy_cms/tree/7.2-stable/app/views/alchemy/admin/resources).
+You can find the list of all templates and partials LaissCms provides [on GitHub](https://github.com/LaissCMS/laiss_cms/tree/7.2-stable/app/views/laiss_cms/admin/resources).
 
 ### The resource form
 
-Alchemy uses [a `_form` partial](https://github.com/AlchemyCMS/alchemy_cms/blob/7.2-stable/app/views/alchemy/admin/resources/_form.html.erb) to render the fields for your resource's edit view.
+LaissCms uses [a `_form` partial](https://github.com/LaissCMS/laiss_cms/blob/7.2-stable/app/views/laiss_cms/admin/resources/_form.html.erb) to render the fields for your resource's edit view.
 
 It looks like this
 
 ```erb
-<%= alchemy_form_for resource_instance_variable, url: resource_path(resource_instance_variable, search_filter_params) do |f| %>
+<%= laiss_cms_form_for resource_instance_variable, url: resource_path(resource_instance_variable, search_filter_params) do |f| %>
   <% resource_handler.editable_attributes.each do |attribute| %>
     <% if relation = attribute[:relation] %>
       <%= f.association relation[:name].to_sym,
         collection: relation[:collection],
         label_method: relation[:attr_method],
-        include_blank: Alchemy.t(:blank, scope: 'resources.relation_select'),
-        input_html: {is: 'alchemy-select'} %>
+        include_blank: LaissCms.t(:blank, scope: 'resources.relation_select'),
+        input_html: {is: 'laiss-cms-select'} %>
     <% elsif attribute[:type].in? %i[date time datetime] %>
       <%= f.datepicker attribute[:name], resource_attribute_field_options(attribute) %>
     <% elsif attribute[:enum].present? %>
       <%= f.input attribute[:name],
         collection: attribute[:enum],
-        include_blank: Alchemy.t(:blank, scope: 'resources.relation_select'),
-        input_html: {is: 'alchemy-select'} %>
+        include_blank: LaissCms.t(:blank, scope: 'resources.relation_select'),
+        input_html: {is: 'laiss-cms-select'} %>
     <% else %>
       <%= f.input attribute[:name], resource_attribute_field_options(attribute) %>
     <% end %>
   <% end %>
   <% if f.object.respond_to?(:tag_list) %>
-    <%= render Alchemy::Admin::TagsAutocomplete.new do %>
+    <%= render LaissCms::Admin::TagsAutocomplete.new do %>
       <%= f.input :tag_list, input_html: { value: f.object.tag_list.join(",") } %>
     <% end %>
   <% end %>
-  <%= f.submit Alchemy.t(:save) %>
+  <%= f.submit LaissCms.t(:save) %>
 <% end %>
 ```
 
@@ -226,7 +226,7 @@ To customize the form place a file with the same content into your apps view fol
 
 ### The resource table
 
-Alchemy uses [a `_table` partial](https://github.com/AlchemyCMS/alchemy_cms/blob/7.2-stable/app/views/alchemy/admin/resources/_table.html.erb) to render the table for your resource's index view.
+LaissCms uses [a `_table` partial](https://github.com/LaissCMS/laiss_cms/blob/7.2-stable/app/views/laiss_cms/admin/resources/_table.html.erb) to render the table for your resource's index view.
 
 The default table looks like this
 
@@ -254,14 +254,14 @@ The default table looks like this
   </tbody>
 </table>
 <% elsif search_filter_params[:q].present? %>
-<p><%= Alchemy.t('Nothing found') %></p>
+<p><%= LaissCms.t('Nothing found') %></p>
 <% end %>
 
-<%= paginate resources_instance_variable, scope: resource_url_proxy, theme: 'alchemy' %>
+<%= paginate resources_instance_variable, scope: resource_url_proxy, theme: 'laiss_cms' %>
 ```
 
 You can customize it by adding a `_table.html.erb` partial into your resources view folder of your app or engine and adjust it accordingly.
 
 ### Examples
 
-Alchemy dogfeeds it's own resource views to render it's admin interface. You can take them as example as starting point.
+LaissCms dogfeeds it's own resource views to render it's admin interface. You can take them as example as starting point.

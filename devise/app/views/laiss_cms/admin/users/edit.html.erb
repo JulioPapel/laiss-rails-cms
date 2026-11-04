@@ -1,0 +1,29 @@
+<% if request.xhr? || turbo_frame_request? %>
+  <%= laiss_cms_form_for [:admin, @user] do |f| %>
+    <%= render "fields", f: f, user_roles: @user_roles %>
+  <% end %>
+<% else %>
+  <% content_for :toolbar do %>
+    <div class="toolbar_buttons">
+      <sl-tooltip content="<%= LaissCms.t(:back) %>">
+        <%= render LaissCms::Admin::ToolbarButton.new(
+          label: LaissCms.t(:back),
+          primary: true,
+          icon: "arrow-left-s",
+          url: request.referer || laiss_cms.admin_dashboard_path,
+          skip_permission_check: true,
+          dialog: false
+        ) %>
+      </sl-tooltip>
+    </div>
+  <% end %>
+
+  <div class="panel">
+    <laiss-cms-message type="info">
+      <%= LaissCms.t(:edit_user) %>
+    </laiss-cms-message>
+    <%= laiss_cms_form_for [:admin, @user] do |f| %>
+      <%= render "fields", f: f, user_roles: @user_roles %>
+    <% end %>
+  </div>
+<% end %>

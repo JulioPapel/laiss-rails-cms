@@ -1,0 +1,142 @@
+# frozen_string_literal: true
+
+module LaissCms
+  module Admin
+    class AttachmentsController < ResourcesController
+      include UploaderResponses
+      include ArchiveOverlay
+
+      add_laiss_cms_filter :by_file_type, type: :select,
+        multiple: ->(params) { params[:only].presence&.many? || params[:except].present? },
+        include_blank: ->(params) { params[:only].blank? && params[:except].blank? },
+        options: ->(_query, params) do
+          case params&.to_h
+          in {except:}
+            Attachment.file_types - Attachment.file_types(from_extensions: except)
+          in {only:}
+            Attachment.file_types(from_extensions: only)
+          else
+            Attachment.file_types
+          end
+        end
+
+      add_laiss_cms_filter :recent, type: :checkbox
+      add_laiss_cms_filter :last_upload, type: :checkbox
+      add_laiss_cms_filter :without_tag, type: :checkbox
+      add_laiss_cms_filter :deletable, type: :checkbox
+
+      before_action(only: :assign) do
+        @attachment = Attachment.find(params[:id])
+      end
+
+      def index
+        @query = Attachment.ransack(search_filter_params[:q])
+        @query.sorts = default_sort_order if @query.sorts.empty?
+        @attachments = @query.result
+
+        if search_filter_params[:tagged_with].present?
+          @attachments = @attachments.tagged_with(search_filter_params[:tagged_with])
+        end
+
+        @attachments = @attachments
+          .page(params[:page] || 1)
+          .per(items_per_page)
+
+        # Preload deletable ids for the current page in a single query so the
+        # view can decide which delete buttons to enable without calling
+        # +deletable?+ (a two-query check) per row. We pass the already-loaded
+        # ids (via +map(&:id)+) rather than the relation itself, because passing
+        # a paginated relation produces +IN (SELECT ... LIMIT n)+, which older
+        # MariaDB versions reject.
+        @deletable_attachment_ids =
+          Attachment.where(id: @attachments.map(&:id)).deletable.pluck(:id).to_set
+
+        if in_overlay?
+          archive_overlay
+        end
+      end
+
+      # The resources controller renders the edit form as default for show actions.
+      def show
+        @assignments = @attachment.related_ingredients.joins(element: :page).merge(PageVersion.draft)
+        render :show
+      end
+
+      def create
+        @attachment = Attachment.create(attachment_attributes)
+        handle_uploader_response(status: 201)
+      end
+
+      def update
+        @attachment.update(attachment_attributes)
+        if attachment_attributes["file"].present?
+          handle_uploader_response(status: 202)
+        else
+          render_errors_or_redirect(
+            @attachment,
+            admin_attachments_path(search_filter_params),
+            LaissCms.t("File successfully updated")
+          )
+        end
+      end
+
+      def destroy
+        @attachment.destroy
+        flash[:notice] = LaissCms.t("File deleted successfully", name: @attachment.name)
+        redirect_to laiss_cms.admin_attachments_path(**search_filter_params)
+      end
+
+      private
+
+      def default_sort_order
+        "created_at desc"
+      end
+
+      def search_filter_params
+        @_search_filter_params ||= begin
+          params[:q] ||= ActionController::Parameters.new
+
+          if params[:only].present?
+            params[:q][:by_file_type] ||= Array(params[:only]).map do |extension|
+              Marcel::MimeType.for(extension:)
+            end
+          end
+
+          if params[:except].present?
+            params[:q][:by_file_type] ||= Attachment.file_types - params[:except].map do |extension|
+              Marcel::MimeType.for(extension:)
+            end
+          end
+
+          params.except(*COMMON_SEARCH_FILTER_EXCLUDES + [:attachment]).permit(
+            *common_search_filter_includes + [
+              :form_field_id,
+              {only: []},
+              {except: []}
+            ]
+          )
+        end
+      end
+
+      def permitted_ransack_search_fields
+        super + [
+          {by_file_type: []},
+          :not_file_type,
+          {not_file_type: []}
+        ]
+      end
+
+      def handle_uploader_response(status:)
+        if @attachment.valid?
+          render successful_uploader_response(file: @attachment, status: status)
+        else
+          render failed_uploader_response(file: @attachment)
+        end
+      end
+
+      def attachment_attributes
+        params.require(:attachment).permit(:file, :name, :file_name, :tag_list)
+      end
+    end
+  end
+end

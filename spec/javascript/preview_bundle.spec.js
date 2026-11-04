@@ -8,7 +8,7 @@ import { JSDOM } from "jsdom"
 const bundle = readFileSync(
   path.resolve(
     import.meta.dirname,
-    "../../app/assets/builds/alchemy/preview.min.js"
+    "../../app/assets/builds/laiss_cms/preview.min.js"
   ),
   "utf8"
 )

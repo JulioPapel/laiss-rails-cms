@@ -1,12 +1,12 @@
-## Devise based authentication for AlchemyCMS
+## Devise based authentication for LaissCMS
 
-[![Gem Version](https://badge.fury.io/rb/alchemy-devise.svg)](http://badge.fury.io/rb/alchemy-devise)
+[![Gem Version](https://badge.fury.io/rb/laiss-cms-devise.svg)](http://badge.fury.io/rb/laiss-cms-devise)
 
-AlchemyCMS has no authentication in its core. So it is possible to bring your own authentication and use it to authorize users in AlchemyCMS. If you don't have your own authentication, you can use this gem.
+LaissCMS has no authentication in its core. So it is possible to bring your own authentication and use it to authorize users in LaissCMS. If you don't have your own authentication, you can use this gem.
 
-Since Alchemy CMS 9.0, `alchemy-devise` is developed inside the [Alchemy CMS repository](https://github.com/AlchemyCMS/alchemy_cms/tree/main/devise)
-and released together with `alchemy_cms` using the same version.
-Older versions are maintained in the [`alchemy-devise` repository](https://github.com/AlchemyCMS/alchemy-devise).
+Since LaissCms CMS 9.0, `laiss-cms-devise` is developed inside the [LaissCms CMS repository](https://github.com/LaissCMS/laiss_cms/tree/main/devise)
+and released together with `laiss_cms` using the same version.
+Older versions are maintained in the [`laiss-cms-devise` repository](https://github.com/LaissCMS/laiss-cms-devise).
 
 ## Install
 
@@ -14,7 +14,7 @@ Just put the gem into your projects `Gemfile`.
 
 ```ruby
 # Gemfile
-gem 'alchemy-devise'
+gem 'laiss-cms-devise'
 ```
 
 and run `bundle install`.
@@ -22,7 +22,7 @@ and run `bundle install`.
 Then run the installer:
 
 ```bash
-$ bin/rails g alchemy:devise:install
+$ bin/rails g laiss_cms:devise:install
 ```
 
 ## Upgrading
@@ -30,13 +30,13 @@ $ bin/rails g alchemy:devise:install
 After updating the gem, please run the installer again.
 
 ```bash
-$ bundle update alchemy-devise
-$ bin/rails g alchemy:devise:install
+$ bundle update laiss-cms-devise
+$ bin/rails g laiss_cms:devise:install
 ```
 
 ## Devise modules
 
-Default Devise modules included in `Alchemy::User` model
+Default Devise modules included in `LaissCms::User` model
 
 - `:database_authenticatable`
 - `:trackable`
@@ -45,13 +45,13 @@ Default Devise modules included in `Alchemy::User` model
 - `:recoverable`
 - `:rememberable`
 
-If you want to add additional modules into the Alchemy user class append them to `Alchemy::Devise.config.devise_modules` in an initializer in your app.
+If you want to add additional modules into the LaissCms user class append them to `LaissCms::Devise.config.devise_modules` in an initializer in your app.
 
 ### Register additional modules example
 
 ```ruby
-# config/initializers/alchemy.rb
-Alchemy::Devise.config.devise_modules << :registerable
+# config/initializers/laiss_cms.rb
+LaissCms::Devise.config.devise_modules << :registerable
 ```
 
 ### Using old encryption
@@ -59,8 +59,8 @@ Alchemy::Devise.config.devise_modules << :registerable
 If your app uses an old encryption that needs the +devise-encryptable+ gem you also need to load the devise module.
 
 ```ruby
-# config/initializers/alchemy.rb
-Alchemy::Devise.config.devise_modules << :encryptable
+# config/initializers/laiss_cms.rb
+LaissCms::Devise.config.devise_modules << :encryptable
 ```
 
 ## Role changes
@@ -73,30 +73,30 @@ every other user attribute can be edited with a valid session alone.
 Roles that need a password are configurable:
 
 ```ruby
-# config/initializers/alchemy.rb
-Alchemy::Devise.config.privileged_user_roles << "editor"
+# config/initializers/laiss_cms.rb
+LaissCms::Devise.config.privileged_user_roles << "editor"
 ```
 
 Set this to `false` to grant roles with a valid session alone:
 
 ```ruby
-# config/initializers/alchemy.rb
-Alchemy::Devise.config.require_password_for_role_change = false
+# config/initializers/laiss_cms.rb
+LaissCms::Devise.config.require_password_for_role_change = false
 ```
 
 ## Testing
 
 If you want to contribute (and you should ^_^), you need to run the tests locally on your machine.
 
-The gem shares the bundle and the dummy app of the Alchemy CMS repository, so prepare the test database from the repository root.
-The dummy app only loads `alchemy-devise` for these specs, because the Alchemy CMS specs use a stub user instead,
-so `bin/rspec` runs them from the `devise` directory, separately from the Alchemy CMS specs.
+The gem shares the bundle and the dummy app of the LaissCms CMS repository, so prepare the test database from the repository root.
+The dummy app only loads `laiss-cms-devise` for these specs, because the LaissCms CMS specs use a stub user instead,
+so `bin/rspec` runs them from the `devise` directory, separately from the LaissCms CMS specs.
 
 ### 1. Once to prepare the test suite:
 
 ```bash
 $ bundle install
-$ bundle exec rake alchemy:test:prepare
+$ bundle exec rake laiss_cms:test:prepare
 ```
 
 ### 2. Run the tests with:
@@ -108,16 +108,16 @@ $ bin/rspec devise/spec
 Getting Help
 ------------
 
-* If you have bugs, please use the [issue tracker on Github](https://github.com/AlchemyCMS/alchemy_cms/issues).
+* If you have bugs, please use the [issue tracker on Github](https://github.com/LaissCMS/laiss_cms/issues).
 * For Q&A and general usage, please use the [Slack](https://slackin.alchemy-cms.com)
 
 Resources
 ---------
 
 * Homepage: <https://alchemy-cms.com>
-* Live-Demo: <https://alchemy-demo.herokuapp.com> (user: demo, password: demo123)
-* Issue-Tracker: <https://github.com/AlchemyCMS/alchemy_cms/issues>
-* Sourcecode: <https://github.com/AlchemyCMS/alchemy_cms/tree/main/devise>
+* Live-Demo: <https://laiss-cms-demo.herokuapp.com> (user: demo, password: demo123)
+* Issue-Tracker: <https://github.com/LaissCMS/laiss_cms/issues>
+* Sourcecode: <https://github.com/LaissCMS/laiss_cms/tree/main/devise>
 * Slack: <https://slackin.alchemy-cms.com>
 
 License

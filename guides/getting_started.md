@@ -7,7 +7,7 @@ next:
 
 # Getting Started
 
-This guide walks you through installing AlchemyCMS into a Rails application. By the end you will have a running Alchemy instance with an admin user.
+This guide walks you through installing LaissCMS into a Rails application. By the end you will have a running LaissCms instance with an admin user.
 
 ## Prerequisites
 
@@ -36,22 +36,22 @@ cd myapp
 See the [Rails Getting Started guide](https://guides.rubyonrails.org/getting_started.html) for more options.
 :::
 
-## Install Alchemy
+## Install LaissCms
 
-Add the gem and run the installer. It will mount Alchemy in your routes, create configuration files, set up the database, and generate demo content.
+Add the gem and run the installer. It will mount LaissCms in your routes, create configuration files, set up the database, and generate demo content.
 
 ~~~ bash
-bundle add alchemy_cms
-bin/rails alchemy:install
+bundle add laiss_cms
+bin/rails laiss_cms:install
 ~~~
 
 The installer asks for your site's primary language. Accept the defaults or enter your own.
 
 ## Authentication
 
-Alchemy lets you choose your own authentication strategy.
+LaissCms lets you choose your own authentication strategy.
 
-**Option A: Use alchemy-devise** (recommended for new projects)
+**Option A: Use laiss-cms-devise** (recommended for new projects)
 
 Add the gem and run its installer.
 
@@ -60,13 +60,13 @@ See [Extensions](extensions) for all available add-ons.
 :::
 
 ~~~ bash
-bundle add alchemy-devise
-bin/rails g alchemy:devise:install
+bundle add laiss-cms-devise
+bin/rails g laiss_cms:devise:install
 ~~~
 
 **Option B: Use your existing authentication**
 
-If your app already has a user model, configure Alchemy to use it. See the [custom authentication guide](how_to_add_custom_authentication) for details.
+If your app already has a user model, configure LaissCms to use it. See the [custom authentication guide](how_to_add_custom_authentication) for details.
 
 ## Start the Server
 
@@ -80,7 +80,7 @@ After signing in you can start building pages. Continue with the [Elements](elem
 
 ## Changing the Mount Point
 
-The installer automatically mounts Alchemy at the root of your application. If your app has its own routes and you want Alchemy to handle only a subpath, change the mount point in `config/routes.rb`.
+The installer automatically mounts LaissCms at the root of your application. If your app has its own routes and you want LaissCms to handle only a subpath, change the mount point in `config/routes.rb`.
 
 ~~~ ruby
 # config/routes.rb
@@ -88,13 +88,13 @@ Rails.application.routes.draw do
   # your app's routes
   resources :products
 
-  # mount Alchemy under /cms instead of /
-  mount Alchemy::Engine => "/cms"
+  # mount LaissCms under /cms instead of /
+  mount LaissCms::Engine => "/cms"
 end
 ~~~
 
 ::: warning
-Alchemy has a catch-all route for page URLs. Mount it after your own routes so they take priority.
+LaissCms has a catch-all route for page URLs. Mount it after your own routes so they take priority.
 :::
 
 ## What the Installer Creates
@@ -103,11 +103,11 @@ The installer generates these files in your app.
 
 | File | Purpose |
 |------|---------|
-| `config/alchemy/elements.yml` | [Element](elements) definitions |
-| `config/alchemy/page_layouts.yml` | [Page layout](pages) definitions |
-| `config/alchemy/menus.yml` | Menu definitions |
-| `config/initializers/alchemy.rb` | Alchemy [configuration](configuration) |
-| `app/views/layouts/application.html.erb` | Application layout with Alchemy helpers |
-| `app/views/alchemy/page_layouts/_standard.html.erb` | Demo [page layout](pages#page-layouts) partial |
-| `app/views/alchemy/elements/_article.html.erb` | Demo [element](elements#rendering) partial |
-| `app/assets/stylesheets/alchemy/admin/custom.css` | Custom [admin styles](configuration#admin-javascript-and-css) |
+| `config/laiss_cms/elements.yml` | [Element](elements) definitions |
+| `config/laiss_cms/page_layouts.yml` | [Page layout](pages) definitions |
+| `config/laiss_cms/menus.yml` | Menu definitions |
+| `config/initializers/laiss_cms.rb` | LaissCms [configuration](configuration) |
+| `app/views/layouts/application.html.erb` | Application layout with LaissCms helpers |
+| `app/views/laiss_cms/page_layouts/_standard.html.erb` | Demo [page layout](pages#page-layouts) partial |
+| `app/views/laiss_cms/elements/_article.html.erb` | Demo [element](elements#rendering) partial |
+| `app/assets/stylesheets/laiss_cms/admin/custom.css` | Custom [admin styles](configuration#admin-javascript-and-css) |

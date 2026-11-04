@@ -41,11 +41,11 @@ function blurElements(selectedElement) {
 
 function getElement(elementId) {
   return elements.find(
-    (element) => element.dataset.alchemyElement === elementId.toString()
+    (element) => element.dataset.laissCmsElement === elementId.toString()
   )
 }
 
-// Focus the element in the Alchemy preview window.
+// Focus the element in the LaissCms preview window.
 function focusElement(data) {
   const element = getElement(data.element_id)
 
@@ -56,12 +56,12 @@ function focusElement(data) {
   }
 }
 
-// Focus the element editor in the Alchemy element window.
+// Focus the element editor in the LaissCms element window.
 function focusElementEditor(element) {
   window.parent.postMessage(
     {
-      message: "Alchemy.focusElementEditor",
-      element_id: element.dataset.alchemyElement
+      message: "LaissCms.focusElementEditor",
+      element_id: element.dataset.laissCmsElement
     },
     window.location.origin
   )
@@ -81,7 +81,7 @@ function observeElement(element) {
 }
 
 function selectClickedElement(event) {
-  const element = event.target.closest("[data-alchemy-element]")
+  const element = event.target.closest("[data-laiss-cms-element]")
 
   if (element) {
     selectElement(element)
@@ -110,10 +110,10 @@ function onNavigatingClick(event) {
 function init() {
   window.addEventListener("message", (event) => {
     switch (event.data.message) {
-      case "Alchemy.blurElements":
+      case "LaissCms.blurElements":
         blurElements()
         break
-      case "Alchemy.focusElement":
+      case "LaissCms.focusElement":
         focusElement(event.data)
         break
       default:
@@ -124,13 +124,13 @@ function init() {
   window.addEventListener("click", onNavigatingClick, { capture: true })
   window.addEventListener("click", selectClickedElement)
 
-  elements = Array.from(document.querySelectorAll("[data-alchemy-element]"))
+  elements = Array.from(document.querySelectorAll("[data-laiss-cms-element]"))
   elements.forEach(observeElement)
 
   // Notify parent window that preview is ready
   window.parent.postMessage(
     {
-      message: "Alchemy.previewReady"
+      message: "LaissCms.previewReady"
     },
     window.location.origin
   )

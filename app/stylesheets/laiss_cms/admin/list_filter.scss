@@ -1,0 +1,36 @@
+laiss-cms-list-filter {
+  display: block;
+  position: relative;
+
+  > label laiss-cms-icon {
+    position: absolute;
+    left: var(--spacing-2);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .js_filter_field {
+    width: 100%;
+    padding-left: var(--spacing-7);
+    padding-right: var(--spacing-7);
+    margin: 0;
+
+    form .input & {
+      float: none;
+      width: 100%;
+    }
+  }
+
+  .js_filter_field_clear {
+    display: flex;
+    visibility: hidden;
+    position: absolute;
+    right: var(--spacing-2);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    align-items: center;
+    justify-content: center;
+  }
+}

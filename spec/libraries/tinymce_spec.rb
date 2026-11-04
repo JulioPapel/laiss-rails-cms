@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-module Alchemy
+module LaissCms
   describe Tinymce do
     describe ".init" do
       subject { Tinymce.init }

@@ -1,0 +1,202 @@
+/**
+ * @typedef {object} PersistedFile
+ * @property {string} name
+ * @property {number} size
+ */
+import { Progress } from "laiss_cms_admin/components/uploader/progress"
+import { FileUpload } from "laiss_cms_admin/components/uploader/file_upload"
+import { translate } from "laiss_cms_admin/i18n"
+import { readJSONScript } from "laiss_cms_admin/utils/json_script"
+import { getToken } from "laiss_cms_admin/utils/ajax"
+
+export class Uploader extends HTMLElement {
+  #dropzoneElement = null
+  #isDraggedOver = false
+
+  connectedCallback() {
+    this.fileInput.addEventListener("change", this.#onFileInputChange)
+    if (this.dropzone) {
+      this.#setupDropZone()
+    }
+    this.addEventListener("LaissCms.upload.successful", this)
+  }
+
+  disconnectedCallback() {
+    this.fileInput?.removeEventListener("change", this.#onFileInputChange)
+    if (this.#dropzoneElement) {
+      this.#dropzoneElement.removeEventListener(
+        "dragleave",
+        this.#onDropzoneDragleave
+      )
+      this.#dropzoneElement.removeEventListener("drop", this.#onDropzoneDrop)
+      this.#dropzoneElement.removeEventListener(
+        "dragover",
+        this.#onDropzoneDragover
+      )
+      this.#dropzoneElement = null
+    }
+  }
+
+  handleEvent(evt) {
+    switch (evt.type) {
+      case "LaissCms.upload.successful":
+        this.#handleUploadComplete()
+        break
+    }
+  }
+
+  #onFileInputChange = (event) => {
+    this.uploadFiles(Array.from(event.target.files))
+  }
+
+  #toggleDropzoneClass = (enabled) => {
+    if (this.#isDraggedOver !== enabled) {
+      this.#isDraggedOver = enabled
+      this.#dropzoneElement.classList.toggle("dragover")
+    }
+  }
+
+  #onDropzoneDragleave = () => this.#toggleDropzoneClass(false)
+
+  #onDropzoneDrop = async (event) => {
+    event.preventDefault()
+    this.#toggleDropzoneClass(false)
+
+    const files = [...event.dataTransfer.items].map((item) => item.getAsFile())
+
+    this.uploadFiles(files)
+  }
+
+  #onDropzoneDragover = (event) => {
+    event.preventDefault() // dragover has to be disabled to use the custom drop event
+    this.#toggleDropzoneClass(true)
+  }
+
+  #handleUploadComplete() {
+    setTimeout(() => {
+      const url = this.redirectUrl
+      const turboFrame = this.closest("turbo-frame")
+      this.uploadProgress.visible = false
+
+      if (!url) return
+
+      if (turboFrame) {
+        turboFrame.setAttribute("src", url)
+        turboFrame.reload()
+      } else {
+        Turbo.visit(url)
+      }
+    }, 750)
+  }
+
+  /**
+   * add dragover class to indicate, if the file is draggable
+   * @private
+   */
+  #setupDropZone() {
+    this.#dropzoneElement = document.querySelector(this.dropzone)
+    if (!this.#dropzoneElement) return
+
+    this.#dropzoneElement.addEventListener(
+      "dragleave",
+      this.#onDropzoneDragleave
+    )
+    this.#dropzoneElement.addEventListener("drop", this.#onDropzoneDrop)
+    this.#dropzoneElement.addEventListener("dragover", this.#onDropzoneDragover)
+  }
+
+  /**
+   * @param {File[]} files
+   */
+  uploadFiles(files) {
+    // prepare file progress bars and server request
+    let fileUploadCount = 0
+    const config = readJSONScript("laiss_cms_uploader_defaults")
+
+    const fileUploads = files.map((file) => {
+      const request = new XMLHttpRequest()
+      const fileUpload = new FileUpload()
+      fileUpload.initialize(file, request)
+
+      if (config.upload_limit - 1 < fileUploadCount) {
+        fileUpload.valid = false
+        fileUpload.errorMessage = translate("Maximum number of files exceeded")
+      } else if (fileUpload.valid) {
+        fileUploadCount++
+        this.#submitFile(request, file)
+      }
+
+      return fileUpload
+    })
+
+    this.#createProgress(fileUploads)
+  }
+
+  /**
+   * @param {XMLHttpRequest} request
+   * @param {File} file
+   * @private
+   */
+  #submitFile(request, file) {
+    const form = this.querySelector("form")
+    const formData = new FormData(form)
+    formData.set(this.fileInput.name, file)
+    request.open("POST", form.action)
+    request.setRequestHeader("X-CSRF-Token", getToken())
+    request.setRequestHeader("X-Requested-With", "XMLHttpRequest")
+    request.setRequestHeader("Accept", "application/json")
+    request.send(formData)
+  }
+
+  /**
+   * create (and maybe remove the old) progress bar - component
+   * @param {FileUpload[]} fileUploads
+   * @private
+   */
+  #createProgress(fileUploads) {
+    if (this.uploadProgress) {
+      this.uploadProgress.cancel()
+      this.uploadProgress.remove()
+    }
+    this.uploadProgress = new Progress()
+    this.uploadProgress.initialize(fileUploads)
+    this.uploadProgress.setAttribute("layout", this.layout)
+    this.uploadProgress.onComplete = (status) => {
+      this.dispatchEvent(
+        new CustomEvent(`LaissCms.upload.${status}`, { bubbles: true })
+      )
+    }
+
+    this.#progressContainer.append(this.uploadProgress)
+  }
+
+  // The dropzone doubles as the progress container so the upload indicators
+  // render inside the archive (and inside dialogs). Falls back to the body for
+  // uploaders without a dropzone (e.g. the attachment replace button).
+  get #progressContainer() {
+    return this.#dropzoneElement ?? document.body
+  }
+
+  get dropzone() {
+    return this.getAttribute("dropzone")
+  }
+
+  // Shape of the upload indicators. Defaults to "row" so uploads fit naturally
+  // into resource table views; set layout="card" for the thumbnail grid.
+  get layout() {
+    return this.getAttribute("layout") || "row"
+  }
+
+  /**
+   * @returns {HTMLInputElement}
+   */
+  get fileInput() {
+    return this.querySelector("input[type='file']")
+  }
+
+  get redirectUrl() {
+    return this.getAttribute("redirect-url")
+  }
+}
+
+customElements.define("laiss-cms-uploader", Uploader)

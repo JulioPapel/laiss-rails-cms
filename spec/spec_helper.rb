@@ -7,8 +7,8 @@ if ENV["GITHUB_ACTIONS"]
 end
 
 SimpleCov.start "rails" do
-  add_filter "/lib/alchemy/upgrader"
-  add_filter "/lib/alchemy/version"
+  add_filter "/lib/laiss_cms/upgrader"
+  add_filter "/lib/laiss_cms/version"
   add_filter "/lib/generators"
 end
 

@@ -1,0 +1,25 @@
+module LaissCms
+  module Ingredients
+    class DatetimeView < BaseView
+      DEFAULT_DATE_FORMAT = :"laiss_cms.default"
+
+      attr_reader :date_format
+
+      # @param ingredient [LaissCms::Ingredient]
+      # @param date_format [String] The date format to use. Use either a strftime format string, a I18n format symbol or "rfc822". Defaults to "time.formats.laiss_cms.default".
+      def initialize(ingredient, date_format: nil, html_options: {})
+        super(ingredient)
+        @date_format = settings_value(:date_format, value: date_format) || DEFAULT_DATE_FORMAT
+      end
+
+      def call
+        datetime = ingredient.value.in_time_zone(Rails.application.config.time_zone)
+        if date_format == "rfc822"
+          datetime.to_fs(:rfc822)
+        else
+          LaissCms.l(datetime, format: date_format)
+        end.html_safe
+      end
+    end
+  end
+end

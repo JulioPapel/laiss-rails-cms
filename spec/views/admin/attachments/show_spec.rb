@@ -2,9 +2,9 @@
 
 require "rails_helper"
 
-RSpec.describe "alchemy/admin/attachments/show.html.erb" do
+RSpec.describe "laiss_cms/admin/attachments/show.html.erb" do
   let(:attachment) do
-    create(:alchemy_attachment)
+    create(:laiss_cms_attachment)
   end
 
   it "displays urls to file" do
@@ -19,7 +19,7 @@ RSpec.describe "alchemy/admin/attachments/show.html.erb" do
   end
 
   context "if attachment is used" do
-    let!(:file_ingredient) { create(:alchemy_ingredient_file, attachment: attachment) }
+    let!(:file_ingredient) { create(:laiss_cms_ingredient_file, attachment: attachment) }
 
     it "links to the page and element outside of the dialog turbo frame" do
       allow(view).to receive(:edit_admin_page_path).and_return("/path")

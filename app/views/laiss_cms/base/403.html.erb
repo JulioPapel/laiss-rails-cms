@@ -1,0 +1,6 @@
+<%= turbo_frame_tag request.headers["Turbo-Frame"] do %>
+  <%= render_message(:warning) do %>
+    <h1><%= LaissCms.t("You are not authorized.") %></h1>
+    <p><%= LaissCms.t("Your current user role is not permitted to access this resource.") %></p>
+  <% end %>
+<% end %>

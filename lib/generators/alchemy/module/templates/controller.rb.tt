@@ -1,2 +1,0 @@
-class Admin::<%= @controller_class %>Controller < Alchemy::Admin::ResourcesController
-end

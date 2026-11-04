@@ -6,9 +6,9 @@ RSpec.describe "Content Security Policy" do
   # Without a user the login page redirects into the signup form, and we want
   # the policy of the rendered page here.
   before do
-    create(:alchemy_admin_user)
-    # Alchemy 8.4 has the CSP disabled by default
-    stub_alchemy_config(admin_content_security_policy: Alchemy::Admin::ContentSecurityPolicy)
+    create(:laiss_cms_admin_user)
+    # LaissCms 8.4 has the CSP disabled by default
+    stub_laiss_cms_config(admin_content_security_policy: LaissCms::Admin::ContentSecurityPolicy)
   end
 
   def policy = response.headers["Content-Security-Policy"]

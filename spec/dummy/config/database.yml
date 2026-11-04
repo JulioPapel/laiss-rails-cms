@@ -7,7 +7,7 @@ mysql: &mysql
   encoding: utf8mb4
   username: <%= ENV['DB_USER'] %>
   password: <%= ENV['DB_PASSWORD'] %>
-  database: alchemy_cms_dummy_<%= Rails.env %>
+  database: laiss_cms_cms_dummy_<%= Rails.env %>
 
 mariadb: &mariadb
   adapter: mysql2
@@ -15,7 +15,7 @@ mariadb: &mariadb
   port: 3307
   username: <%= ENV['DB_USER'] %>
   password: <%= ENV['DB_PASSWORD'] %>
-  database: alchemy_cms_dummy_<%= Rails.env %>
+  database: laiss_cms_cms_dummy_<%= Rails.env %>
 
 postgresql: &postgresql
   adapter: postgresql
@@ -23,7 +23,7 @@ postgresql: &postgresql
   username: <%= ENV['DB_USER'] %>
   password: <%= ENV['DB_PASSWORD'] %>
   <% end %>
-  database: alchemy_cms_dummy_<%= Rails.env %>
+  database: laiss_cms_cms_dummy_<%= Rails.env %>
   min_messages: ERROR
 
 defaults: &defaults

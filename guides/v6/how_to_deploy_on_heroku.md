@@ -1,13 +1,13 @@
 # Heroku deployment
 
-[Heroku](https://heroku.com) is a cloud platform as a service. You can start with a free plan and run it for lifetime. In this guide you will learn how to deploy your existing Alchemy Site on Heroku. After finishing this guide you will know:
+[Heroku](https://heroku.com) is a cloud platform as a service. You can start with a free plan and run it for lifetime. In this guide you will learn how to deploy your existing LaissCms Site on Heroku. After finishing this guide you will know:
 
-* How to prepare your local Alchemy installation for Heroku
+* How to prepare your local LaissCms installation for Heroku
 * How to deploy code changes to Heroku
 
 ## Prerequisites
 
-We assume you already have a running Alchemy application on your local machine. In the following steps we call it `my-project`. Please replace it name with your actual name. All following shell commands need to be executed within your applications folder from the command shell.
+We assume you already have a running LaissCms application on your local machine. In the following steps we call it `my-project`. Please replace it name with your actual name. All following shell commands need to be executed within your applications folder from the command shell.
 
 We also assume you already have an account on Heroku. [Otherwise signup now.](https://signup.heroku.com)
 
@@ -19,12 +19,12 @@ The last thing we assume is you already have an Amazon AWS account. [Otherwise s
 
 ### Create S3 buckets
 
-Heroku does not provide data storage on its filesystem (beside a small amount for the application code and some temporary data). So we have to store our pictures and attachments outside of Heroku. Amazon S3 comes for the rescue. We need two S3 buckets, one for Alchemy pictures and another for Alchemy attachments.
+Heroku does not provide data storage on its filesystem (beside a small amount for the application code and some temporary data). So we have to store our pictures and attachments outside of Heroku. Amazon S3 comes for the rescue. We need two S3 buckets, one for LaissCms pictures and another for LaissCms attachments.
 
 Please create two S3 buckets now and name them as follows:
 
-* `my-project-alchemy-pictures`
-* `my-project-alchemy-attachments`
+* `my-project-laiss-cms-pictures`
+* `my-project-laiss-cms-attachments`
 
 Please make sure to save the keys (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) Amazon gives you and keep them safe.
 
@@ -54,8 +54,8 @@ Run the following commands on your command shell to set some environment variabl
 heroku config:set AWS_REGION=bucket-region
 heroku config:set AWS_ACCESS_KEY_ID=your-key-id
 heroku config:set AWS_SECRET_ACCESS_KEY=your-key
-heroku config:set AWS_PICTURES_BUCKET=my-project-alchemy-pictures
-heroku config:set AWS_ATTACHMENTS_BUCKET=my-project-alchemy-attachments
+heroku config:set AWS_PICTURES_BUCKET=my-project-laiss-cms-pictures
+heroku config:set AWS_ATTACHMENTS_BUCKET=my-project-laiss-cms-attachments
 ~~~
 
 ## Code adjustments
@@ -97,7 +97,7 @@ web: bundle exec thin start -p $PORT -e $RACK_ENV
 
 ### Create initializer
 
-Create a new initializer `config/initializers/alchemy_file_storage.rb` in your application code to overwrite the information how and where Alchemy pictures and attachments are stored. You can just paste the following code and adjust the region if necessary. Be aware to use the same region as you did when creating the buckets.
+Create a new initializer `config/initializers/laiss_cms_file_storage.rb` in your application code to overwrite the information how and where LaissCms pictures and attachments are stored. You can just paste the following code and adjust the region if necessary. Be aware to use the same region as you did when creating the buckets.
 
 We set up the application to use Amazon S3 storage on production while using the filesystem in other environments.
 
@@ -114,13 +114,13 @@ if Rails.env.production?
     url_scheme: 'https'
   }
 
-  Dragonfly.app(:alchemy_pictures).configure do
+  Dragonfly.app(:laiss_cms_pictures).configure do
     plugin :imagemagick
     datastore :s3,
       { bucket_name: Rails.configuration.aws_pictures_bucket }.merge(aws_defaults)
   end
 
-  Dragonfly.app(:alchemy_attachments).configure do
+  Dragonfly.app(:laiss_cms_attachments).configure do
     datastore :s3,
       { bucket_name: Rails.configuration.aws_attachments_bucket }.merge(aws_defaults)
   end
@@ -165,10 +165,10 @@ config.aws_attachments_bucket = ENV['AWS_ATTACHMENTS_BUCKET']
 
 ### Prepare your seeds.rb
 
-In order to populate the remote database with basic information (which is needed for running Alchemy) please paste the following to your `db/seeds.rb`. You can skip this step if you already have it.
+In order to populate the remote database with basic information (which is needed for running LaissCms) please paste the following to your `db/seeds.rb`. You can skip this step if you already have it.
 
 ~~~ ruby
-Alchemy::Seeder.seed!
+LaissCms::Seeder.seed!
 ~~~
 
 ## Git repository
@@ -227,7 +227,7 @@ git push heroku master
 
 ### Migrate and seed the database
 
-We need to migrate the database and populate it with Alchemy seed data.
+We need to migrate the database and populate it with LaissCms seed data.
 
 ~~~ bash
 heroku run rake db:migrate

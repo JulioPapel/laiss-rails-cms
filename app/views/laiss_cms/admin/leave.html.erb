@@ -1,0 +1,13 @@
+<%= render_message do %>
+  <%= LaissCms.t("You are about to leave LaissCms") %>
+<% end %>
+<%= form_tag LaissCms.config.logout_path, method: LaissCms.config.logout_method do %>
+  <div class="buttons">
+    <%= link_to LaissCms.t("stay logged in"),
+      laiss_cms.root_path,
+      rel: "noreferrer",
+      data: {turbo: false},
+      class: "button secondary" %>
+    <%= button_tag LaissCms.t(:logout), autofocus: true %>
+  </div>
+<% end %>

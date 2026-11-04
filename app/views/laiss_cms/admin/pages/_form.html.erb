@@ -1,0 +1,77 @@
+<%= turbo_frame_tag page do %>
+  <%= laiss_cms_form_for [:admin, page], class: 'edit_page' do |f| %>
+    <% unless page.language_root? || page.layoutpage %>
+      <%= render LaissCms::Admin::PageSelect.new(page.parent) do %>
+        <%= f.input :parent_id, required: true %>
+      <% end %>
+    <% end %>
+
+    <div class="input check_boxes">
+      <label class="control-label"><%= LaissCms.t(:page_status) %></label>
+      <div class="control_group">
+        <%= render 'laiss_cms/admin/pages/publication_fields', page: %>
+        <%= page_status_checkbox(page, :restricted) %>
+        <%= render LaissCms::Admin::PagePermittedRolesSelect.new(page: page, form: f) %>
+        <% if LaissCms.config.sitemap.show_flag %>
+          <%= page_status_checkbox(page, :sitemap) %>
+        <% end %>
+      </div>
+    </div>
+
+    <%= f.input :name, autofocus: true %>
+    <%= f.input :urlname, as: 'string', input_html: {
+      value: page.slug,
+      disabled: page.has_wildcard_url?
+    }, label: LaissCms::Page.human_attribute_name(:slug) %>
+
+    <%= f.fields_for :draft_version, page.draft_version do |v| %>
+      <laiss-cms-char-counter max-chars="60">
+        <%= v.input :title, input_html: {
+          disabled: page.attribute_fixed?(:title)
+        } %>
+      </laiss-cms-char-counter>
+    <% end %>
+
+    <% if LaissCms.config.show_page_searchable_checkbox %>
+      <div class="input check_boxes">
+        <label class="control-label"><%= LaissCms.t(:fulltext_search) %></label>
+        <div class="control_group">
+          <%= page_status_checkbox(page, :searchable) %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="input check_boxes">
+      <label class="control-label"><%= LaissCms.t(:search_engines) %></label>
+      <div class="control_group">
+        <%= page_status_checkbox(page, :robot_index) %>
+        <%= page_status_checkbox(page, :robot_follow) %>
+      </div>
+    </div>
+
+    <%= f.fields_for :draft_version, page.draft_version do |v| %>
+      <laiss-cms-char-counter max-chars="160">
+        <%= v.input :meta_description, as: 'text', input_html: {
+          disabled: page.attribute_fixed?(:meta_description)
+        } %>
+      </laiss-cms-char-counter>
+
+      <%= v.input :meta_keywords,
+        as: 'text',
+        hint: LaissCms.t('pages.update.comma_seperated'),
+        input_html: {
+          disabled: page.attribute_fixed?(:meta_keywords)
+        } %>
+    <% end %>
+
+    <div class="input tags">
+      <%= f.label :tag_list, class: "control-label" %>
+      <%= render LaissCms::Admin::TagsAutocomplete.new do %>
+        <%= f.text_field :tag_list, value: f.object.tag_list.join(",") %>
+      <% end %>
+    </div>
+
+    <%= hidden_field_tag :view, params[:view] %>
+    <%= f.submit LaissCms.t(:save) %>
+  <% end %>
+<% end %>

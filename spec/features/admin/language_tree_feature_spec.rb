@@ -3,44 +3,44 @@
 require "rails_helper"
 
 RSpec.describe "Language tree feature", type: :system, js: true do
-  let(:klingon) { create(:alchemy_language, :klingon) }
-  let(:user) { build(:alchemy_dummy_user, :as_admin) }
+  let(:klingon) { create(:laiss_cms_language, :klingon) }
+  let(:user) { build(:laiss_cms_dummy_user, :as_admin) }
 
   before do
-    create(:alchemy_page, :language_root)
+    create(:laiss_cms_page, :language_root)
     authorize_user(user)
   end
 
   context "with a single language" do
     it "one should not be able to switch the language tree" do
       visit("/admin/pages")
-      expect(page).to_not have_selector("label", text: Alchemy.t("Language tree"))
+      expect(page).to_not have_selector("label", text: LaissCms.t("Language tree"))
     end
   end
 
   context "in a multilangual environment" do
     context "even if one language is not public" do
-      let(:klingon) { create(:alchemy_language, :klingon, public: false) }
+      let(:klingon) { create(:laiss_cms_language, :klingon, public: false) }
 
       before do
-        create(:alchemy_page, :language_root, name: "Klingon", language: klingon)
+        create(:laiss_cms_page, :language_root, name: "Klingon", language: klingon)
       end
 
       context "and an author" do
-        let(:user) { build(:alchemy_dummy_user, :as_author) }
+        let(:user) { build(:laiss_cms_dummy_user, :as_author) }
 
         it "one should not be able to switch the language tree" do
           visit("/admin/pages")
-          expect(page).to_not have_selector("label", text: Alchemy.t("Language tree"))
+          expect(page).to_not have_selector("label", text: LaissCms.t("Language tree"))
         end
       end
 
       context "and an editor" do
-        let(:user) { build(:alchemy_dummy_user, :as_editor) }
+        let(:user) { build(:laiss_cms_dummy_user, :as_editor) }
 
         it "one should be able to switch the language tree" do
           visit("/admin/pages")
-          expect(page).to have_css("[content='#{Alchemy.t("Language tree")}'] select")
+          expect(page).to have_css("[content='#{LaissCms.t("Language tree")}'] select")
         end
       end
     end

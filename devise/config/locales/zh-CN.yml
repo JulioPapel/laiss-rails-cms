@@ -1,16 +1,16 @@
 zh-CN:
   activerecord:
     attributes:
-      alchemy/user:
+      laiss_cms/user:
         current_password: "您的密码"
     errors:
       models:
-        alchemy/user:
+        laiss_cms/user:
           attributes:
             current_password:
               blank: "是更改角色所必需的"
               invalid: "不正确"
-  alchemy:
+  laiss_cms:
     admin:
       users:
         confirm_password_for_role_change:

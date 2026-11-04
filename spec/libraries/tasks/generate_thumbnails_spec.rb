@@ -1,27 +1,27 @@
 # frozen_string_literal: true
 
 require "rails_helper"
-require "alchemy/tasks/generate_thumbnails"
+require "laiss_cms/tasks/generate_thumbnails"
 
-RSpec.describe Alchemy::GenerateThumbnails do
+RSpec.describe LaissCms::GenerateThumbnails do
   # Adapter-agnostic count of persisted thumbnail artifacts.
   # ActiveStorage tracks processed variants in variant records, while
-  # Dragonfly persists them as Alchemy::PictureThumb records.
+  # Dragonfly persists them as LaissCms::PictureThumb records.
   def thumbnail_count
-    if Alchemy.storage_adapter.active_storage?
+    if LaissCms.storage_adapter.active_storage?
       ActiveStorage::VariantRecord.count
     else
-      Alchemy::PictureThumb.count
+      LaissCms::PictureThumb.count
     end
   end
 
   describe ".pictures" do
-    let!(:picture) { create(:alchemy_picture) }
+    let!(:picture) { create(:laiss_cms_picture) }
 
     before do
       # Dragonfly persists the archive thumbnails on create; clear them so the
       # count starts at zero. active_storage does not, so no reset is needed.
-      Alchemy::PictureThumb.delete_all if Alchemy.storage_adapter.dragonfly?
+      LaissCms::PictureThumb.delete_all if LaissCms.storage_adapter.dragonfly?
     end
 
     it "generates the archive thumbnails for all pictures" do
@@ -32,7 +32,7 @@ RSpec.describe Alchemy::GenerateThumbnails do
       expect { |probe| described_class.pictures(&probe) }.to yield_with_args(picture)
     end
 
-    if Alchemy.storage_adapter.active_storage?
+    if LaissCms.storage_adapter.active_storage?
       context "with async: true" do
         it "enqueues an ActiveStorage::TransformJob for the variants instead of processing inline" do
           expect { described_class.pictures(async: true) }
@@ -47,14 +47,14 @@ RSpec.describe Alchemy::GenerateThumbnails do
       # A real, adequately sized image so the thumbnail crop is valid on every
       # platform. The active_storage factory hard codes the metadata to 1x1,
       # which makes cropping fail on stricter libvips builds (e.g. CI).
-      create(:alchemy_picture, image_file: fixture_file_upload("500x500.png")).tap do |picture|
-        if Alchemy.storage_adapter.active_storage?
+      create(:laiss_cms_picture, image_file: fixture_file_upload("500x500.png")).tap do |picture|
+        if LaissCms.storage_adapter.active_storage?
           blob = picture.image_file.blob
           blob.update!(metadata: blob.metadata.merge(width: 500, height: 500))
         end
       end
     end
-    let!(:ingredient) { create(:alchemy_ingredient_picture, related_object: picture) }
+    let!(:ingredient) { create(:laiss_cms_ingredient_picture, related_object: picture) }
 
     it "generates thumbnails for published picture ingredients" do
       expect { described_class.ingredients }.to change { thumbnail_count }.by(2)
@@ -64,7 +64,7 @@ RSpec.describe Alchemy::GenerateThumbnails do
       expect { |probe| described_class.ingredients(&probe) }.to yield_with_args(ingredient)
     end
 
-    if Alchemy.storage_adapter.active_storage?
+    if LaissCms.storage_adapter.active_storage?
       context "with async: true" do
         it "enqueues an ActiveStorage::TransformJob for the variants instead of processing inline" do
           expect { described_class.ingredients(async: true) }
@@ -78,8 +78,8 @@ RSpec.describe Alchemy::GenerateThumbnails do
         # Under Dragonfly the archive thumbnails persist on create and the
         # crop-less 160x120 thumbnail would dedup with the archive medium;
         # clear them so the count reflects only the ingredient's variants.
-        Alchemy::PictureThumb.delete_all if Alchemy.storage_adapter.dragonfly?
-        allow_any_instance_of(Alchemy::Ingredients::Picture).to receive(:settings).and_return(
+        LaissCms::PictureThumb.delete_all if LaissCms.storage_adapter.dragonfly?
+        allow_any_instance_of(LaissCms::Ingredients::Picture).to receive(:settings).and_return(
           ActiveSupport::HashWithIndifferentAccess.new(size: "1200x480", srcset: ["80x60"])
         )
       end
@@ -94,8 +94,8 @@ RSpec.describe Alchemy::GenerateThumbnails do
         # Under Dragonfly the archive thumbnails persist on create and the
         # crop-less 160x120 thumbnail would dedup with the archive medium;
         # clear them so the count reflects only the ingredient's variants.
-        Alchemy::PictureThumb.delete_all if Alchemy.storage_adapter.dragonfly?
-        allow_any_instance_of(Alchemy::Ingredients::Picture).to receive(:settings).and_return(
+        LaissCms::PictureThumb.delete_all if LaissCms.storage_adapter.dragonfly?
+        allow_any_instance_of(LaissCms::Ingredients::Picture).to receive(:settings).and_return(
           ActiveSupport::HashWithIndifferentAccess.new(
             size: "1200x480",
             srcset: ["80x60", {size: "80x60", format: "webp"}]
@@ -118,7 +118,7 @@ RSpec.describe Alchemy::GenerateThumbnails do
 
     context "when the picture is not convertible (e.g. an svg)" do
       before do
-        allow_any_instance_of(Alchemy::Picture).to receive(:has_convertible_format?).and_return(false)
+        allow_any_instance_of(LaissCms::Picture).to receive(:has_convertible_format?).and_return(false)
       end
 
       it "does not generate thumbnails" do
@@ -127,13 +127,13 @@ RSpec.describe Alchemy::GenerateThumbnails do
     end
 
     context "when configured to convert images to webp" do
-      before { stub_alchemy_config(image_output_format: "webp") }
+      before { stub_laiss_cms_config(image_output_format: "webp") }
 
       it "still generates thumbnails for the convertible source" do
         expect { described_class.ingredients }.to change { thumbnail_count }.by(2)
       end
 
-      if Alchemy.storage_adapter.active_storage?
+      if LaissCms.storage_adapter.active_storage?
         it "generates them in the configured webp format" do
           described_class.ingredients
           filenames = ActiveStorage::VariantRecord.all.map { |record| record.image.blob.filename.to_s }
@@ -142,14 +142,14 @@ RSpec.describe Alchemy::GenerateThumbnails do
       end
     end
 
-    if Alchemy.storage_adapter.active_storage?
+    if LaissCms.storage_adapter.active_storage?
       context "when a variant fails to process" do
         before do
-          allow(Alchemy::DragonflyToImageProcessing).to receive(:call).and_raise("boom")
+          allow(LaissCms::DragonflyToImageProcessing).to receive(:call).and_raise("boom")
         end
 
         it "reports the error and keeps going" do
-          expect(Alchemy::ErrorTracking.notification_handler).to receive(:call).at_least(:once)
+          expect(LaissCms::ErrorTracking.notification_handler).to receive(:call).at_least(:once)
           expect { described_class.ingredients }.not_to raise_error
         end
       end

@@ -3,28 +3,28 @@
 require "rails_helper"
 
 RSpec.describe "Requesting a page" do
-  let!(:default_language) { create(:alchemy_language, :english, default: true) }
+  let!(:default_language) { create(:laiss_cms_language, :english, default: true) }
 
   let!(:default_language_root) do
-    create(:alchemy_page, :language_root, language: default_language, name: "Home")
+    create(:laiss_cms_page, :language_root, language: default_language, name: "Home")
   end
 
   let(:public_page) do
-    create(:alchemy_page, :public, name: "Page 1")
+    create(:laiss_cms_page, :public, name: "Page 1")
   end
 
   context "in multi language mode" do
-    let(:second_page) { create(:alchemy_page, :public, name: "Second Page") }
+    let(:second_page) { create(:laiss_cms_page, :public, name: "Second Page") }
 
     let(:legacy_url) do
-      Alchemy::LegacyPageUrl.create(
+      LaissCms::LegacyPageUrl.create(
         urlname: "index.php?option=com_content&view=article&id=48&Itemid=69",
         page: second_page
       )
     end
 
     before do
-      allow_any_instance_of(Alchemy::PagesController).to receive(:multi_language?).and_return(true)
+      allow_any_instance_of(LaissCms::PagesController).to receive(:multi_language?).and_return(true)
     end
 
     context "if language params are given" do
@@ -83,7 +83,7 @@ RSpec.describe "Requesting a page" do
 
     context "if requested page is unpublished" do
       before do
-        create(:alchemy_page, name: "Not Public")
+        create(:laiss_cms_page, name: "Not Public")
       end
 
       it "should raise not found error" do
@@ -124,11 +124,11 @@ RSpec.describe "Requesting a page" do
 
     context "wrong language requested" do
       before do
-        allow(Alchemy.config.user_class).to receive(:alchemy_admins).and_return([1, 2])
+        allow(LaissCms.config.user_class).to receive(:laiss_cms_admins).and_return([1, 2])
       end
 
       it "should render 404 if urlname and lang parameter do not belong to same page" do
-        create(:alchemy_language, :klingon)
+        create(:laiss_cms_language, :klingon)
         expect {
           visit "/kl/#{public_page.urlname}"
         }.to raise_error(ActionController::RoutingError)
@@ -136,7 +136,7 @@ RSpec.describe "Requesting a page" do
 
       it "should render 404 if requested language does not exist" do
         public_page
-        Alchemy::LegacyPageUrl.delete_all
+        LaissCms::LegacyPageUrl.delete_all
         expect {
           visit "/fo/#{public_page.urlname}"
         }.to raise_error(ActionController::RoutingError)
@@ -145,17 +145,17 @@ RSpec.describe "Requesting a page" do
   end
 
   context "not in multi language mode" do
-    let(:second_page) { create(:alchemy_page, :public, name: "Second Page") }
+    let(:second_page) { create(:laiss_cms_page, :public, name: "Second Page") }
 
     let(:legacy_url) do
-      Alchemy::LegacyPageUrl.create(
+      LaissCms::LegacyPageUrl.create(
         urlname: "index.php?option=com_content&view=article&id=48&Itemid=69",
         page: second_page
       )
     end
 
     before do
-      allow_any_instance_of(Alchemy::PagesController).to receive(:multi_language?).and_return(false)
+      allow_any_instance_of(LaissCms::PagesController).to receive(:multi_language?).and_return(false)
     end
 
     it "redirects legacy url with unknown format & query string" do

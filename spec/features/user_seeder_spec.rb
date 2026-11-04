@@ -3,19 +3,19 @@
 require "rails_helper"
 
 RSpec.describe "User seeding", type: :system do
-  context "when db/seeds/alchemy/users.yml file is present" do
+  context "when db/seeds/laiss_cms/users.yml file is present" do
     let(:seeds_file) do
       "spec/fixtures/users.yml"
     end
 
     before do
-      FileUtils.mkdir_p(Rails.root.join("db/seeds/alchemy"))
-      FileUtils.cp(seeds_file, Rails.root.join("db/seeds/alchemy/users.yml"))
+      FileUtils.mkdir_p(Rails.root.join("db/seeds/laiss_cms"))
+      FileUtils.cp(seeds_file, Rails.root.join("db/seeds/laiss_cms/users.yml"))
       allow_any_instance_of(DummyUser).to receive(:confirmed_at=)
     end
 
     it "seeds users" do
-      Alchemy::Seeder.seed!
+      LaissCms::Seeder.seed!
       expect(DummyUser.find_by(email: "admin@example.com")).to be_present
       expect(DummyUser.find_by(email: "member@example.com")).to be_present
     end

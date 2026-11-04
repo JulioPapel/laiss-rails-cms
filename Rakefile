@@ -12,13 +12,13 @@ rescue LoadError
   RDoc::Task = Rake::RDocTask
 end
 
-desc "Generate documentation for Alchemy CMS."
+desc "Generate documentation for LaissCms CMS."
 RDoc::Task.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = "rdoc"
-  rdoc.title = "Alchemy CMS"
+  rdoc.title = "LaissCms CMS"
   rdoc.options << "--line-numbers" << "--inline-source"
   rdoc.rdoc_files.include("README.md")
-  rdoc.rdoc_files.include("config/alchemy/*.yml")
+  rdoc.rdoc_files.include("config/laiss_cms/*.yml")
   rdoc.rdoc_files.include("lib/**/*.rb")
   rdoc.rdoc_files.include("app/**/*.rb")
 end
@@ -31,25 +31,25 @@ require "rspec/core/rake_task"
 
 RSpec::Core::RakeTask.new(:spec)
 
-task default: "alchemy:test:all"
+task default: "laiss_cms:test:all"
 
-namespace :alchemy_i18n do
-  Bundler::GemHelper.new(File.expand_path("i18n", __dir__), "alchemy_i18n").install
+namespace :laiss_cms_i18n do
+  Bundler::GemHelper.new(File.expand_path("i18n", __dir__), "laiss_cms_i18n").install
 end
 
-namespace :alchemy_devise do
-  Bundler::GemHelper.new(File.expand_path("devise", __dir__), "alchemy-devise").install
+namespace :laiss_cms_devise do
+  Bundler::GemHelper.new(File.expand_path("devise", __dir__), "laiss-cms-devise").install
 end
 
 Bundler::GemHelper.install_tasks
-task build: "alchemy_i18n:build"
-task release: "alchemy_i18n:release:rubygem_push"
-task build: "alchemy_devise:build"
-task release: "alchemy_devise:release:rubygem_push"
+task build: "laiss_cms_i18n:build"
+task release: "laiss_cms_i18n:release:rubygem_push"
+task build: "laiss_cms_devise:build"
+task release: "laiss_cms_devise:release:rubygem_push"
 
-namespace :alchemy do
+namespace :laiss_cms do
   namespace :test do
-    desc "Prepares database for testing Alchemy"
+    desc "Prepares database for testing LaissCms"
     task :prepare do
       system(
         <<~BASH
@@ -58,19 +58,19 @@ namespace :alchemy do
           bin/rake db:create && \
           bin/rake db:environment:set && \
           bin/rake db:migrate:reset && \
-          bin/rails g alchemy:install --skip --skip-demo-files --auto-accept --skip-db-create && \
+          bin/rails g laiss_cms:install --skip --skip-demo-files --auto-accept --skip-db-create && \
           bin/rails dartsass:build && \
           cd -
         BASH
       ) || fail
     end
 
-    desc "Prepares the database and runs the Alchemy core specs"
+    desc "Prepares the database and runs the LaissCms core specs"
     task core: :prepare do
       sh "bin/rspec", "spec"
     end
 
-    desc "Prepares the database and runs the alchemy-devise specs"
+    desc "Prepares the database and runs the laiss-cms-devise specs"
     task devise: :prepare do
       sh "bin/rspec", "devise/spec"
     end
@@ -85,7 +85,7 @@ namespace :alchemy do
       original_file = "./CHANGELOG.md"
       new_file = original_file + ".new"
       backup = original_file + ".old"
-      changes = `git rev-list v#{ENV["PREVIOUS_VERSION"]}..HEAD | bundle exec github_fast_changelog AlchemyCMS/alchemy_cms`.split("\n")
+      changes = `git rev-list v#{ENV["PREVIOUS_VERSION"]}..HEAD | bundle exec github_fast_changelog LaissCMS/laiss_cms`.split("\n")
       changelog = File.read(original_file)
       File.open(new_file, "w") do |file|
         file.puts "# Changelog"
@@ -108,14 +108,14 @@ namespace :alchemy do
     end
   end
 
-  desc "Release a new version of Alchemy to rubygems.org"
+  desc "Release a new version of LaissCms to rubygems.org"
   task :release do
-    require_relative "lib/alchemy/version"
-    ENV["PREVIOUS_VERSION"] = Alchemy::VERSION
+    require_relative "lib/laiss_cms/version"
+    ENV["PREVIOUS_VERSION"] = LaissCms::VERSION
     system("bundle exec gem bump --version #{ENV.fetch("VERSION", "patch")}")
-    load "./lib/alchemy/version.rb"
-    new_version = Alchemy::VERSION
-    Rake::Task["alchemy:changelog:update"].invoke
+    load "./lib/laiss_cms/version.rb"
+    new_version = LaissCms::VERSION
+    Rake::Task["laiss_cms:changelog:update"].invoke
     changelog = File.read("CHANGELOG.md").gsub(/(##) Unreleased/, "## #{new_version} (#{Time.now.strftime("%Y-%m-%d")})")
     File.open("CHANGELOG.md", "w") { |file| file.puts changelog }
     system("git add CHANGELOG.md")

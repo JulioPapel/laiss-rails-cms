@@ -1,0 +1,238 @@
+import { vi } from "vitest"
+import ajax, { get, post, patch, getToken } from "laiss_cms_admin/utils/ajax"
+
+const JSON_CONTENT_TYPE = "application/json"
+const token = "s3cr3t"
+
+const successResponse = {
+  ok: true,
+  headers: { get: () => JSON_CONTENT_TYPE },
+  json: async () => ({ success: true })
+}
+
+describe("ajax utilities", () => {
+  beforeEach(() => {
+    document.head.innerHTML = `<meta name="csrf-token" content="${token}">`
+    global.fetch = vi.fn()
+  })
+
+  describe("getToken", () => {
+    it("retrieves the CSRF token from the meta tag", () => {
+      expect(getToken()).toBe(token)
+    })
+
+    it("throws an error if the meta tag is missing", () => {
+      document.head.innerHTML = ""
+      expect(() => getToken()).toThrow()
+    })
+  })
+
+  describe("ajax", () => {
+    it("sends a GET request with query parameters", async () => {
+      global.fetch.mockResolvedValueOnce(successResponse)
+
+      const response = await ajax("GET", "/test", { param1: "value1" })
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://localhost:3000/test?param1=value1",
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({
+            "X-CSRF-Token": token
+          })
+        })
+      )
+      expect(response.data).toEqual({ success: true })
+    })
+
+    it("keeps query parameters already present in the path", async () => {
+      global.fetch.mockResolvedValueOnce(successResponse)
+
+      await ajax("GET", "/test?context=topics&term=old", { term: "new" })
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://localhost:3000/test?context=topics&term=new",
+        expect.anything()
+      )
+    })
+
+    it("sends a POST request with JSON body", async () => {
+      global.fetch.mockResolvedValueOnce(successResponse)
+
+      const response = await ajax("POST", "/test", { key: "value" })
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://localhost:3000/test",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({ key: "value" }),
+          headers: expect.objectContaining({
+            "Content-Type": "application/json; charset=utf-8",
+            Accept: JSON_CONTENT_TYPE
+          })
+        })
+      )
+      expect(response.data).toEqual({ success: true })
+    })
+
+    it("throws an error for non-OK responses", async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        headers: { get: () => JSON_CONTENT_TYPE },
+        json: async () => ({ error: "Something went wrong" })
+      })
+
+      await expect(ajax("GET", "/test")).rejects.toEqual({
+        error: "Something went wrong"
+      })
+    })
+
+    it("visits the login page if the session expired", async () => {
+      global.Turbo = { visit: vi.fn() }
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        headers: { get: () => JSON_CONTENT_TYPE },
+        json: async () => ({
+          message: "Please log in",
+          redirect_url: "/login"
+        })
+      })
+
+      const outcome = await Promise.race([
+        ajax("DELETE", "/test").then(
+          () => "resolved",
+          () => "rejected"
+        ),
+        new Promise((resolve) => setTimeout(() => resolve("pending"), 20))
+      ])
+
+      expect(global.Turbo.visit).toHaveBeenCalledWith("/login")
+      // Callers must not run their error handling while we navigate away
+      expect(outcome).toBe("pending")
+    })
+
+    it("throws if the session expired without a place to log in", async () => {
+      global.Turbo = { visit: vi.fn() }
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        headers: { get: () => JSON_CONTENT_TYPE },
+        json: async () => ({ message: "Please log in" })
+      })
+
+      await expect(ajax("DELETE", "/test")).rejects.toEqual({
+        message: "Please log in"
+      })
+      expect(global.Turbo.visit).not.toHaveBeenCalled()
+    })
+
+    it("does not visit anywhere for other error responses", async () => {
+      global.Turbo = { visit: vi.fn() }
+      global.fetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        headers: { get: () => JSON_CONTENT_TYPE },
+        json: async () => ({ message: "You are not authorized" })
+      })
+
+      await expect(ajax("DELETE", "/test")).rejects.toEqual({
+        message: "You are not authorized"
+      })
+      expect(global.Turbo.visit).not.toHaveBeenCalled()
+    })
+
+    it("handles non-JSON responses gracefully", async () => {
+      global.fetch.mockResolvedValueOnce({
+        ok: true,
+        headers: { get: () => "text/html" },
+        text: async () => "<html></html>"
+      })
+
+      const response = await ajax("GET", "/test")
+
+      expect(response.data).toBeNull()
+    })
+  })
+
+  describe("get", () => {
+    it("calls ajax with GET method", async () => {
+      const ajaxSpy = vi
+        .spyOn(global, "fetch")
+        .mockResolvedValueOnce(successResponse)
+
+      const response = await get("/test", { param: "value" })
+
+      expect(ajaxSpy).toHaveBeenCalled()
+      expect(response.data).toEqual({ success: true })
+    })
+  })
+
+  describe("post", () => {
+    it("calls ajax with POST method and default accept header", async () => {
+      const ajaxSpy = vi
+        .spyOn(global, "fetch")
+        .mockResolvedValueOnce(successResponse)
+
+      const response = await post("/test", { key: "value" })
+
+      expect(ajaxSpy).toHaveBeenCalled()
+      expect(response.data).toEqual({ success: true })
+    })
+
+    it("allows overriding the accept header", async () => {
+      const ajaxSpy = vi.spyOn(global, "fetch").mockResolvedValueOnce({
+        ok: true,
+        headers: { get: () => "application/xml" },
+        text: async () => "<response>success</response>"
+      })
+
+      const response = await post("/test", { key: "value" }, "application/xml")
+
+      expect(ajaxSpy).toHaveBeenCalledWith(
+        "http://localhost:3000/test",
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Accept: "application/xml"
+          })
+        })
+      )
+    })
+  })
+
+  describe("patch", () => {
+    it("calls ajax with PATCH method", async () => {
+      const ajaxSpy = vi
+        .spyOn(global, "fetch")
+        .mockResolvedValueOnce(successResponse)
+
+      const response = await patch("/test", { key: "value" })
+
+      expect(ajaxSpy).toHaveBeenCalled()
+      expect(response.data).toEqual({ success: true })
+    })
+
+    it("supports Turbo Stream responses", async () => {
+      global.Turbo = { renderStreamMessage: vi.fn() }
+      const turboStreamResponse = {
+        ok: true,
+        headers: { get: () => "text/vnd.turbo-stream.html" },
+        text: async () => "<turbo-stream>...</turbo-stream>"
+      }
+
+      global.fetch.mockResolvedValueOnce(turboStreamResponse)
+
+      const response = await patch("/test", null, "text/vnd.turbo-stream.html")
+
+      expect(global.Turbo.renderStreamMessage).toHaveBeenCalledWith(
+        "<turbo-stream>...</turbo-stream>"
+      )
+      expect(response.data).toBe("<turbo-stream>...</turbo-stream>")
+    })
+  })
+
+  afterEach(() => {
+    vi.resetAllMocks()
+    delete global.Turbo
+  })
+})

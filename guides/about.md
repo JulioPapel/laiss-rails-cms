@@ -5,17 +5,17 @@ next:
   link: getting_started
 ---
 
-# About AlchemyCMS
+# About LaissCMS
 
-Alchemy is a flexible, developer-friendly content management framework for Ruby on Rails. It gives you full control over markup and styling while providing editors with a powerful, intuitive admin interface.
+LaissCms is a flexible, developer-friendly content management framework for Ruby on Rails. It gives you full control over markup and styling while providing editors with a powerful, intuitive admin interface.
 
 ## Rails Engine
 
-Alchemy is a [Rails engine](https://guides.rubyonrails.org/engines.html) that integrates into your existing application. It uses standard Rails conventions — ERB templates, ActiveRecord, asset pipeline — so there is nothing new to learn.
+LaissCms is a [Rails engine](https://guides.rubyonrails.org/engines.html) that integrates into your existing application. It uses standard Rails conventions — ERB templates, ActiveRecord, asset pipeline — so there is nothing new to learn.
 
 ## Content Architecture
 
-Unlike CMS systems that store complete HTML pages, Alchemy stores only structured content: text, references to images and attachments, and richtext. No HTML markup, no CSS, no layout. You control how content is rendered.
+Unlike CMS systems that store complete HTML pages, LaissCms stores only structured content: text, references to images and attachments, and richtext. No HTML markup, no CSS, no layout. You control how content is rendered.
 
 ### The Content Hierarchy
 
@@ -24,41 +24,41 @@ Unlike CMS systems that store complete HTML pages, Alchemy stores only structure
 
 - A **Site** has one or more **Languages**.
 - Each language has a tree of **[Pages](pages)**.
-- Each page maintains a **draft version** for editing and a **public version** for visitors. When a page is published, Alchemy duplicates the draft's elements into the public version. This is handled transparently.
+- Each page maintains a **draft version** for editing and a **public version** for visitors. When a page is published, LaissCms duplicates the draft's elements into the public version. This is handled transparently.
 - Pages support **[time-based publishing](pages#publishing)**, allowing scheduled publishing and expiration. Since 8.1, [elements support this as well](elements#time-based-publishing).
 - Pages contain **[Elements](elements)** — reusable content components like articles, hero sections, or cards. Elements can be nested.
 - Elements contain **[Ingredients](ingredients)** — typed content fields like Text, Richtext, Picture, or Boolean.
 
 ### The Render Flow
 
-Alchemy uses standard [Rails partials](https://guides.rubyonrails.org/layouts_and_rendering.html#using-partials) and [ViewComponents](https://viewcomponent.org). It has no custom templating language.
+LaissCms uses standard [Rails partials](https://guides.rubyonrails.org/layouts_and_rendering.html#using-partials) and [ViewComponents](https://viewcomponent.org). It has no custom templating language.
 
-When Alchemy renders a page, these files are used:
+When LaissCms renders a page, these files are used:
 
 1. `app/views/layouts/application.html.erb` — your application layout
-2. `app/views/alchemy/page_layouts/_<page_layout>.html.erb` — the page layout partial
-3. `app/views/alchemy/elements/_<element>.html.erb` — the element partial
+2. `app/views/laiss_cms/page_layouts/_<page_layout>.html.erb` — the page layout partial
+3. `app/views/laiss_cms/elements/_<element>.html.erb` — the element partial
 4. Ingredient view components render the individual content fields
 
 ### Planning Your Content Structure
 
 Start by identifying the different types of pages your site needs (called page layouts). Every structurally different page should have its own layout. [More about pages.](pages)
 
-Then split the content within each layout into elements. Group related content fields into reusable components. Elements are the key building blocks of Alchemy. [More about elements.](elements)
+Then split the content within each layout into elements. Group related content fields into reusable components. Elements are the key building blocks of LaissCms. [More about elements.](elements)
 
 Finally, define the ingredients for each element — the individual content fields like headlines, images, and text. [More about ingredients.](ingredients)
 
 ## Image Processing
 
-Alchemy renders images on the fly using [ImageMagick](https://imagemagick.org) or [libvips](https://www.libvips.org). Images are stored as originals in the picture library. Editors assign them to elements and can crop them using the built-in cropping tool. You define the rendering dimensions and output format. [More about rendering images.](render_images)
+LaissCms renders images on the fly using [ImageMagick](https://imagemagick.org) or [libvips](https://www.libvips.org). Images are stored as originals in the picture library. Editors assign them to elements and can crop them using the built-in cropping tool. You define the rendering dimensions and output format. [More about rendering images.](render_images)
 
 ## Caching
 
-Alchemy uses Rails' Russian doll caching for fast content delivery. With every page request Alchemy sends `Cache-Control` headers that CDNs, proxies and browsers use to cache the page. Caching can be configured globally or per page layout. [More about caching.](configuration#caching)
+LaissCms uses Rails' Russian doll caching for fast content delivery. With every page request LaissCms sends `Cache-Control` headers that CDNs, proxies and browsers use to cache the page. Caching can be configured globally or per page layout. [More about caching.](configuration#caching)
 
 ## Admin Modules
 
-Alchemy comes with these admin modules:
+LaissCms comes with these admin modules:
 
 - **[Pages](pages)** — manage the page tree and edit content
 - **[Menus](menus)** — manage navigation trees independently from pages
@@ -66,7 +66,7 @@ Alchemy comes with these admin modules:
 - **[Sites](sites)** — multi-site support
 - **[Library](library)** — picture and attachment management
 - **[Tags](tags)** — tagging for pictures, attachments, and pages
-- **Users** — user management (with [alchemy-devise](extensions#alchemy-devise))
+- **Users** — user management (with [laiss-cms-devise](extensions#laiss-cms-devise))
 
 ::: tip
 You can extend the admin with your own [custom modules](how_to_create_modules). See [Extensions](extensions) for a full list of available add-ons.

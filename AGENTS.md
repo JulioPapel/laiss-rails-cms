@@ -2,9 +2,9 @@
 
 This file provides guidance to coding agents when working with code in this repository.
 
-## About AlchemyCMS
+## About LaissCMS
 
-AlchemyCMS is an open source Rails CMS engine with a flexible, YAML-driven content architecture. It uses a three-tier content model: Pages → Elements → Ingredients, with multi-language support, versioning, and a modern admin interface built with Rails + Web Components.
+LaissCMS is an open source Rails CMS engine with a flexible, YAML-driven content architecture. It uses a three-tier content model: Pages → Elements → Ingredients, with multi-language support, versioning, and a modern admin interface built with Rails + Web Components.
 
 ## Development Commands
 
@@ -23,18 +23,18 @@ This installs dependencies (Ruby gems + pnpm packages) and sets up the dummy app
 bundle exec rake
 
 # Prepare the database and run a single suite
-bundle exec rake alchemy:test:core
-bundle exec rake alchemy:test:devise
+bundle exec rake laiss_cms:test:core
+bundle exec rake laiss_cms:test:devise
 
 # Run RSpec only (core and devise specs, each in its own RSpec process)
 bin/rspec
 
 # Run specific test file
-bin/rspec spec/models/alchemy/page_spec.rb
+bin/rspec spec/models/laiss_cms/page_spec.rb
 bin/rspec devise/spec/models/user_spec.rb
 
 # Prepare test database (required before first test run)
-bundle exec rake alchemy:test:prepare
+bundle exec rake laiss_cms:test:prepare
 
 # Run JavaScript tests
 pnpm run test
@@ -47,7 +47,7 @@ pnpm run test
 pnpm run build
 
 # Build individual components
-pnpm run build:admin      # Bundle admin JavaScript (app/javascript/alchemy_admin/**)
+pnpm run build:admin      # Bundle admin JavaScript (app/javascript/laiss_cms_admin/**)
 pnpm run build:js         # Bundle vendored dependencies (sortablejs, shoelace, tinymce, etc.)
 pnpm run build:css        # Sass compilation
 pnpm run handlebars:compile  # Compile Handlebars templates
@@ -114,25 +114,25 @@ pnpm exec prettier --write app/javascript/**/*.js
 
 ### Content Model: Three-Tier Hierarchy
 
-Alchemy organizes content in a three-tier hierarchy:
+LaissCms organizes content in a three-tier hierarchy:
 
-**Pages** (`Alchemy::Page`)
+**Pages** (`LaissCms::Page`)
 - Top-level content containers organized in a tree structure (using `awesome_nested_set`)
-- Each page has a `page_layout` (defined in `config/alchemy/page_layouts.yml`)
-- Multi-language support: each page belongs to one `Alchemy::Language`
+- Each page has a `page_layout` (defined in `config/laiss_cms/page_layouts.yml`)
+- Multi-language support: each page belongs to one `LaissCms::Language`
 - **Dual-version system**:
   - `draft_version` - Working copy (no `public_on` date)
   - `public_version` - Published content (has `public_on` date)
 - Page locking prevents concurrent editing (`locked_by`, `locked_at`)
 
-**Elements** (`Alchemy::Element`)
+**Elements** (`LaissCms::Element`)
 - Content blocks that live on specific `PageVersion` records
-- Defined in `config/alchemy/elements.yml`
+- Defined in `config/laiss_cms/elements.yml`
 - Can be **fixed** (permanent) or **mutable** (user-removable)
 - Support nesting via `parent_element_id`
 - Positioned using `acts_as_list` within scope
 
-**Ingredients** (`Alchemy::Ingredient`)
+**Ingredients** (`LaissCms::Ingredient`)
 - The actual content values (text, images, links, etc.)
 - Uses **Single Table Inheritance (STI)** with 15+ types:
   - Value types: `Text`, `Headline`, `Html`, `Richtext`, `Number`, `Boolean`
@@ -144,10 +144,10 @@ Alchemy organizes content in a three-tier hierarchy:
 
 ### YAML-Driven Configuration
 
-Alchemy uses declarative YAML definitions that are **separate from database records**:
+LaissCms uses declarative YAML definitions that are **separate from database records**:
 
-- `config/alchemy/page_layouts.yml` - Page layout definitions
-- `config/alchemy/elements.yml` - Element definitions with ingredient specs
+- `config/laiss_cms/page_layouts.yml` - Page layout definitions
+- `config/laiss_cms/elements.yml` - Element definitions with ingredient specs
 - Definition classes (`PageDefinition`, `ElementDefinition`, `IngredientDefinition`) are read-only configuration objects
 
 This separation allows runtime configuration changes without database migrations.
@@ -156,24 +156,24 @@ This separation allows runtime configuration changes without database migrations
 
 ```
 Site
-└── languages (Alchemy::Language)
-    └── pages (Alchemy::Page - nested set tree)
-        └── versions (Alchemy::PageVersion)
-            └── elements (Alchemy::Element - can be nested)
-                └── ingredients (Alchemy::Ingredient - STI)
+└── languages (LaissCms::Language)
+    └── pages (LaissCms::Page - nested set tree)
+        └── versions (LaissCms::PageVersion)
+            └── elements (LaissCms::Element - can be nested)
+                └── ingredients (LaissCms::Ingredient - STI)
                     └── related_object (polymorphic: Picture, Page, etc.)
 ```
 
 ### Navigation System
 
-**Nodes** (`Alchemy::Node`) represent menu/navigation structure separate from page hierarchy:
+**Nodes** (`LaissCms::Node`) represent menu/navigation structure separate from page hierarchy:
 - Also uses nested set pattern per language
 - Can attach to pages or link to external URLs
 - Referenced by elements via `Ingredients::Node`
 
 ### Service Objects
 
-Complex business logic is extracted into service classes in `app/services/alchemy/`:
+Complex business logic is extracted into service classes in `app/services/laiss_cms/`:
 
 - `CopyPage` - Deep copies pages with all elements and ingredients
 - `DuplicateElement` - Element copying with ingredient awareness
@@ -196,23 +196,23 @@ Use service objects for complex operations rather than bloating models.
 The admin interface uses a **hybrid architecture**:
 
 **Modern Web Components** (preferred for new features):
-- Custom elements in `app/javascript/alchemy_admin/components/`
+- Custom elements in `app/javascript/laiss_cms_admin/components/`
 - Extend `HTMLElement` directly; do all DOM work in `connectedCallback`
-- Examples: `alchemy-sitemap`, `alchemy-element-editor`, `alchemy-datepicker`
+- Examples: `laiss-cms-sitemap`, `laiss-cms-element-editor`, `laiss-cms-datepicker`
 - Vanilla JavaScript (no framework dependency)
 
 **Rails Integration**:
 - Turbo for navigation (replacing Turbolinks)
 - Turbo Frames and Streams for forms
-- Custom events: `Alchemy.${name}` namespace
+- Custom events: `LaissCms.${name}` namespace
 - View Component: Used to populate Ruby values into custom JS elements.
 
-**Global Object**: `window.Alchemy` provides legacy utilities:
+**Global Object**: `window.LaissCms` provides legacy utilities:
 ```javascript
-Alchemy.t()          // i18n translation
-Alchemy.growl()      // Notifications
-Alchemy.LinkDialog   // Link picker
-Alchemy.closeCurrentDialog()
+LaissCms.t()          // i18n translation
+LaissCms.growl()      // Notifications
+LaissCms.LinkDialog   // Link picker
+LaissCms.closeCurrentDialog()
 ```
 
 Always prefer local imports for global usage where possible.
@@ -223,7 +223,7 @@ Admin UI uses Rails ViewComponents for rendering:
 - Each ingredient type has two components:
   - `*_editor.rb` - Form in admin UI
   - `*_view.rb` - Frontend rendering
-- Located in `app/components/alchemy/ingredients/`
+- Located in `app/components/laiss_cms/ingredients/`
 
 ## Testing Patterns
 
@@ -243,7 +243,7 @@ spec/
 ### Tools
 
 - **RSpec** with Rails integration
-- **FactoryBot** for test data (`create(:alchemy_page)`)
+- **FactoryBot** for test data (`create(:laiss_cms_page)`)
 - **Capybara** for browser automation (with Selenium for JS tests)
 - **Shoulda Matchers** for ActiveRecord assertions
 - **WebMock** for HTTP stubbing
@@ -259,11 +259,11 @@ Use shared examples for consistent testing across similar classes:
 
 ### Thread-Local State
 
-Use `Alchemy::Current` for thread-safe context:
+Use `LaissCms::Current` for thread-safe context:
 ```ruby
-Alchemy::Current.language = language
-Alchemy::Current.site = site
-Alchemy::Current.preview_page = page
+LaissCms::Current.language = language
+LaissCms::Current.site = site
+LaissCms::Current.preview_page = page
 ```
 
 ## Code Style & Conventions
@@ -295,8 +295,8 @@ Follow Ruby and JavaScript conventions from `CONTRIBUTING.md`:
 
 Layouts and elements can use custom definition repositories:
 ```ruby
-Alchemy::Page.layouts_repository = CustomClass
-Alchemy::Element.definitions_repository = CustomClass
+LaissCms::Page.layouts_repository = CustomClass
+LaissCms::Element.definitions_repository = CustomClass
 ```
 
 ### Nested Set Operations
@@ -304,7 +304,7 @@ Alchemy::Element.definitions_repository = CustomClass
 Pages and nodes use `awesome_nested_set` for tree hierarchies:
 - Efficient querying: `page.ancestors`, `page.descendants`, `page.subtree`
 - Avoid manual parent_id manipulation
-- Use scoped queries: `Alchemy::Page.where(language: lang)`
+- Use scoped queries: `LaissCms::Page.where(language: lang)`
 
 ### Writing Migrations (data loss hazard)
 
@@ -319,8 +319,8 @@ aside, running `DROP TABLE`, and copying them back:
 With foreign keys enforced, SQLite's `DROP TABLE` performs an implicit
 `DELETE`, which fires `ON DELETE CASCADE`. The rebuilt table keeps its rows,
 but **every cascading descendant is deleted permanently**. Rebuilding
-`alchemy_pages` empties `alchemy_page_versions`, `alchemy_elements` and
-`alchemy_ingredients`. Rails guards the rebuild with `PRAGMA foreign_keys =
+`laiss_cms_pages` empties `laiss_cms_page_versions`, `laiss_cms_elements` and
+`laiss_cms_ingredients`. Rails guards the rebuild with `PRAGMA foreign_keys =
 OFF`, but that pragma is a **silent no-op inside a transaction**, and
 migrations run in a transaction by default — so the guard never applies.
 
@@ -348,41 +348,41 @@ When working with page content:
 ### Custom Ingredient Types
 
 Create new ingredient types by:
-1. Subclass `Alchemy::Ingredient` in `app/models/alchemy/ingredients/`
-2. Add view component in `app/components/alchemy/ingredients/`
+1. Subclass `LaissCms::Ingredient` in `app/models/laiss_cms/ingredients/`
+2. Add view component in `app/components/laiss_cms/ingredients/`
 3. Add editor component for admin UI
 4. Register in element YAML definitions
 
-## Upgrading Alchemy
+## Upgrading LaissCms
 
 After updating the gem:
 ```bash
-bundle update alchemy_cms
-bin/rake alchemy:upgrade
+bundle update laiss_cms
+bin/rake laiss_cms:upgrade
 ```
 
 This runs automated upgrade tasks. Read the output carefully for manual steps.
 
 ## File Locations
 
-- **Models**: `app/models/alchemy/`
-- **Controllers**: `app/controllers/alchemy/admin/` (admin), `app/controllers/alchemy/` (frontend)
-- **Views**: `app/views/alchemy/admin/`, `app/views/alchemy/`
-- **Components**: `app/components/alchemy/` (ViewComponents)
-- **JavaScript**: `app/javascript/alchemy_admin/`
-- **Stylesheets**: `app/stylesheets/alchemy/`
-- **Services**: `app/services/alchemy/`
-- **Serializers**: `app/serializers/alchemy/` (API responses)
-- **Jobs**: `app/jobs/alchemy/`
-- **Lib**: `lib/alchemy/` (core engine code)
-- **Config**: `config/alchemy/` (YAML definitions)
-- **Generators**: `lib/generators/alchemy/`
-- **Translations**: `i18n/` (the `alchemy_i18n` gem, released together with `alchemy_cms` under the same version; see `i18n/CLAUDE.md`)
-- **Authentication**: `devise/` (the `alchemy-devise` gem, released together with `alchemy_cms` under the same version; it shares the root bundle and `spec/dummy`, which only loads it for the devise specs, so `bin/rspec` runs them separately from inside `devise/`)
+- **Models**: `app/models/laiss_cms/`
+- **Controllers**: `app/controllers/laiss_cms/admin/` (admin), `app/controllers/laiss_cms/` (frontend)
+- **Views**: `app/views/laiss_cms/admin/`, `app/views/laiss_cms/`
+- **Components**: `app/components/laiss_cms/` (ViewComponents)
+- **JavaScript**: `app/javascript/laiss_cms_admin/`
+- **Stylesheets**: `app/stylesheets/laiss_cms/`
+- **Services**: `app/services/laiss_cms/`
+- **Serializers**: `app/serializers/laiss_cms/` (API responses)
+- **Jobs**: `app/jobs/laiss_cms/`
+- **Lib**: `lib/laiss_cms/` (core engine code)
+- **Config**: `config/laiss_cms/` (YAML definitions)
+- **Generators**: `lib/generators/laiss_cms/`
+- **Translations**: `i18n/` (the `laiss_cms_i18n` gem, released together with `laiss_cms` under the same version; see `i18n/CLAUDE.md`)
+- **Authentication**: `devise/` (the `laiss-cms-devise` gem, released together with `laiss_cms` under the same version; it shares the root bundle and `spec/dummy`, which only loads it for the devise specs, so `bin/rspec` runs them separately from inside `devise/`)
 
 ## Resources
 
 - Documentation: https://guides.alchemy-cms.com
-- API Docs: https://www.rubydoc.info/github/AlchemyCMS/alchemy_cms
-- Issues: https://github.com/AlchemyCMS/alchemy_cms/issues
+- API Docs: https://www.rubydoc.info/github/LaissCMS/laiss_cms
+- Issues: https://github.com/LaissCMS/laiss_cms/issues
 - Slack: https://alchemy-cms.slack.com

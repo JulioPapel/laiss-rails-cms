@@ -8,12 +8,12 @@ RSpec.describe "Admin navigation feature", type: :system do
 
     it "can leave the admin area" do
       visit "/admin/leave"
-      expect(page).to have_content("You are about to leave Alchemy")
+      expect(page).to have_content("You are about to leave LaissCms")
     end
   end
 
   context "editor users" do
-    let!(:default_site) { create(:alchemy_site) }
+    let!(:default_site) { create(:laiss_cms_site) }
     before { authorize_user(:as_editor) }
 
     it "can access the languages page" do

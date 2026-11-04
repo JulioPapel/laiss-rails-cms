@@ -1,0 +1,68 @@
+# frozen_string_literal: true
+
+require_dependency "laiss_cms/page"
+
+module LaissCms
+  class Page < BaseRecord
+    # Handles publishing of pages
+    class Publisher
+      def initialize(page)
+        @page = page
+      end
+
+      # Copies all currently publishable elements to the public version of page
+      #
+      # Creates a new published version if none exists yet and updates
+      # the `published_at` timestamp of the page.
+      # `published_at` is used as a cache key.
+      #
+      # Sends a publish notification to all registered publish targets
+      #
+      def publish!(public_on:)
+        Page.transaction do
+          PageMutex.with_lock!(@page) do
+            version = public_version(public_on)
+            DeleteElements.new(version.elements).call
+
+            copy_metadata(public_version: version)
+
+            repository = page.draft_version.element_repository
+            ActiveRecord::Base.no_touching do
+              Element.acts_as_list_no_update do
+                repository.publishable.not_nested.each.with_index(1) do |element, position|
+                  LaissCms::DuplicateElement.new(element, repository: repository, publishable_only: true).call(
+                    page_version_id: version.id,
+                    position: position
+                  )
+                end
+              end
+            end
+            version.update(updated_at: public_on)
+            page.update(published_at: public_on)
+          end
+        end
+
+        LaissCms.config.publish_targets.each { |p| p.perform_later(page) }
+      end
+
+      private
+
+      attr_reader :page
+
+      # Load the pages public version or create one
+      def public_version(public_on)
+        page.public_version || page.versions.create!(public_on: public_on)
+      end
+
+      # Copy metadata from draft_version to public_version.
+      def copy_metadata(public_version:)
+        draft = page.draft_version
+        return unless draft
+
+        PageVersion::METADATA_ATTRIBUTES.each do |attr|
+          public_version.send(:"#{attr}=", draft.send(attr))
+        end
+      end
+    end
+  end
+end

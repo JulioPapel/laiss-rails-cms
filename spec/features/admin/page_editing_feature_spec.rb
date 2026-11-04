@@ -2,22 +2,22 @@
 
 require "rails_helper"
 
-FooPreviewSource = Class.new(Alchemy::Admin::PreviewUrl)
+FooPreviewSource = Class.new(LaissCms::Admin::PreviewUrl)
 
 RSpec.describe "Page editing feature", type: :system do
-  let(:a_page) { create(:alchemy_page) }
+  let(:a_page) { create(:laiss_cms_page) }
 
   context "as author" do
     before { authorize_user(:as_author) }
 
     it "cannot publish page.", :js do
-      visit alchemy.edit_admin_page_path(a_page)
+      visit laiss_cms.edit_admin_page_path(a_page)
       expect(page).to have_selector("#publish_page_form sl-button[disabled]")
     end
 
     describe "the preview frame", :js do
       it "has relative url" do
-        visit alchemy.edit_admin_page_path(a_page)
+        visit laiss_cms.edit_admin_page_path(a_page)
         expect(page).to have_selector("iframe[src='#{admin_page_path(a_page)}']")
       end
 
@@ -25,27 +25,27 @@ RSpec.describe "Page editing feature", type: :system do
         # The element needs rendered content, or its preview markup collapses to
         # zero height and there is nothing to point the mouse at.
         let!(:element) do
-          create(:alchemy_element, :with_ingredients, page_version: a_page.draft_version).tap do |el|
+          create(:laiss_cms_element, :with_ingredients, page_version: a_page.draft_version).tap do |el|
             el.ingredient_by_role(:headline).update!(value: "Headline in the preview")
           end
         end
-        let(:element_selector) { "[data-alchemy-element='#{element.id}']" }
-        let(:editor_selector) { "alchemy-element-editor#element_#{element.id}" }
+        let(:element_selector) { "[data-laiss-cms-element='#{element.id}']" }
+        let(:editor_selector) { "laiss-cms-element-editor#element_#{element.id}" }
 
         before do
-          visit alchemy.edit_admin_page_path(a_page)
+          visit laiss_cms.edit_admin_page_path(a_page)
           expect(page).to have_selector(editor_selector)
         end
 
         it "outlines the element when hovered" do
-          within_frame("alchemy_preview_window") do
+          within_frame("laiss_cms_preview_window") do
             find(element_selector).hover
             expect(page).to have_selector("#{element_selector}[style*='outline']")
           end
         end
 
         it "selects the element editor when the element is clicked" do
-          within_frame("alchemy_preview_window") do
+          within_frame("laiss_cms_preview_window") do
             # Hovering first waits for the preview script to have bound its
             # listeners, so the click below cannot land before they exist.
             find(element_selector).hover
@@ -59,7 +59,7 @@ RSpec.describe "Page editing feature", type: :system do
         it "selects the element when its editor is clicked" do
           find("#element-header-#{element.id} .element-title").click
 
-          within_frame("alchemy_preview_window") do
+          within_frame("laiss_cms_preview_window") do
             expect(page).to have_selector("#{element_selector}[style*='rgb(144, 185, 208)']")
           end
         end
@@ -68,28 +68,28 @@ RSpec.describe "Page editing feature", type: :system do
 
     describe "single preview source", :js do
       it "does not show as select" do
-        visit alchemy.edit_admin_page_path(a_page)
+        visit laiss_cms.edit_admin_page_path(a_page)
         expect(page).to_not have_select("preview_url")
       end
     end
 
     describe "multiple preview sources", :js do
       before do |example|
-        stub_alchemy_config(preview_sources: [Alchemy::Admin::PreviewUrl, FooPreviewSource])
+        stub_laiss_cms_config(preview_sources: [LaissCms::Admin::PreviewUrl, FooPreviewSource])
       end
 
       it "show as select" do
-        visit alchemy.edit_admin_page_path(a_page)
+        visit laiss_cms.edit_admin_page_path(a_page)
         expect(page).to have_select("preview_url", options: ["Internal", "Foo Preview"])
       end
     end
 
     context "in pages tree" do
-      let!(:a_page) { create(:alchemy_page) }
+      let!(:a_page) { create(:laiss_cms_page) }
 
       describe "clicking the page name" do
         it "opens the page in edit mode", :js do
-          visit alchemy.admin_pages_path(view: "tree")
+          visit laiss_cms.admin_pages_path(view: "tree")
           within ".sitemap_page[name='#{a_page.name}']" do
             click_link a_page.name
           end
@@ -103,62 +103,62 @@ RSpec.describe "Page editing feature", type: :system do
     before { authorize_user(:as_editor) }
 
     it "can publish page.", :js do
-      visit alchemy.edit_admin_page_path(a_page)
+      visit laiss_cms.edit_admin_page_path(a_page)
       find("#publish_page_form sl-button[type='submit']").click
-      expect(page).to have_content Alchemy.t(:page_published, name: a_page.name)
+      expect(page).to have_content LaissCms.t(:page_published, name: a_page.name)
     end
 
     it "can schedule page visibility", :js do
       date = 1.day.from_now
-      visit alchemy.configure_admin_page_path(a_page)
-      find("alchemy-page-publication-fields > label").click
+      visit laiss_cms.configure_admin_page_path(a_page)
+      find("laiss-cms-page-publication-fields > label").click
       expect(page).to have_field("Visible from")
       fill_in("Visible from", with: date)
       click_button "Save"
-      expect(page).to have_content Alchemy.t("Page saved", name: a_page.name)
+      expect(page).to have_content LaissCms.t("Page saved", name: a_page.name)
       expect(page).to have_field("Visible from", with: date.strftime("%Y-%m-%dT%H:%M"))
     end
 
     context "while editing a global page" do
-      let(:a_page) { create(:alchemy_page, :layoutpage) }
+      let(:a_page) { create(:laiss_cms_page, :layoutpage) }
 
       it "can publish page." do
-        visit alchemy.edit_admin_page_path(a_page)
+        visit laiss_cms.edit_admin_page_path(a_page)
         expect(page).to have_selector("#publish_page_form")
       end
     end
 
     describe "creating a new element", :js do
       before do
-        visit alchemy.edit_admin_page_path(a_page)
+        visit laiss_cms.edit_admin_page_path(a_page)
         expect(page).to have_link_with_tooltip("New element")
         click_link_with_tooltip("New element")
-        expect(page).to have_selector(".alchemy-dialog-body .simple_form")
+        expect(page).to have_selector(".laiss-cms-dialog-body .simple_form")
       end
 
       context "on a page having article elements defined" do
-        let(:a_page) { create(:alchemy_page, page_layout: "standard") }
+        let(:a_page) { create(:laiss_cms_page, page_layout: "standard") }
 
         scenario "can create a new article element" do
-          within ".alchemy-dialog-body .simple_form" do
+          within ".laiss-cms-dialog-body .simple_form" do
             tom_select("Article", from: "Element")
             click_button("Add")
           end
-          expect(page).to_not have_selector(".alchemy-dialog-body")
+          expect(page).to_not have_selector(".laiss-cms-dialog-body")
           expect(page).to have_selector('.element-editor[data-element-name="article"]')
         end
       end
 
       context "on a page having fixed elements defined" do
-        let(:a_page) { create(:alchemy_page, page_layout: "everything") }
+        let(:a_page) { create(:laiss_cms_page, page_layout: "everything") }
 
         scenario "can create a new fixed element" do
-          within ".alchemy-dialog-body" do
+          within ".laiss-cms-dialog-body" do
             tom_select("Left column", from: "Element")
             click_button("Add")
           end
 
-          expect(page).to_not have_selector(".alchemy-dialog-body")
+          expect(page).to_not have_selector(".laiss-cms-dialog-body")
           expect(page).to have_selector('sl-tab-panel .element-editor.is-fixed[data-element-name="left_column"]')
         end
       end
@@ -166,17 +166,17 @@ RSpec.describe "Page editing feature", type: :system do
 
     describe "the unsaved changes guard", :js do
       # A persisted user, so that visiting the page actually locks it to them.
-      let(:editor) { create(:alchemy_dummy_user, :as_editor) }
-      let!(:element) { create(:alchemy_element, page_version: a_page.draft_version) }
-      let!(:other_page) { create(:alchemy_page).tap { |p| p.lock_to!(editor) } }
+      let(:editor) { create(:laiss_cms_dummy_user, :as_editor) }
+      let!(:element) { create(:laiss_cms_element, page_version: a_page.draft_version) }
+      let!(:other_page) { create(:laiss_cms_page).tap { |p| p.lock_to!(editor) } }
       let(:page_dirty_notice) do
         "You have unsaved changes on this page. They will be lost if you continue."
       end
 
       before do
         authorize_user(editor)
-        visit alchemy.edit_admin_page_path(a_page)
-        expect(page).to have_selector("alchemy-element-editor")
+        visit laiss_cms.edit_admin_page_path(a_page)
+        expect(page).to have_selector("laiss-cms-element-editor")
       end
 
       # Shoelace anchors a tooltip to its first slotted element. The guard has no
@@ -189,13 +189,13 @@ RSpec.describe "Page editing feature", type: :system do
       context "with no unsaved changes" do
         it "unlocks the page right away" do
           find("#unlock_page_form button").click
-          expect(page).to have_current_path(alchemy.admin_pages_path)
+          expect(page).to have_current_path(laiss_cms.admin_pages_path)
           expect(a_page.reload).to_not be_locked
         end
 
         it "follows a main navigation entry right away" do
-          find("#main_navi a[href='#{alchemy.admin_languages_path}']").click
-          expect(page).to have_current_path(alchemy.admin_languages_path)
+          find("#main_navi a[href='#{laiss_cms.admin_languages_path}']").click
+          expect(page).to have_current_path(laiss_cms.admin_languages_path)
         end
       end
 
@@ -203,7 +203,7 @@ RSpec.describe "Page editing feature", type: :system do
         before do
           fill_in "Intro", with: "Unsaved intro"
           find_field("Intro").send_keys(:tab)
-          expect(page).to have_selector("alchemy-element-editor.dirty")
+          expect(page).to have_selector("laiss-cms-element-editor.dirty")
         end
 
         # Publishing keeps the author on the page, so nothing is lost and there
@@ -211,9 +211,9 @@ RSpec.describe "Page editing feature", type: :system do
         it "publishes the page without asking" do
           find("#publish_page_form sl-button[type='submit']").click
 
-          expect(page).to have_content Alchemy.t(:page_published, name: a_page.name)
+          expect(page).to have_content LaissCms.t(:page_published, name: a_page.name)
           expect(page).to have_no_selector("sl-dialog")
-          expect(page).to have_no_selector("alchemy-overlay.visible")
+          expect(page).to have_no_selector("laiss-cms-overlay.visible")
         end
 
         it "unlocks the page after the changes have been confirmed" do
@@ -221,7 +221,7 @@ RSpec.describe "Page editing feature", type: :system do
           within "sl-dialog" do
             find("button[type=submit]").click
           end
-          expect(page).to have_current_path(alchemy.admin_pages_path)
+          expect(page).to have_current_path(laiss_cms.admin_pages_path)
           expect(a_page.reload).to_not be_locked
         end
 
@@ -231,27 +231,27 @@ RSpec.describe "Page editing feature", type: :system do
             find("button[type=reset]").click
           end
           expect(page).to have_no_selector("sl-dialog")
-          expect(page).to have_current_path(alchemy.edit_admin_page_path(a_page))
+          expect(page).to have_current_path(laiss_cms.edit_admin_page_path(a_page))
           expect(a_page.reload).to be_locked
         end
 
         it "asks before following a main navigation entry" do
-          find("#main_navi a[href='#{alchemy.admin_languages_path}']").click
+          find("#main_navi a[href='#{laiss_cms.admin_languages_path}']").click
 
           expect(page).to have_selector("sl-dialog", text: page_dirty_notice)
           within("sl-dialog") { find("button[type=reset]").click }
 
-          expect(page).to have_current_path(alchemy.edit_admin_page_path(a_page))
+          expect(page).to have_current_path(laiss_cms.edit_admin_page_path(a_page))
         end
 
         it "asks before following a sub navigation link" do
-          find("#main_navi alchemy-main-navi-entry > a[href='#{alchemy.admin_pages_path}']").hover
-          find("#main_navi a[href='#{alchemy.admin_layoutpages_path}']").click
+          find("#main_navi laiss-cms-main-navi-entry > a[href='#{laiss_cms.admin_pages_path}']").hover
+          find("#main_navi a[href='#{laiss_cms.admin_layoutpages_path}']").click
 
           expect(page).to have_selector("sl-dialog", text: page_dirty_notice)
           within("sl-dialog") { find("button[type=reset]").click }
 
-          expect(page).to have_current_path(alchemy.edit_admin_page_path(a_page))
+          expect(page).to have_current_path(laiss_cms.edit_admin_page_path(a_page))
         end
 
         it "asks before following a link outside of the main navigation" do
@@ -260,13 +260,13 @@ RSpec.describe "Page editing feature", type: :system do
           expect(page).to have_selector("sl-dialog", text: page_dirty_notice)
           within("sl-dialog") { find("button[type=submit]").click }
 
-          expect(page).to have_current_path(alchemy.edit_admin_page_path(other_page))
+          expect(page).to have_current_path(laiss_cms.edit_admin_page_path(other_page))
         end
 
         it "does not ask before opening the help dialog" do
-          find("#logout a[href='#{alchemy.help_path}']").click
+          find("#logout a[href='#{laiss_cms.help_path}']").click
 
-          expect(page).to have_selector(".alchemy-dialog-container.open")
+          expect(page).to have_selector(".laiss-cms-dialog-container.open")
           expect(page).to have_no_selector("sl-dialog")
         end
       end
@@ -274,14 +274,14 @@ RSpec.describe "Page editing feature", type: :system do
   end
 
   context "as admin" do
-    let(:a_page) { create(:alchemy_page, :public) }
+    let(:a_page) { create(:laiss_cms_page, :public) }
 
     before { authorize_user(:as_admin) }
 
     context "in configure overlay" do
       context "when editing a normal page" do
         it "should show all relevant input fields" do
-          visit alchemy.configure_admin_page_path(a_page)
+          visit laiss_cms.configure_admin_page_path(a_page)
           expect(page).to have_selector("input#page_urlname")
           expect(page).to have_selector("input#page_draft_version_attributes_title")
           expect(page).to have_selector("input#page_robot_index")
@@ -290,34 +290,34 @@ RSpec.describe "Page editing feature", type: :system do
 
         context "with sitemaps show_flag config option set to true" do
           before do
-            stub_alchemy_config(sitemap: {show_flag: true})
+            stub_laiss_cms_config(sitemap: {show_flag: true})
           end
 
           it "should show sitemap checkbox" do
-            visit alchemy.configure_admin_page_path(a_page)
+            visit laiss_cms.configure_admin_page_path(a_page)
             expect(page).to have_selector('input[type="checkbox"]#page_sitemap')
           end
         end
 
         context "with sitemaps show_flag config option set to false" do
           before do
-            stub_alchemy_config(sitemap: {show_flag: false})
+            stub_laiss_cms_config(sitemap: {show_flag: false})
           end
 
           it "should not show sitemap checkbox" do
-            visit alchemy.configure_admin_page_path(a_page)
+            visit laiss_cms.configure_admin_page_path(a_page)
             expect(page).to_not have_selector('input[type="checkbox"]#page_sitemap')
           end
         end
 
         describe "the searchable checkbox" do
           before do
-            Alchemy.config.show_page_searchable_checkbox = searchable
-            visit alchemy.configure_admin_page_path(a_page)
+            LaissCms.config.show_page_searchable_checkbox = searchable
+            visit laiss_cms.configure_admin_page_path(a_page)
           end
 
           # reset default value
-          after { Alchemy.config.show_page_searchable_checkbox = false }
+          after { LaissCms.config.show_page_searchable_checkbox = false }
 
           context "when enabled" do
             let(:searchable) { true }
@@ -331,7 +331,7 @@ RSpec.describe "Page editing feature", type: :system do
             let(:searchable) { false }
 
             it "should not be visible" do
-              visit alchemy.configure_admin_page_path(a_page)
+              visit laiss_cms.configure_admin_page_path(a_page)
               expect(page).to_not have_selector('input[type="checkbox"]#page_searchable')
             end
           end
@@ -339,10 +339,10 @@ RSpec.describe "Page editing feature", type: :system do
       end
 
       context "when editing a global page" do
-        let(:layout_page) { create(:alchemy_page, :layoutpage) }
+        let(:layout_page) { create(:laiss_cms_page, :layoutpage) }
 
         it "should not show the input fields for normal pages" do
-          visit alchemy.edit_admin_layoutpage_path(layout_page)
+          visit laiss_cms.edit_admin_layoutpage_path(layout_page)
           expect(page).to_not have_selector("input#page_urlname")
           expect(page).to_not have_selector("input#page_title")
           expect(page).to_not have_selector("input#page_robot_index")
@@ -351,23 +351,23 @@ RSpec.describe "Page editing feature", type: :system do
       end
 
       it "should show the tag_list input field" do
-        visit alchemy.configure_admin_page_path(a_page)
+        visit laiss_cms.configure_admin_page_path(a_page)
         expect(page).to have_selector("input#page_tag_list")
       end
     end
 
     context "in preview frame" do
       it "the menubar does not render on the page" do
-        visit alchemy.admin_page_path(a_page)
-        expect(page).not_to have_selector("alchemy-menubar")
+        visit laiss_cms.admin_page_path(a_page)
+        expect(page).not_to have_selector("laiss-cms-menubar")
       end
 
       context "with menu available" do
-        let!(:menu) { create(:alchemy_node, name: "main_menu") }
-        let!(:node) { create(:alchemy_node, url: "/page-1", parent: menu) }
+        let!(:menu) { create(:laiss_cms_node, name: "main_menu") }
+        let!(:node) { create(:laiss_cms_node, url: "/page-1", parent: menu) }
 
         it "navigation links are not clickable" do
-          visit alchemy.admin_page_path(a_page)
+          visit laiss_cms.admin_page_path(a_page)
           within("nav") do
             expect(page).to have_selector('a[href="javascript: void(0)"]')
           end
@@ -377,11 +377,11 @@ RSpec.describe "Page editing feature", type: :system do
 
     context "in element panel" do
       let!(:everything_page) do
-        create(:alchemy_page, page_layout: "everything", autogenerate_elements: true)
+        create(:laiss_cms_page, page_layout: "everything", autogenerate_elements: true)
       end
 
       it "renders editors for all element ingredients" do
-        visit alchemy.admin_elements_path(page_version_id: everything_page.draft_version.id)
+        visit laiss_cms.admin_elements_path(page_version_id: everything_page.draft_version.id)
 
         expect(page).to have_selector(".ingredient-editor.boolean")
         expect(page).to have_selector(".ingredient-editor.datetime")
@@ -395,7 +395,7 @@ RSpec.describe "Page editing feature", type: :system do
       end
 
       it "renders data attribute based on ingredient role" do
-        visit alchemy.admin_elements_path(page_version_id: everything_page.draft_version.id)
+        visit laiss_cms.admin_elements_path(page_version_id: everything_page.draft_version.id)
 
         expect(page).to have_selector("[data-ingredient-role=boolean]")
         expect(page).to have_selector("[data-ingredient-role=datetime]")
@@ -412,19 +412,19 @@ RSpec.describe "Page editing feature", type: :system do
 
   describe "configure properties", js: true do
     before { authorize_user(:as_admin) }
-    let!(:a_page) { create(:alchemy_page) }
+    let!(:a_page) { create(:laiss_cms_page) }
 
     before do
-      visit alchemy.admin_pages_path
+      visit laiss_cms.admin_pages_path
       within ".sitemap_page[name='#{a_page.name}']" do
         click_icon("settings-3")
       end
-      expect(page).to have_selector(".alchemy-dialog-container.open")
+      expect(page).to have_selector(".laiss-cms-dialog-container.open")
     end
 
     context "with validation errors" do
       it "should show the error messages" do
-        within(".alchemy-dialog.modal") do
+        within(".laiss-cms-dialog.modal") do
           fill_in "page_name", with: ""
           click_button "Save"
         end
@@ -434,25 +434,25 @@ RSpec.describe "Page editing feature", type: :system do
 
     context "when updating the name" do
       it "saves the name" do
-        within(".alchemy-dialog.modal") do
+        within(".laiss-cms-dialog.modal") do
           find("input#page_name").set("name with some %!x^)'([@!{}]|/?:# characters")
           find(".edit_page .submit button").click
         end
-        expect(page).to_not have_selector(".alchemy-dialog-container.open")
+        expect(page).to_not have_selector(".laiss-cms-dialog-container.open")
         expect(page).to have_selector("#sitemap a.sitemap_pagename_link", text: "name with some %!x^)'([@!{}]|/?:# characters")
       end
     end
 
     describe "changing parent" do
-      let!(:new_parent) { create(:alchemy_page) }
+      let!(:new_parent) { create(:laiss_cms_page) }
 
       it "can change page parent" do
-        within(".alchemy-dialog.modal") do
+        within(".laiss-cms-dialog.modal") do
           expect(page).to have_css(".ts-wrapper")
           tom_select_search(new_parent.name, from: "Parent")
           find(".edit_page .submit button").click
         end
-        expect(page).to_not have_selector(".alchemy-dialog-container.open")
+        expect(page).to_not have_selector(".laiss-cms-dialog-container.open")
         expect(page).to have_selector("#sitemap .sitemap_url", text: "/#{new_parent.urlname}/#{a_page.urlname}")
       end
     end
@@ -463,14 +463,14 @@ RSpec.describe "Page editing feature", type: :system do
 
     context "when page has fixed attributes" do
       let!(:readonly_page) do
-        create(:alchemy_page, page_layout: "readonly")
+        create(:laiss_cms_page, page_layout: "readonly")
       end
 
       it "is not possible to edit the attribute", :aggregate_failures do
-        visit alchemy.configure_admin_page_path(readonly_page)
+        visit laiss_cms.configure_admin_page_path(readonly_page)
         readonly_page.fixed_attributes.all.each do |attribute, _v|
           # Version metadata attributes have different ID due to nested form
-          if Alchemy::PageVersion::METADATA_ATTRIBUTES.include?(attribute.to_s)
+          if LaissCms::PageVersion::METADATA_ATTRIBUTES.include?(attribute.to_s)
             expect(page).to have_selector("#page_draft_version_attributes_#{attribute}[disabled]")
           else
             expect(page).to have_selector("#page_#{attribute}[disabled]")

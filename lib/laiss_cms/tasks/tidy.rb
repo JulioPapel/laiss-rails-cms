@@ -1,0 +1,103 @@
+# frozen_string_literal: true
+
+require "laiss_cms/shell"
+
+module LaissCms
+  class Tidy
+    extend Shell
+
+    class << self
+      def update_element_positions
+        LaissCms::Page.all.each do |page|
+          if page.elements.any?
+            puts "\n## Updating element positions of page `#{page.name}`"
+          end
+          page.elements.group_by(&:parent_element_id).each do |_, elements|
+            elements.each_with_index do |element, idx|
+              position = idx + 1
+              if element.position != position
+                log "Updating position for element ##{element.id} to #{position}"
+                element.update_column(:position, position)
+              else
+                log "Position for element ##{element.id} is already correct (#{position})", :skip
+              end
+            end
+          end
+        end
+      end
+
+      def remove_orphaned_elements
+        puts "\n## Removing orphaned elements"
+        elements = LaissCms::Element.unscoped.not_nested
+        if elements.any?
+          orphaned_elements = elements.select do |element|
+            element.page.nil? && element.page_id.present?
+          end
+          if orphaned_elements.any?
+            log "Found #{orphaned_elements.size} orphaned elements"
+            destroy_orphaned_records(orphaned_elements, "element")
+          else
+            log "No orphaned elements found", :skip
+          end
+        else
+          log "No elements found", :skip
+        end
+      end
+
+      def remove_trashed_elements
+        puts "\n## Removing trashed elements"
+        elements = LaissCms::Element.unscoped.where(position: nil)
+        if elements.any?
+          log "Destroying #{elements.size} trashed elements"
+          nested_elements, parent_elements = elements.partition(&:parent_element_id)
+          (nested_elements + parent_elements).each do |element|
+            element.destroy
+            print "."
+          end
+          puts "\n"
+          log "Done", :message
+        else
+          log "No trashed elements found", :skip
+        end
+      end
+
+      def remove_duplicate_legacy_urls
+        puts "\n## Removing duplicate legacy URLs"
+        keep_ids = LaissCms::LegacyPageUrl
+          .group(:page_id, :urlname)
+          .pluck(Arel.sql("MAX(id)"))
+        count = LaissCms::LegacyPageUrl
+          .where.not(id: keep_ids)
+          .delete_all
+        log "Deleted #{count} duplicate legacy URLs"
+      end
+
+      def remove_legacy_essence_tables
+        puts "\n## Removing legacy essence tables"
+        matching_tables = ActiveRecord::Base.connection.tables.select do |table|
+          table.start_with?("laiss_cms_essence_")
+        end
+        if matching_tables.length.zero?
+          log "No legacy essence tables found", :skip
+          nil
+        else
+          matching_tables.each do |table|
+            ActiveRecord::Base.connection.drop_table(table, if_exists: true)
+            print "."
+          end
+          puts "\n"
+          log "Deleted #{matching_tables.length} legacy essence tables"
+        end
+      end
+
+      private
+
+      def destroy_orphaned_records(records, class_name)
+        records.each do |record|
+          log "Destroy orphaned #{class_name}: #{record.inspect}"
+          record.destroy
+        end
+      end
+    end
+  end
+end

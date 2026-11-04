@@ -1,3 +1,3 @@
 # frozen_string_literal: true
-class Admin::SeriesController < Alchemy::Admin::ResourcesController
+class Admin::SeriesController < LaissCms::Admin::ResourcesController
 end

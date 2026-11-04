@@ -1,6 +1,6 @@
 <template>
   <div class="help-box">
-    <b>Need help with Alchemy?</b><br />
+    <b>Need help with LaissCms?</b><br />
     <p class="text">
       Ask the experts from
       <a href="https://blish.cloud" class="blish-link" target="_blank">

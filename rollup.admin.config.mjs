@@ -2,9 +2,9 @@ import resolve from "@rollup/plugin-node-resolve"
 import terser from "@rollup/plugin-terser"
 
 export default {
-  input: "app/javascript/alchemy_admin.js",
+  input: "app/javascript/laiss_cms_admin.js",
   output: {
-    file: "app/assets/builds/alchemy/alchemy_admin.min.js",
+    file: "app/assets/builds/laiss_cms/laiss_cms_admin.min.js",
     format: "es",
     sourcemap: true
   },

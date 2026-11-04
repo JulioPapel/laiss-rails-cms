@@ -1,15 +1,15 @@
 # Creating Modules
 
-Modules add custom sections to the Alchemy admin interface. Use them to manage your own models (events, products, orders) with Alchemy's built-in CRUD interface, authentication, and authorization.
+Modules add custom sections to the LaissCms admin interface. Use them to manage your own models (events, products, orders) with LaissCms's built-in CRUD interface, authentication, and authorization.
 
 You only need three things: a controller, a menu entry, and routes.
 
 ## Generator
 
-Alchemy provides a generator that creates all the necessary files:
+LaissCms provides a generator that creates all the necessary files:
 
 ~~~ bash
-bin/rails generate alchemy:module event
+bin/rails generate laiss_cms:module event
 ~~~
 
 This generates:
@@ -18,7 +18,7 @@ This generates:
 |------|---------|
 | `app/controllers/admin/events_controller.rb` | Admin controller inheriting from `ResourcesController` |
 | `app/models/events_ability.rb` | CanCanCan ability for authorization |
-| `config/initializers/alchemy_event.rb` | Menu entry and ability registration |
+| `config/initializers/laiss_cms_event.rb` | Menu entry and ability registration |
 
 It also adds the admin routes to `config/routes.rb`.
 
@@ -26,11 +26,11 @@ The rest of this guide explains what each piece does so you can customize or cre
 
 ## The Controller
 
-Your module controller inherits from `Alchemy::Admin::ResourcesController`, which provides a full CRUD interface out of the box:
+Your module controller inherits from `LaissCms::Admin::ResourcesController`, which provides a full CRUD interface out of the box:
 
 ~~~ ruby
 # app/controllers/admin/events_controller.rb
-class Admin::EventsController < Alchemy::Admin::ResourcesController
+class Admin::EventsController < LaissCms::Admin::ResourcesController
 end
 ~~~
 
@@ -40,7 +40,7 @@ You can override any action or add your own logic as needed.
 
 ## Routes
 
-Add admin routes for your resource. Make sure to define them **before** the Alchemy engine mount:
+Add admin routes for your resource. Make sure to define them **before** the LaissCms engine mount:
 
 ~~~ ruby
 # config/routes.rb
@@ -49,12 +49,12 @@ Rails.application.routes.draw do
     resources :events
   end
 
-  mount Alchemy::Engine => "/"
+  mount LaissCms::Engine => "/"
 end
 ~~~
 
 ::: warning
-Alchemy uses a catch-all route for pages. Always mount your routes before `Alchemy::Engine`, otherwise they won't be reachable.
+LaissCms uses a catch-all route for pages. Always mount your routes before `LaissCms::Engine`, otherwise they won't be reachable.
 :::
 
 ## Menu Entry
@@ -62,8 +62,8 @@ Alchemy uses a catch-all route for pages. Always mount your routes before `Alche
 <Badge type="tip" text="8.4+" /> Add your module to the admin navigation with `config.menu.add`:
 
 ~~~ ruby
-# config/initializers/alchemy_event.rb
-Alchemy.configure do |config|
+# config/initializers/laiss_cms_event.rb
+LaissCms.configure do |config|
   config.menu.add(
     name: "events",
     title: "Events",
@@ -146,7 +146,7 @@ Each sub-navigation entry needs its own controller and routes.
 
 ### Translating Titles
 
-Titles are translated through I18n under the `alchemy` namespace. Use a key like `modules.events` to make it translatable:
+Titles are translated through I18n under the `laiss_cms` namespace. Use a key like `modules.events` to make it translatable:
 
 ~~~ ruby
 config.menu.add(
@@ -159,7 +159,7 @@ config.menu.add(
 ~~~ yaml
 # config/locales/en.yml
 en:
-  alchemy:
+  laiss_cms:
     modules:
       events: Events
 ~~~
@@ -167,7 +167,7 @@ en:
 ~~~ yaml
 # config/locales/de.yml
 de:
-  alchemy:
+  laiss_cms:
     modules:
       events: Veranstaltungen
 ~~~
@@ -178,7 +178,7 @@ See the [I18n guide](i18n) for all available translation scopes.
 
 ## Authorization
 
-Alchemy uses [CanCanCan](https://github.com/CanCanCommunity/cancancan) for authorization. Create an ability class and register it so Alchemy knows about your module's permissions:
+LaissCms uses [CanCanCan](https://github.com/CanCanCommunity/cancancan) for authorization. Create an ability class and register it so LaissCms knows about your module's permissions:
 
 ~~~ ruby
 # app/models/events_ability.rb
@@ -199,8 +199,8 @@ The symbol `:admin_events` is derived from the controller path -- `/admin/events
 Register the ability in the same initializer as the menu entry:
 
 ~~~ ruby
-# config/initializers/alchemy_event.rb
-Alchemy.configure do |config|
+# config/initializers/laiss_cms_event.rb
+LaissCms.configure do |config|
   config.abilities.add("EventsAbility")
 
   config.menu.add(...)
@@ -208,7 +208,7 @@ end
 ~~~
 
 :::warning
-`Alchemy.register_ability` is deprecated since Alchemy 8.1 and will be removed in a future version.
+`LaissCms.register_ability` is deprecated since LaissCms 8.1 and will be removed in a future version.
 :::
 
 ::: tip
@@ -224,36 +224,36 @@ app/views/admin/events/
   _form.html.erb     # The form for new/edit
   _table.html.erb    # The table on the index page
   index.html.erb     # The full index page
-  new.html.erb       # Rendered in the Alchemy dialog
-  edit.html.erb      # Rendered in the Alchemy dialog
+  new.html.erb       # Rendered in the LaissCms dialog
+  edit.html.erb      # Rendered in the LaissCms dialog
 ~~~
 
 The default form auto-generates fields from your model's database columns. To customize it, create a `_form.html.erb` partial:
 
 ::: tip
-`alchemy_form_for` is a wrapper around [Simple Form](https://github.com/heartcombo/simple_form). You can use all Simple Form input types and options.
+`laiss_cms_form_for` is a wrapper around [Simple Form](https://github.com/heartcombo/simple_form). You can use all Simple Form input types and options.
 :::
 
 ~~~ erb
-<%= alchemy_form_for resource_instance_variable,
+<%= laiss_cms_form_for resource_instance_variable,
       url: resource_path(resource_instance_variable, search_filter_params) do |f| %>
   <%= f.input :name %>
   <%= f.input :starts_at, as: :date %>
   <%= f.input :description %>
-  <%= f.submit Alchemy.t(:save) %>
+  <%= f.submit LaissCms.t(:save) %>
 <% end %>
 ~~~
 
 ## Resource Table
 
-Alchemy renders index tables using the `Alchemy::Admin::Resource::Table` ViewComponent. Without any customization, it auto-generates columns from your model's database columns (skipping `id`, `created_at`, and `creator_id` by default) and adds edit and delete buttons. Columns are sorted with `name` first, `updated_at` last, and booleans near the end.
+LaissCms renders index tables using the `LaissCms::Admin::Resource::Table` ViewComponent. Without any customization, it auto-generates columns from your model's database columns (skipping `id`, `created_at`, and `creator_id` by default) and adds edit and delete buttons. Columns are sorted with `name` first, `updated_at` last, and booleans near the end.
 
 You can customize which attributes are skipped, restricted, or searchable by defining class methods on your model (see [Customizing attributes](#customizing-attributes)).
 
 To customize the table rendering, create a `_table.html.erb` partial and use the component's block API:
 
 ~~~ erb
-<%= render Alchemy::Admin::Resource::Table.new(
+<%= render LaissCms::Admin::Resource::Table.new(
   resources_instance_variable,
   query: @query,
   search_filter_params: search_filter_params
@@ -295,19 +295,19 @@ Adds an icon column. Pass a fixed icon name or use a block to determine the icon
 
 `edit_button(tooltip: "Edit", dialog_title: nil, dialog_size: nil)`
 
-Adds an edit button that opens the edit view in the Alchemy dialog.
+Adds an edit button that opens the edit view in the LaissCms dialog.
 
 `delete_button(tooltip: "Delete", confirm_message: "Are you sure?")`
 
 Adds a delete button with a confirmation prompt.
 
 ::: tip
-Alchemy uses its own admin views for pages, pictures, and attachments. You can browse them on [GitHub](https://github.com/AlchemyCMS/alchemy_cms/tree/main/app/views/alchemy/admin/resources) as a reference.
+LaissCms uses its own admin views for pages, pictures, and attachments. You can browse them on [GitHub](https://github.com/LaissCMS/laiss_cms/tree/main/app/views/laiss_cms/admin/resources) as a reference.
 :::
 
 ## Customizing Attributes
 
-By default, Alchemy skips `id`, `created_at`, and `creator_id` from the table and form views. You can customize this behavior by defining class methods on your model.
+By default, LaissCms skips `id`, `created_at`, and `creator_id` from the table and form views. You can customize this behavior by defining class methods on your model.
 
 ### Skipping Attributes
 
@@ -315,7 +315,7 @@ Hide attributes from both the table and the form:
 
 ~~~ ruby
 class Event < ApplicationRecord
-  def self.skipped_alchemy_resource_attributes
+  def self.skipped_laiss_cms_resource_attributes
     %w[id created_at updated_at secret_token]
   end
 end
@@ -327,7 +327,7 @@ Restricted attributes are shown in the table but cannot be edited in the form:
 
 ~~~ ruby
 class Event < ApplicationRecord
-  def self.restricted_alchemy_resource_attributes
+  def self.restricted_laiss_cms_resource_attributes
     %w[synced_at external_id]
   end
 end
@@ -339,7 +339,7 @@ By default, all `string` and `text` columns are searchable. To override:
 
 ~~~ ruby
 class Event < ApplicationRecord
-  def self.searchable_alchemy_resource_attributes
+  def self.searchable_laiss_cms_resource_attributes
     %w[name description location_name]
   end
 end
@@ -347,13 +347,13 @@ end
 
 ### Belongs-to Relations
 
-Alchemy can display associated record names instead of foreign key IDs. Define `alchemy_resource_relations` to configure this:
+LaissCms can display associated record names instead of foreign key IDs. Define `laiss_cms_resource_relations` to configure this:
 
 ~~~ ruby
 class Event < ApplicationRecord
   belongs_to :location
 
-  def self.alchemy_resource_relations
+  def self.laiss_cms_resource_relations
     {
       location: { attr_method: "name", attr_type: "string" }
     }
@@ -375,7 +375,7 @@ module MyShop
     engine_name "my_shop"
 
     initializer "my_shop.admin_menu" do
-      Alchemy.configure do |config|
+      LaissCms.configure do |config|
         config.menu.add(
           name: "shop",
           title: "Shop",
@@ -393,28 +393,28 @@ end
 The routing proxy (`my_shop` above) is named after the `engine_name` set in your `Rails::Engine` class. Resource controllers in your engine use the engine's routes automatically.
 :::
 
-Mount your engine **before** Alchemy in the host app's routes:
+Mount your engine **before** LaissCms in the host app's routes:
 
 ~~~ ruby
 # config/routes.rb
 Rails.application.routes.draw do
   mount MyShop::Engine => "/"
-  mount Alchemy::Engine => "/"
+  mount LaissCms::Engine => "/"
 end
 ~~~
 
 ::: tip
-The [alchemy-devise](extensions#alchemy-devise) and [alchemy-solidus](extensions#alchemy-solidus) extensions are good examples of engine-based modules. See [Extensions](extensions) for more.
+The [laiss-cms-devise](extensions#laiss-cms-devise) and [laiss-cms-solidus](extensions#laiss-cms-solidus) extensions are good examples of engine-based modules. See [Extensions](extensions) for more.
 :::
 
 ## Migrating from `register_module`
 
-Before Alchemy 8.4, modules were added to the navigation with `Alchemy::Modules.register_module`. It still works, but is deprecated and will be removed in Alchemy 9.0.
+Before LaissCms 8.4, modules were added to the navigation with `LaissCms::Modules.register_module`. It still works, but is deprecated and will be removed in LaissCms 9.0.
 
 The upgrade task rewrites `register_module` calls that use a plain hash into `config.menu.add` and lists everything it could not rewrite:
 
 ~~~ bash
-bin/rails alchemy:upgrade
+bin/rails laiss_cms:upgrade
 ~~~
 
 To migrate a call by hand, move the keys of the `navigation` hash to the entry itself and replace `controller` and `action` with `url` and `condition`:
@@ -428,4 +428,4 @@ To migrate a call by hand, move the keys of the `navigation` hash to the entry i
 | `navigation: {data: {turbo: false}}` | `turbo: false` |
 | `navigation: {params: {...}}` | No longer supported, add the parameters to the `url` instead |
 
-The partials `alchemy/admin/_main_navi`, `alchemy/admin/partials/_main_navigation_entry` and `alchemy/admin/partials/_sub_navigation` have been replaced by the `Alchemy::Admin::MainNavigation` components. If your app overrides one of them, move your changes into a menu entry or into the `:alchemy_main_navigation` content block, which is still rendered at the end of the navigation.
+The partials `laiss_cms/admin/_main_navi`, `laiss_cms/admin/partials/_main_navigation_entry` and `laiss_cms/admin/partials/_sub_navigation` have been replaced by the `LaissCms::Admin::MainNavigation` components. If your app overrides one of them, move your changes into a menu entry or into the `:laiss_cms_main_navigation` content block, which is still rendered at the end of the navigation.

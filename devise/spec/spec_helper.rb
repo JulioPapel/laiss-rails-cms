@@ -6,7 +6,7 @@ if ENV["GITHUB_ACTIONS"]
   SimpleCov.formatter = SimpleCov::Formatter::CoberturaFormatter
 end
 SimpleCov.start "rails" do
-  add_filter "/lib/alchemy/devise/version"
+  add_filter "/lib/laiss_cms/devise/version"
   add_filter "/lib/generators"
 end
 

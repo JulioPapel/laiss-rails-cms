@@ -103,7 +103,7 @@ Vitest caught 1 unhandled error during the test run.
 TypeError: routes.url_admin_picture_path is not a function
 ```
 
-originating from `spec/javascript/alchemy_admin/components/picture_editor.spec.js`.
+originating from `spec/javascript/laiss_cms_admin/components/picture_editor.spec.js`.
 
 **How often:** measured over 6 consecutive full runs on the untouched tree — 1 green,
 5 red, every one with 830/830 tests passing. This is not a rare flake; it is the
@@ -111,15 +111,15 @@ normal outcome on this machine.
 
 **Why:** `picture_editor.js:60` calls `routes.url_admin_picture_path(...)` inside
 `updateImage()`, which runs from a `debounce(..., 125)` timer. The spec never
-provides an `alchemy_routes` JSON script, so the imported `routes` object is `{}` and
+provides an `laiss_cms_routes` JSON script, so the imported `routes` object is `{}` and
 the call is undefined. Whether the 125 ms timer fires while the spec is still on the
 stack or after teardown completes is a race — which is why the run sometimes passes
 and why the file always passes when run alone.
 
 **Not fixed here.** This is upstream code and upstream test wiring; Phase 0 does not
-edit source to make a gate green. Phase 1 (which rewrites `alchemy-*` custom element
+edit source to make a gate green. Phase 1 (which rewrites `laiss-cms-*` custom element
 tags and touches this component anyway) should fix it properly by mocking
-`alchemy_admin/routes` in the spec the way `link_dialog.spec.js:6` already does.
+`laiss_cms_admin/routes` in the spec the way `link_dialog.spec.js:6` already does.
 
 **Until then:** `script/rebrand/gates` retries vitest once and only fails if tests
 actually fail or the count is wrong, but you should expect a red exit and verify the

@@ -11,20 +11,20 @@ After reading this guide you will be able to:
 
 To override the default settings you have to create a `tinymce.rb` initializer file into `config/initializers`.
 
-Alchemys default settings for TinyMCE can be found in the [documentation](https://www.rubydoc.info/github/AlchemyCMS/alchemy_cms/Alchemy/Tinymce)
+Alchemys default settings for TinyMCE can be found in the [documentation](https://www.rubydoc.info/github/LaissCMS/laiss_cms/LaissCms/Tinymce)
 
 ### A Minimal Editor
 
 Let's reduce the options for formatting the text to a minimum.
 
-Because Alchemy merges the default options and your custom options you just need to pass the options you want to override to `Alchemy::Tinymce.init`.
+Because LaissCms merges the default options and your custom options you just need to pass the options you want to override to `LaissCms::Tinymce.init`.
 
 ~~~ ruby
 # config/initializers/tinymce.rb
-Alchemy::Tinymce.init = {
+LaissCms::Tinymce.init = {
   toolbar: [
     'bold italic underline',
-    'pastetext charmap code | undo redo | alchemy_link unlink | alignleft aligncenter alignright alignjustify'
+    'pastetext charmap code | undo redo | laiss_cms_link unlink | alignleft aligncenter alignright alignjustify'
   ]
 }
 ~~~
@@ -33,7 +33,7 @@ Now only this three basic formatting options are available in the first toolbar 
 In the second toolbar are now the align formatting options available.
 
 ::: warning NOTE
-Overriding options always in the initializer applies to all richtext editors in all elements in Alchemy.
+Overriding options always in the initializer applies to all richtext editors in all elements in LaissCms.
 :::
 
 ## Custom toolbar buttons
@@ -58,10 +58,10 @@ And we need to insert the format select into the set of buttons.
 
 ~~~ ruby
 # config/initializers/tinymce.rb
-Alchemy::Tinymce.init = {
+LaissCms::Tinymce.init = {
   toolbar: [
     'bold italic underline | strikethrough subscript superscript | numlist bullist indent outdent | removeformat | fullscreen',
-    'pastetext | formatselect | charmap code | undo redo | alchemy_link unlink'
+    'pastetext | formatselect | charmap code | undo redo | laiss_cms_link unlink'
   ],
   block_formats: "Header 2=h2;Paragraph=p"
 }
@@ -70,7 +70,7 @@ Alchemy::Tinymce.init = {
 That's it. Now the editor can format a block of text as headline 2. Nice!
 
 ::: warning NOTE
-Custom buttons always appear in all richtext editors in all elements in Alchemy.
+Custom buttons always appear in all richtext editors in all elements in LaissCms.
 :::
 
 ## Adding editor plugins
@@ -81,11 +81,11 @@ All you have to do is to download the tinymce plugin and copy the folder to
 and add the following content to `config/initializers/tinymce.rb`
 
 ~~~ ruby
-Alchemy::Tinymce.init = {
-  plugins: Alchemy::Tinymce.plugins + ['colorpicker'],
+LaissCms::Tinymce.init = {
+  plugins: LaissCms::Tinymce.plugins + ['colorpicker'],
   toolbar: [
     'bold italic underline | strikethrough subscript superscript | numlist bullist indent outdent | removeformat | alignleft aligncenter alignright | fullscreen',
-    'pastetext charmap hr | undo redo | alchemy_link unlink anchor | code | colorpicker'
+    'pastetext charmap hr | undo redo | laiss_cms_link unlink anchor | code | colorpicker'
   ]
 }
 ~~~
@@ -93,11 +93,11 @@ Alchemy::Tinymce.init = {
 Another example configuration could be:
 
 ~~~ ruby
-Alchemy::Tinymce.plugins += ['textcolor']
-Alchemy::Tinymce.init = {
+LaissCms::Tinymce.plugins += ['textcolor']
+LaissCms::Tinymce.init = {
   toolbar: [
     'bold italic underline | strikethrough subscript superscript | numlist bullist indent outdent | removeformat | fullscreen',
-    'pastetext | charmap code | undo redo | alchemy_link unlink | help | forecolor backcolor'
+    'pastetext | charmap code | undo redo | laiss_cms_link unlink | help | forecolor backcolor'
   ],
 }
 ~~~
@@ -121,7 +121,7 @@ Put a `tinymce_content.css` stylesheet into your `app/assets/stylesheets` folder
 
 ~~~ ruby
 # config/initializers/tinymce.rb
-Alchemy::Tinymce.init = {
+LaissCms::Tinymce.init = {
   content_css: "/assets/tinymce_content.css"
 }
 ~~~
@@ -151,7 +151,7 @@ You can also set TinyMCE configuration options per element.
         tinymce:
           toolbar:
             - 'bold italic underline',
-            - 'pastetext charmap code | undo redo | alchemy_link unlink | alignleft aligncenter alignright alignjustify'
+            - 'pastetext charmap code | undo redo | laiss_cms_link unlink | alignleft aligncenter alignright alignjustify'
 ~~~
 
 ## Configuration Syntax

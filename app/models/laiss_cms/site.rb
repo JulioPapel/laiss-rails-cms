@@ -1,0 +1,76 @@
+# frozen_string_literal: true
+
+# == Schema Information
+#
+# Table name: laiss_cms_sites
+#
+#  id                       :integer          not null, primary key
+#  aliases                  :text
+#  host                     :string
+#  name                     :string
+#  public                   :boolean          default(FALSE), not null
+#  redirect_to_primary_host :boolean          default(FALSE), not null
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#
+# Indexes
+#
+#  laiss_cms_sites_public_hosts_idx  (host,public)
+#  index_laiss_cms_sites_on_host     (host)
+#
+
+module LaissCms
+  class Site < BaseRecord
+    # validations
+    validates_presence_of :host
+    validates_uniqueness_of :host, case_sensitive: false
+
+    # associations
+    has_many :languages, dependent: :restrict_with_error
+
+    scope :published, -> { where(public: true) }
+
+    # concerns
+    include LaissCms::Site::Layout
+
+    # Returns true if this site is the current site
+    def current?
+      Current.site == self
+    end
+
+    # Returns the path to site's view partial.
+    #
+    # Site view partials live in +app/views/laiss_cms/site_layouts+
+    #
+    # Please use <tt>rails g laiss_cms:site_layouts</tt> to generate partials for all your sites.
+    #
+    def to_partial_path
+      "laiss_cms/site_layouts/#{partial_name}"
+    end
+
+    # The default language for this site
+    #
+    # There can only be one default language per site.
+    #
+    def default_language
+      languages.find_by(default: true)
+    end
+
+    class << self
+      def find_for_host(host)
+        # These are split up into two separate queries in order to run the
+        # fastest query first (selecting the domain by its primary host name).
+        #
+        find_by(host: host) || find_in_aliases(host) || first
+      end
+
+      def find_in_aliases(host)
+        return nil if host.blank?
+
+        all.find do |site|
+          site.aliases.split.include?(host) if site.aliases.present?
+        end
+      end
+    end
+  end
+end

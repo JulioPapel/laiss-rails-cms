@@ -11,7 +11,7 @@ RSpec.describe "Resources", type: :system do
   describe "index view" do
     it "should have a button for creating a new resource items" do
       visit "/admin/events"
-      expect(page).to have_selector('.toolbar a.button.with_icon alchemy-icon[name="add"]')
+      expect(page).to have_selector('.toolbar a.button.with_icon laiss-cms-icon[name="add"]')
     end
 
     it "should list existing items" do
@@ -34,8 +34,8 @@ RSpec.describe "Resources", type: :system do
         create_list(:event, 15)
       end
 
-      it "should limit the number of items per page based on alchemy's general configuration" do
-        stub_alchemy_config(items_per_page: 5)
+      it "should limit the number of items per page based on laiss_cms's general configuration" do
+        stub_laiss_cms_config(items_per_page: 5)
 
         visit "/admin/events"
         expect(page).to have_selector("div#main_content table.list tbody tr", count: 5)
@@ -51,7 +51,7 @@ RSpec.describe "Resources", type: :system do
       end
 
       it "reloads the items with the selected amount of items per page", :js do
-        stub_alchemy_config(items_per_page: 5)
+        stub_laiss_cms_config(items_per_page: 5)
 
         visit "/admin/events"
         expect(page).to have_selector("div#main_content table.list tbody tr", count: 5)
@@ -66,7 +66,7 @@ RSpec.describe "Resources", type: :system do
     describe "filters" do
       let(:filter_count) { 2 }
 
-      context "resource controller has add_alchemy_filter defined" do
+      context "resource controller has add_laiss_cms_filter defined" do
         it "should show selectboxes for the filters" do
           visit "/admin/events"
 
@@ -135,7 +135,7 @@ RSpec.describe "Resources", type: :system do
           end
 
           it "can combine filters and pagination", :js do
-            stub_alchemy_config(items_per_page: 1)
+            stub_laiss_cms_config(items_per_page: 1)
 
             visit "/admin/events?q[by_timeframe]=starting_today"
 
@@ -151,7 +151,7 @@ RSpec.describe "Resources", type: :system do
 
           it "can combine ransack queries and pagination", :js do
             allow_any_instance_of(Admin::EventsController).to receive(:permitted_ransack_search_fields).and_return([:name_start])
-            stub_alchemy_config(items_per_page: 1)
+            stub_laiss_cms_config(items_per_page: 1)
 
             visit "/admin/events?q[name_start]=today"
 
@@ -243,7 +243,7 @@ RSpec.describe "Resources", type: :system do
       end
 
       it "displays date values" do
-        Alchemy::Deprecation.silence do
+        LaissCms::Deprecation.silence do
           visit "/admin/bookings"
         end
         expect(page).to have_content(yesterday)
@@ -256,12 +256,12 @@ RSpec.describe "Resources", type: :system do
     it "renders an input field according to the attribute's type" do
       visit "/admin/events/new"
       expect(page).to have_selector('input#event_name[type="text"]')
-      expect(page).to have_selector('alchemy-datepicker[input-type="datetime"] input#event_starts_at')
-      expect(page).to have_selector('alchemy-datepicker[input-type="datetime"] input#event_ends_at')
+      expect(page).to have_selector('laiss-cms-datepicker[input-type="datetime"] input#event_starts_at')
+      expect(page).to have_selector('laiss-cms-datepicker[input-type="datetime"] input#event_ends_at')
       expect(page).to have_selector("textarea#event_description")
       expect(page).to have_selector('input#event_published[type="checkbox"]')
-      expect(page).to have_selector('alchemy-datepicker[input-type="time"] input#event_lunch_starts_at')
-      expect(page).to have_selector('alchemy-datepicker[input-type="time"] input#event_lunch_ends_at')
+      expect(page).to have_selector('laiss-cms-datepicker[input-type="time"] input#event_lunch_starts_at')
+      expect(page).to have_selector('laiss-cms-datepicker[input-type="time"] input#event_lunch_ends_at')
     end
 
     it "should have a select box for associated models" do
@@ -284,7 +284,7 @@ RSpec.describe "Resources", type: :system do
         visit "/admin/events/new"
 
         within('form[action="/admin/events"]') do
-          expect(page).to have_selector("alchemy-tags-autocomplete")
+          expect(page).to have_selector("laiss-cms-tags-autocomplete")
         end
       end
     end
@@ -292,7 +292,7 @@ RSpec.describe "Resources", type: :system do
     describe "date fields" do
       it "have date picker" do
         visit "/admin/bookings/new"
-        expect(page).to have_selector('alchemy-datepicker[input-type="date"] input#booking_from')
+        expect(page).to have_selector('laiss-cms-datepicker[input-type="date"] input#booking_from')
       end
     end
   end
@@ -313,7 +313,7 @@ RSpec.describe "Resources", type: :system do
 
       it "lists the new item" do
         expect(page).to have_content "My second event"
-        expect(page).to have_content I18n.l(start_date, format: :"alchemy.default")
+        expect(page).to have_content I18n.l(start_date, format: :"laiss_cms.default")
 
         within "#library_sidebar" do
           expect(page).to have_content "wedding"
@@ -385,7 +385,7 @@ RSpec.describe "Resources", type: :system do
   context "with event that acts_as_taggable" do
     it "shows an autocomplete tag list in the form" do
       visit "/admin/events/new"
-      expect(page).to have_selector('alchemy-tags-autocomplete input#event_tag_list[type="text"]')
+      expect(page).to have_selector('laiss-cms-tags-autocomplete input#event_tag_list[type="text"]')
     end
 
     context "with tagged events in the index view" do

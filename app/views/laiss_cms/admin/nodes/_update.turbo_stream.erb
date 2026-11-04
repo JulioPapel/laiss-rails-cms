@@ -1,0 +1,9 @@
+<% key = flash.keys.first %>
+<laiss-cms-growl message="<%= flash[key] %>" type="<%= key %>"></laiss-cms-growl>
+
+<%= turbo_stream.replace "page_nodes" do %>
+  <%= render "page_nodes" %>
+<% end %>
+<%= turbo_stream.update_all '[panel="nodes"]' do %>
+  <%= render('laiss_cms/admin/nodes/label', count: @page.nodes.select(&:persisted?).length) %>
+<% end %>

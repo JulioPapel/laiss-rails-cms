@@ -1,0 +1,10 @@
+# == This file defines the page layouts for new pages.
+#
+# For further information please see https://guides.alchemy-cms.com/pages.html
+
+<%- unless @options[:skip_demo_files] -%>
+- name: <%= LaissCms.config.default_language.page_layout %>
+  unique: true
+  elements: [article]
+  autogenerate: [article]
+<%- end -%>

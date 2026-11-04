@@ -1,0 +1,9 @@
+<% if @clipboard.blank? %>
+  <%= render template: "laiss_cms/admin/clipboard/clear" %>
+<% else %>
+  <%= turbo_stream.remove "clipboard_item_#{@item.id}" %>
+  <%= render "update_nested_element_button" %>
+  <laiss-cms-growl>
+    <%= LaissCms.t("item removed from clipboard", name: @item.class.to_s == "Element" ? @item.display_name_with_preview_text : @item.name) %>
+  </laiss-cms-growl>
+<% end %>

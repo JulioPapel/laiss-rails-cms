@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "alchemy/routing_constraints"
+require "laiss_cms/routing_constraints"
 
-Alchemy::Engine.routes.draw do
+LaissCms::Engine.routes.draw do
   root to: "pages#index"
 
   get "/sitemap.xml", to: "sitemap#show", format: "xml"
 
-  scope Alchemy.admin_path, constraints: Alchemy.admin_constraints do
-    get "/", to: redirect("#{Alchemy.admin_path}/dashboard"), as: :admin
+  scope LaissCms.admin_path, constraints: LaissCms.admin_constraints do
+    get "/", to: redirect("#{LaissCms.admin_path}/dashboard"), as: :admin
     get "/dashboard", to: "admin/dashboard#index", as: :admin_dashboard
     get "/dashboard/info", to: "admin/dashboard#info", as: :dashboard_info
     get "/dashboard/license", to: "admin/dashboard#license", as: :dashboard_license
@@ -18,7 +18,7 @@ Alchemy::Engine.routes.draw do
     get "/leave", to: "admin/base#leave", as: :leave_admin
   end
 
-  namespace :admin, path: Alchemy.admin_path, constraints: Alchemy.admin_constraints do
+  namespace :admin, path: LaissCms.admin_path, constraints: LaissCms.admin_constraints do
     resources :nodes
 
     resources :pages do
@@ -144,13 +144,13 @@ Alchemy::Engine.routes.draw do
   end
 
   get "/:locale", to: "pages#index",
-    constraints: {locale: Alchemy::RoutingConstraints::LOCALE_REGEXP},
+    constraints: {locale: LaissCms::RoutingConstraints::LOCALE_REGEXP},
     as: :show_language_root
 
   # The page show action has to be last route
-  constraints(locale: Alchemy::RoutingConstraints::LOCALE_REGEXP) do
+  constraints(locale: LaissCms::RoutingConstraints::LOCALE_REGEXP) do
     get "(/:locale)/*urlname(.:format)", to: "pages#show",
-      constraints: Alchemy::RoutingConstraints.new,
+      constraints: LaissCms::RoutingConstraints.new,
       as: :show_page
   end
 end

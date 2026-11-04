@@ -14,7 +14,7 @@ SimpleForm.setup do |config|
   # wrapper, change the order or even add your own to the
   # stack. The options given below are used to wrap the
   # whole input.
-  config.wrappers :alchemy,
+  config.wrappers :laiss_cms,
     class: :input,
     hint_class: :field_with_hint,
     error_class: :field_with_errors,
@@ -178,5 +178,5 @@ SimpleForm.setup do |config|
   # config.include_default_input_wrapper_class = true
 
   # Defines which i18n scope will be used in Simple Form.
-  config.i18n_scope = "alchemy.forms"
+  config.i18n_scope = "laiss_cms.forms"
 end

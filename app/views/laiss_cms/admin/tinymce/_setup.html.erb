@@ -1,0 +1,19 @@
+<% tinymce_base_path = "#{Rails.application.config.assets.prefix}/tinymce" %>
+
+<link rel="preload" href="<%= asset_path("#{tinymce_base_path}/skins/ui/laiss_cms/skin.min.css") %>" as="style">
+<% if LaissCms::Tinymce.init[:content_css] %>
+  <link rel="preload" href="<%= asset_path(LaissCms::Tinymce.init[:content_css]) %>" as="style">
+<% end %>
+<% LaissCms::Tinymce.preloadable_plugins.each do |plugin| %>
+  <link rel="preload" href="<%= asset_path("#{tinymce_base_path}/plugins/#{plugin}/plugin.min.js") %>" as="script">
+<% end %>
+
+<%= tag.script(type: "application/json", id: "laiss_cms_tinymce_defaults") do %>
+  <%== LaissCms::Tinymce.init.merge(
+    base_url: ActionController::Base.config.asset_host ?
+      asset_url(tinymce_base_path, host: ActionController::Base.config.asset_host) :
+      tinymce_base_path,
+    suffix: ".min",
+    plugins: LaissCms::Tinymce.plugins.join(",")
+  ).to_json %>
+<% end %>

@@ -12,7 +12,7 @@ const VERSION_NAVITEMS = {
       collapsed: false,
       items: [
         {
-          text: "About AlchemyCMS",
+          text: "About LaissCMS",
           link: "/v6/about",
         },
         {
@@ -74,7 +74,7 @@ const VERSION_NAVITEMS = {
           link: "/v6/how_to_add_custom_authentication",
         },
         {
-          text: "Extend Alchemy",
+          text: "Extend LaissCms",
           link: "/v6/how_to_extend_alchemy",
         },
       ],
@@ -90,7 +90,7 @@ const VERSION_NAVITEMS = {
       collapsed: false,
       items: [
         {
-          text: "About AlchemyCMS",
+          text: "About LaissCMS",
           link: "/v7/about",
         },
         {
@@ -152,7 +152,7 @@ const VERSION_NAVITEMS = {
           link: "/v7/how_to_add_custom_authentication",
         },
         {
-          text: "Extend Alchemy",
+          text: "Extend LaissCms",
           link: "/v7/how_to_extend_alchemy",
         },
       ],
@@ -164,7 +164,7 @@ const VERSION_NAVITEMS = {
       collapsed: false,
       items: [
         {
-          text: "About AlchemyCMS",
+          text: "About LaissCMS",
           link: "/about",
         },
         {
@@ -278,7 +278,7 @@ const VERSION_NAVITEMS = {
           link: "/how_to_integrate_into_existing_rails_app",
         },
         {
-          text: "Extend Alchemy",
+          text: "Extend LaissCms",
           link: "/how_to_extend_alchemy",
         },
       ],
@@ -305,7 +305,7 @@ const sidebar = VERSIONS.reduce((obj, version) => {
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  title: "AlchemyCMS",
+  title: "LaissCMS",
   srcExclude: ["README.md"],
   head: [
     ["link", { rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
@@ -324,7 +324,7 @@ export default defineConfig({
     ],
   ],
   description:
-    "Alchemy is the Open Source Rails CMS framework for the component based web that can be used as classic server side rendered or headless CMS.",
+    "LaissCms is the Open Source Rails CMS framework for the component based web that can be used as classic server side rendered or headless CMS.",
   // https://vitepress.dev/reference/default-theme-config
   themeConfig: {
     logo: "/icon.svg",
@@ -343,15 +343,15 @@ export default defineConfig({
       },
     ],
     socialLinks: [
-      { icon: "github", link: "https://github.com/AlchemyCMS/" },
-      { icon: "mastodon", link: "https://ruby.social/@alchemy_cms" },
+      { icon: "github", link: "https://github.com/LaissCMS/" },
+      { icon: "mastodon", link: "https://ruby.social/@laiss_cms" },
       { icon: "bluesky", link: "https://bsky.app/profile/alchemy-cms.com" },
       { icon: "slack", link: "https://alchemy-cms.slack.com" },
     ],
     sidebar,
     editLink: {
       pattern:
-        "https://github.com/AlchemyCMS/alchemy_cms/edit/main/guides/:path",
+        "https://github.com/LaissCMS/laiss_cms/edit/main/guides/:path",
     },
     footer: {
       message: `

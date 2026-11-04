@@ -1,0 +1,46 @@
+@use "../variables" as vars;
+
+:root {
+  --preview-window-min-width: 0px;
+
+  @media screen and (min-width: vars.$large-screen-break-point) {
+    --preview-window-min-width: 240px;
+  }
+}
+
+#laiss_cms_preview_window {
+  position: absolute;
+  left: var(--main-menu-width);
+  top: 75px;
+  width: calc(
+    100vw - var(--main-menu-width) - var(--elements-window-width) +
+      var(--border-width_small)
+  );
+  min-width: var(--preview-window-min-width);
+  max-width: calc(100vw - var(--main-menu-width));
+  height: calc(100vh - var(--top-menu-height));
+  border: 0 none;
+
+  // This seems weird, but the correct way to create iframes that handle light/dark themes.
+  // https://fvsch.com/transparent-iframes
+  background-color: white;
+  color-scheme: light;
+
+  border-right: var(--border-default);
+  transition-duration: var(--transition-duration);
+  transition-timing-function: var(--elements-window-transition-easing);
+  transition-property: width, max-width;
+
+  .elements-window-visible & {
+    max-width: calc(
+      100vw - var(--main-menu-width) - var(--elements-window-min-width) +
+        var(--border-width_small)
+    );
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  #laiss_cms_preview_window {
+    color-scheme: dark;
+  }
+}

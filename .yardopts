@@ -1,4 +1,4 @@
---title "Alchemy CMS"
+--title "LaissCms CMS"
 app/**/*.rb
 config/**/*.yml
 lib/**/*.rb

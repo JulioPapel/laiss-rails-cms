@@ -1,13 +1,13 @@
 require "rails_helper"
 
 describe "Session Routing" do
-  routes { Alchemy::Engine.routes }
+  routes { LaissCms::Engine.routes }
 
   it "routes to login" do
     expect({
       get: "/admin/login"
     }).to route_to(
-      controller: "alchemy/admin/user_sessions",
+      controller: "laiss_cms/admin/user_sessions",
       action: "new"
     )
   end
@@ -16,7 +16,7 @@ describe "Session Routing" do
     expect({
       post: "/admin/login"
     }).to route_to(
-      controller: "alchemy/admin/user_sessions",
+      controller: "laiss_cms/admin/user_sessions",
       action: "create"
     )
   end
@@ -25,7 +25,7 @@ describe "Session Routing" do
     expect({
       delete: "/admin/logout"
     }).to route_to(
-      controller: "alchemy/admin/user_sessions",
+      controller: "laiss_cms/admin/user_sessions",
       action: "destroy"
     )
   end

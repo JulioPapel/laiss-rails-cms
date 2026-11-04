@@ -5,11 +5,11 @@ next: false
 
 # Sites
 
-Alchemy supports multiple websites from a single Rails application. Each site has its own domain, languages, and page trees.
+LaissCms supports multiple websites from a single Rails application. Each site has its own domain, languages, and page trees.
 
 ## How Sites Work
 
-A site is identified by its host name. When a request comes in, Alchemy matches it against the configured hosts and serves the correct site's content.
+A site is identified by its host name. When a request comes in, LaissCms matches it against the configured hosts and serves the correct site's content.
 
 | Attribute | Description |
 |-----------|-------------|
@@ -20,10 +20,10 @@ A site is identified by its host name. When a request comes in, Alchemy matches 
 
 ## Setting Up Multiple Sites
 
-The Alchemy installer creates a default site. To add more sites, use the admin interface under the Sites module.
+The LaissCms installer creates a default site. To add more sites, use the admin interface under the Sites module.
 
-Each site needs at least one [language](languages). After creating a new site, Alchemy will prompt you to create its default language.
+Each site needs at least one [language](languages). After creating a new site, LaissCms will prompt you to create its default language.
 
 ## Single-Site Setups
 
-Most Alchemy installations use a single site. In this case, you can ignore the Sites module entirely — the default site created during installation handles everything.
+Most LaissCms installations use a single site. In this case, you can ignore the Sites module entirely — the default site created during installation handles everything.

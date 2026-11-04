@@ -1,0 +1,29 @@
+<div class="widget-body">
+  <header>
+    <%= LaissCms::Site.model_name.human(count: 2) %>
+    <aside><%= LaissCms::Site.count %></aside>
+  </header>
+  <table class="list">
+    <% sites.each do |site| %>
+    <tr>
+      <td>
+        <span class="label-with-icon">
+          <laiss-cms-icon name="global"></laiss-cms-icon>
+          <% if laiss_cms.respond_to?(:login_url) %>
+            <%= link_to_unless site == LaissCms::Current.site,
+              site.name,
+              laiss_cms.login_url(
+                protocol: 'http://',
+                host: site.host,
+                user: {login: current_laiss_cms_user.try(:login)}
+              ), target: '_blank' %>
+          <% else %>
+            <%= site.name %>
+          <% end %>
+        </span>
+      </td>
+      <td class="right"><small><%= site.host %></small></td>
+    </tr>
+    <% end %>
+  </table>
+</div>

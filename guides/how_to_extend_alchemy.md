@@ -1,36 +1,36 @@
-# Extending Alchemy
+# Extending LaissCms
 
-Alchemy has extensive [configuration](configuration) options and class-level extension points, but sometimes you need to go further. This guide is about using Alchemy's helpers in your own controllers, and adding behavior to Alchemy's built-in controllers and models.
+LaissCms has extensive [configuration](configuration) options and class-level extension points, but sometimes you need to go further. This guide is about using LaissCms's helpers in your own controllers, and adding behavior to LaissCms's built-in controllers and models.
 
 ::: tip
 Looking for ready-made add-ons? See the [Extensions](extensions) page.
 :::
 
-## Using Alchemy in Your Controllers
+## Using LaissCms in Your Controllers
 
-If your app has controllers that render Alchemy content or use Alchemy view helpers like `render_elements` or `render_menu`, include `Alchemy::ControllerActions`:
+If your app has controllers that render LaissCms content or use LaissCms view helpers like `render_elements` or `render_menu`, include `LaissCms::ControllerActions`:
 
 ~~~ ruby
 # app/controllers/blog_controller.rb
 class BlogController < ApplicationController
-  include Alchemy::ControllerActions
+  include LaissCms::ControllerActions
 end
 ~~~
 
 This gives your controller access to:
 
-- `current_alchemy_site` and `set_alchemy_language`
-- Alchemy's page and element view helpers
-- `current_alchemy_user` and `alchemy_user_signed_in?`
+- `current_laiss_cms_site` and `set_laiss_cms_language`
+- LaissCms's page and element view helpers
+- `current_laiss_cms_user` and `laiss_cms_user_signed_in?`
 
-## Extending Alchemy Controllers
+## Extending LaissCms Controllers
 
-To add behavior to an Alchemy controller, use Ruby's `prepend` inside a `config.to_prepare` block. This ensures the extension is reloaded in development.
+To add behavior to an LaissCms controller, use Ruby's `prepend` inside a `config.to_prepare` block. This ensures the extension is reloaded in development.
 
 ~~~ ruby
-# config/initializers/alchemy_extensions.rb
+# config/initializers/laiss_cms_extensions.rb
 Rails.application.config.to_prepare do
-  Alchemy::PagesController.prepend(PagesControllerExtension)
+  LaissCms::PagesController.prepend(PagesControllerExtension)
 end
 ~~~
 
@@ -49,14 +49,14 @@ module PagesControllerExtension
 end
 ~~~
 
-## Extending Alchemy Models
+## Extending LaissCms Models
 
 The same pattern works for models:
 
 ~~~ ruby
-# config/initializers/alchemy_extensions.rb
+# config/initializers/laiss_cms_extensions.rb
 Rails.application.config.to_prepare do
-  Alchemy::Page.prepend(PageExtension)
+  LaissCms::Page.prepend(PageExtension)
 end
 ~~~
 

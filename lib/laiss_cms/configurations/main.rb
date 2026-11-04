@@ -1,0 +1,571 @@
+# frozen_string_literal: true
+
+require "laiss_cms/configuration"
+require "laiss_cms/configurations/admin_components"
+require "laiss_cms/configurations/dashboard"
+require "laiss_cms/configurations/default_language"
+require "laiss_cms/configurations/default_site"
+require "laiss_cms/configurations/importmap"
+require "laiss_cms/configurations/format_matchers"
+require "laiss_cms/configurations/mailer"
+require "laiss_cms/configurations/menu"
+require "laiss_cms/configurations/menu_item"
+require "laiss_cms/configurations/page_cache"
+require "laiss_cms/configurations/preview"
+require "laiss_cms/configurations/sitemap"
+require "laiss_cms/configurations/uploader"
+require "laiss_cms/deprecation"
+
+module LaissCms
+  module Configurations
+    class Main < LaissCms::Configuration
+      # == This is the global LaissCms configuration class
+
+      # === Auto Log Out Time
+      #
+      # The amount of time of inactivity in minutes after which the user is kicked out of his current session.
+      #
+      # NOTE: This is only active in production environments
+      #
+      option :auto_logout_time, :integer, default: 30
+
+      # === Page caching
+      #
+      # Enable/Disable page caching globally.
+      #
+      # NOTE: You can enable/disable page caching for single LaissCms::Definitions in the page_layout.yml file.
+      #
+      option :cache_pages, :boolean, default: true
+
+      # === Page caching max age
+      #
+      # max-age [Integer] # The duration in seconds for which the page is cached before revalidation.
+      # stale-while-revalidate [Boolean] # If true, enables the stale-while-revalidate caching strategy.
+      configuration :page_cache, PageCache
+
+      # === Sitemap
+      #
+      # LaissCms creates a XML, Google compatible, sitemap for you.
+      #
+      # The url is: http://your-domain.tld/sitemap.xml
+      #
+      # ==== Config Options:
+      #
+      #   show_root [Boolean] # Show language root page in sitemap?
+      #   show_flag [Boolean] # Enables the Checkbox in Page#update overlay. So your customer can set the visibility of pages in the sitemap.
+      #   max_age [Integer]   # How long the sitemap is cached, in seconds. Set to 0 to disable sitemap caching.
+      configuration :sitemap, Sitemap
+
+      # === Default items per page in admin views
+      #
+      # In LaissCms's Admin, change how many items you would get shown per page by Kaminari
+      option :items_per_page, :integer, default: 15
+
+      # === Preview window URL configuration
+      #
+      # By default LaissCms uses its internal page preview renderer,
+      # but you can configure it to be any URL instead.
+      #
+      # Basic Auth is supported.
+      #
+      # preview:
+      #   host: https://www.my-static-site.com
+      #   auth:
+      #     username: <%= ENV["BASIC_AUTH_USERNAME"] %>
+      #     password: <%= ENV["BASIC_AUTH_PASSWORD"] %>
+      #
+      # Preview config per site is supported as well.
+      #
+      # preview:
+      #   My site name:
+      #     host: https://www.my-static-site.com
+      #     auth:
+      #       username: <%= ENV["BASIC_AUTH_USERNAME"] %>
+      #       password: <%= ENV["BASIC_AUTH_PASSWORD"] %>
+      #
+      configuration :preview, Preview
+
+      # === Preview load timeout
+      #
+      # The number of seconds the admin preview window waits for the preview
+      # frame to load before it stops the loading spinner and warns the user
+      # that the preview failed to load.
+      #
+      option :preview_load_timeout, :integer, default: 5
+
+      # === Picture rendering settings
+      #
+      # LaissCms uses Dragonfly to render images. Settings for image rendering are specific to elements and are defined in elements.yml
+      #
+      # Example:
+      # - name: some_element
+      #   ingredients:
+      #   - role: some_picture
+      #     type: Picture
+      #     settings:
+      #       hint: true
+      #       crop: true  # turns on image cropping
+      #       size: '500x500' # image will be cropped to this size
+      #
+      # See http://markevans.github.com/dragonfly for further info.
+      #
+      # ==== Global Options:
+      #
+      #   output_image_quality      [Integer]       # If image gets rendered as JPG or WebP this is the quality setting for it. (Default 85)
+      #   preprocess_image_resize   [String]        # Use this option to resize images to the given size when they are uploaded to the image library. Downsizing example: '1000x1000>' (Default nil)
+      #   image_output_format       [String]        # The global image output format setting. (Default +original+)
+      #
+      # NOTE: You can always override the output format in the settings of your ingredients in elements.yml, I.E. {format: 'gif'}
+      #
+      option :output_image_quality, :integer, default: 85
+      alias_method :output_image_jpg_quality, :output_image_quality
+      deprecate output_image_jpg_quality: :output_image_quality, deprecator: LaissCms::Deprecation
+      alias_method :output_image_jpg_quality=, :output_image_quality=
+      deprecate "output_image_jpg_quality=": :output_image_quality=, deprecator: LaissCms::Deprecation
+      option :preprocess_image_resize, :string
+      option :image_output_format, :string, default: "original"
+      option :sharpen_images, :boolean, default: false
+
+      # This is used by the seeder to create the default site.
+      configuration :default_site, DefaultSite
+
+      # This is the default language when seeding.
+      configuration :default_language, DefaultLanguage
+
+      # === Mailer Settings:
+      #
+      # To send emails via contact forms, you can create your form fields here and set which fields are to be validated.
+      #
+      # === Validating fields:
+      #
+      # Pass the field name as a symbol and a message_id (will be translated) to :validate_fields:
+      #
+      # ==== Options:
+      #
+      #   page_layout_name:           [String] # A +LaissCms::PageDefinition+ name. Used to render the contactform on a page with this layout.
+      #   fields:                     [Array]  # An Array of fieldnames.
+      #   validate_fields:            [Array]  # An Array of fieldnames to be validated on presence.
+      #
+      # ==== Translating validation messages:
+      #
+      # The validation messages are passed through ::I18n.t so you can translate it in your language yml file.
+      #
+      # ==== Example:
+      #
+      #   de:
+      #     activemodel:
+      #       attributes:
+      #         laiss_cms/message:
+      #           firstname: Vorname
+      #
+      configuration :mailer, Mailer
+
+      # === User roles
+      #
+      # You can add own user roles.
+      #
+      # Further documentation for the auth system used please visit:
+      #
+      # https://github.com/ryanb/cancan/wiki
+      #
+      # ==== Translating User roles
+      #
+      # Userroles can be translated inside your the language yml file under:
+      #
+      #   laiss_cms:
+      #     user_roles:
+      #       rolename: Name of the role
+      #
+      option :user_roles, :collection, item_type: :string, default: %w[member author editor admin]
+
+      # === Uploader Settings
+      #
+      #   upload_limit       [Integer]    # Set an amount of files upload limit of files which can be uploaded at once. Set 0 for unlimited.
+      #   file_size_limit*   [Integer]    # Set a file size limit in mega bytes for a per file limit.
+      #
+      # *) Allow filetypes to upload. Pass * to allow all kind of files.
+      #
+      configuration :uploader, Uploader
+
+      # === Link Target Options
+      #
+      # Values for the link target selectbox inside the link dialog.
+      #
+      # Each value is stored with a leading underscore, so that it can be used
+      # as the link's `target` attribute right away: `blank` is stored as
+      # `_blank` and rendered as `target="_blank"`. Views rendering a link
+      # themselves should pass the stored value through
+      # `LaissCms::Ingredients::LinkTarget#link_target_value`, which also maps
+      # the legacy `blank` (stored before the underscore was added) to
+      # `_blank`.
+      #
+      # == Example:
+      #
+      # Open all links set to overlay in a dialog window in your frontend code,
+      # based on the `target="_overlay"` attribute. Such a target has no meaning
+      # to the browser, so your code needs to handle the click itself.
+      #
+      #   config.link_target_options = %w[blank overlay]
+      #
+      option :link_target_options, :collection, item_type: :string, default: %w[blank]
+
+      # === Allowed url schemes
+      #
+      # Url schemes editors are allowed to store in menu nodes and linkable
+      # ingredients. Any other scheme is rejected, because a scheme like
+      # `javascript:` turns an editable url into script execution in your
+      # site's own origin.
+      #
+      # Urls without a scheme (absolute and relative paths, anchors, queries
+      # and protocol relative urls) are always allowed.
+      #
+      # == Example:
+      #
+      #   config.allowed_url_schemes = %w[http https mailto]
+      #
+      option :allowed_url_schemes, :collection, item_type: :string, default: %w[http https mailto tel ftp]
+
+      # === Format matchers
+      #
+      # Named aliases for regular expressions that can be used in various places.
+      # The most common use case is the format validation of ingredients, or attribute validations of your individual models.
+      #
+      # == Example:
+      #
+      #   validates_format_of :url, with: LaissCms.config.format_matchers.url
+      #
+      configuration :format_matchers, FormatMatchers
+
+      # The layout used for rendering the +laiss_cms/admin/pages#show+ action.
+      option :admin_page_preview_layout, :string, default: "application"
+
+      # The sizes for the preview size select in the page editor.
+      option :page_preview_sizes, :collection, item_type: :integer, default: [360, 640, 768, 1024, 1280, 1440]
+
+      # Enable full text search configuration
+      #
+      # It enables a searchable checkbox in the page form to toggle
+      # the searchable field. These information can used in a search
+      # plugin (e.g. https://github.com/LaissCMS/laiss-cms-pg_search).
+      #
+      # == Example
+      #
+      #     # config/initializers/laiss_cms.rb
+      #     LaissCms.config.page_searchable_checkbox = true
+      option :show_page_searchable_checkbox, :boolean, default: false
+
+      # The storage adapter for Pictures and Attachments
+      #
+      option :storage_adapter, :string, default: "active_storage"
+
+      # Define page preview sources
+      #
+      # A preview source is a Ruby class returning an URL
+      # that is used as source for the preview frame in the
+      # admin UI.
+      #
+      # == Example
+      #
+      #     # lib/acme/preview_source.rb
+      #     class Acme::PreviewSource < LaissCms::Admin::PreviewUrl
+      #       def url_for(page)
+      #         if page.site.name == "Next"
+      #           "https://user:#{ENV['PREVIEW_HTTP_PASS']}@next.acme.com"
+      #         else
+      #           "https://www.acme.com"
+      #         end
+      #       end
+      #     end
+      #
+      #     # config/initializers/laiss_cms.rb
+      #     require "acme/preview_source"
+      #     LaissCms.config.preview_sources << "Acme::PreviewSource"
+      #
+      #     # config/locales/de.yml
+      #     de:
+      #       activemodel:
+      #         models:
+      #           acme/preview_source: Acme Vorschau
+      #
+      option :preview_sources, :collection, item_type: :class, collection_class: Set, default: ["LaissCms::Admin::PreviewUrl"]
+
+      # Additional JS modules to be imported in the LaissCms admin UI
+      #
+      # Be sure to also pin the modules with +LaissCms.importmap+.
+      #
+      # == Example
+      #
+      #    LaissCms.importmap.pin "flatpickr/de",
+      #      to: "https://ga.jspm.io/npm:flatpickr@4.6.13/dist/l10n/de.js"
+      #
+      #    LaissCms.config.admin_js_imports << "flatpickr/de"
+      #
+      option :admin_js_imports, :collection, item_type: :string, collection_class: Set, default: []
+
+      # Additional importmaps to be included in the LaissCms admin UI
+      #
+      # Be sure to also pin modules with +LaissCms.importmap+.
+      #
+      # == Example
+      #
+      #    # config/laiss_cms/importmap.rb
+      #    LaissCms.importmap.pin "laiss_cms_solidus", to: "laiss_cms_solidus.js", preload: true
+      #    LaissCms.importmap.pin_all_from LaissCms::Solidus::Engine.root.join("app/javascript/laiss_cms_solidus"),
+      #      under: "laiss_cms_solidus",
+      #      preload: true
+      #
+      #    # lib/laiss_cms/solidus/engine.rb
+      #    initializer "laiss_cms_solidus.assets", before: "laiss_cms.importmap" do |app|
+      #      LaissCms.admin_importmaps.add({
+      #        importmap_path: root.join("config/importmap.rb"),
+      #        source_paths: [
+      #          root.join("app/javascript")
+      #        ],
+      #        name: "laiss_cms_solidus"
+      #      })
+      #      app.config.assets.precompile << "laiss_cms_solidus/manifest.js"
+      #    end
+      #
+      option :admin_importmaps, :collection, collection_class: Set, item_type: :configuration, config_class: LaissCms::Configurations::Importmap, default: []
+
+      # The entries of the admin main navigation
+      #
+      # +url+ and +condition+ are evaluated in the view context.
+      #
+      # Entries without a +condition+ (and without a legacy +controller+ and
+      # +action+) are shown to every admin user.
+      #
+      # == Example
+      #
+      #    LaissCms.configure do |config|
+      #      config.menu.add(
+      #        name: "events",
+      #        title: "Events",
+      #        icon: "calendar",
+      #        url: -> { main_app.admin_events_path },
+      #        condition: -> { can?(:index, :admin_events) },
+      #        children: [
+      #          {
+      #            title: "Locations",
+      #            url: -> { main_app.admin_locations_path },
+      #            condition: -> { can?(:index, :admin_locations) }
+      #          }
+      #        ]
+      #      )
+      #    end
+      #
+      option :menu, :collection, item_type: :configuration, config_class: LaissCms::Configurations::MenuItem, default: LaissCms::Configurations::Menu::DEFAULT
+
+      # Additional stylesheets to be included in the LaissCms admin UI
+      #
+      # == Example
+      #
+      #    # lib/laiss_cms/devise/engine.rb
+      #    initializer "laiss_cms.devise.stylesheets", before: "laiss_cms.admin_stylesheets" do
+      #      LaissCms.config.admin_stylesheets << "laiss_cms/devise/admin.css"
+      #    end
+      #
+      option :admin_stylesheets, :collection, collection_class: Set, item_type: :string, default: ["laiss_cms/admin/custom.css"]
+
+      # Define page publish targets
+      #
+      # A publish target is a ActiveJob that gets performed
+      # whenever a user clicks the publish page button.
+      #
+      # Use this to trigger deployment hooks of external
+      # services in an asychronous way.
+      #
+      # == Example
+      #
+      #     # app/jobs/publish_job.rb
+      #     class PublishJob < ApplicationJob
+      #       def perform(page)
+      #         RestClient.post(ENV['BUILD_HOOK_URL'])
+      #       end
+      #     end
+      #
+      #     # config/initializers/laiss_cms.rb
+      #     LaissCms.config.publish_targets << PublishJob
+      #
+      option :publish_targets, :collection, collection_class: Set, item_type: :class, default: []
+
+      # Configure tabs in the link dialog
+      #
+      # With this configuration that tabs in the link dialog can be extended
+      # without overwriting or defacing the Admin Interface.
+      #
+      # == Example
+      #
+      #    # components/acme/link_tab.rb
+      #    module Acme
+      #      class LinkTab < ::LaissCms::Admin::LinkDialog::BaseTab
+      #        def title
+      #          "Awesome Tab Title"
+      #        end
+      #
+      #        def name
+      #          :unique_name
+      #        end
+      #
+      #        def fields
+      #           [ title_input, target_select ]
+      #        end
+      #      end
+      #    end
+      #
+      #    # config/initializers/laiss_cms.rb
+      #    LaissCms.config.link_dialog_tabs << "Acme::LinkTab"
+      #
+      option :link_dialog_tabs, :collection, collection_class: Set, item_type: :class, default: [
+        "LaissCms::Admin::LinkDialog::InternalTab",
+        "LaissCms::Admin::LinkDialog::AnchorTab",
+        "LaissCms::Admin::LinkDialog::ExternalTab",
+        "LaissCms::Admin::LinkDialog::FileTab"
+      ]
+
+      # === Update Check Service
+      #
+      # The service to use for checking for new LaissCms versions.
+      #
+      # Available services:
+      # - :laiss_cms_app (default): LaissCms's own update check endpoint
+      #   shares minimal data about your installation (LaissCms version, Rails version, Ruby version, Origin host)
+      #   with maintainers of LaissCMS.
+      # - :ruby_gems: RubyGems.org API
+      #   recommeded if you don't want to share any data with LaissCMS maintainers.
+      # - :none: Disable update checks (not recommended).
+      #
+      option :update_check_service, :symbol, default: :laiss_cms_app
+
+      # === Update Check Cache Duration
+      #
+      # The duration in hours for caching the result of the update check.
+      #
+      # Default is 1 hour.
+      #
+      option :update_check_cache_duration, :integer, default: 1
+
+      # === The user class to be used for LaissCms
+      #
+      # If you don't have your own user model or don't want to provide one,
+      # add the `laiss-cms-devise` gem into your App's Gemfile.
+      #
+      # == Example
+      #     LaissCms.config.user_class = "MyUser"
+      option :user_class, :class
+
+      # Returns the user class name
+      #
+      # Prefixed with :: when getting to avoid constant name conflicts
+      def user_class_name = "::#{raw_user_class}"
+
+      # === User class primary key
+      #
+      # Your users table primary key. Defaults to +id+
+      #
+      # == Example
+      #     LaissCms.config.user_class_primary_key = :uuid
+      option :user_class_primary_key, :symbol, default: :id
+
+      # === Current user method
+      #
+      # A method on your ApplicationController to get current user. Defaults to +:id+
+      #
+      # == Example
+      #     LaissCms.config.current_user_method = :my_current_user
+      option :current_user_method, :symbol, default: :current_user
+
+      # === Signup Path
+      #
+      # The path to the signup form. Defaults to "/signup"
+      option :signup_path, :string, default: "/signup"
+
+      # === Login Path
+      #
+      # The path to the login form. Defaults to "/login"
+      option :login_path, :string, default: "/login"
+
+      # === Logout Path
+      #
+      # The path to the logout method.
+      option :logout_path, :string, default: "/logout"
+
+      # === Logout Method
+      #
+      # The http verb for the logout method. Defaults to "delete"
+      option :logout_method, :string, default: "delete"
+
+      # === Unauthorized Path
+      #
+      # The path to the page showing the user they're unauthorized
+      option :unauthorized_path, :string, default: "/"
+
+      # === Admin Users Path
+      #
+      # The path to the admin users list.
+      #
+      # == Example
+      #
+      #     "/admin/users"
+      #
+      option :admin_users_path, :string
+
+      # === Edit User Path
+      #
+      # The path to the edit user form.
+      #
+      # == Example
+      #
+      #     "/admin/users/:id/edit"
+      #
+      # NOTE: The :id placeholder will be replaced with the current_laiss_cms_user's id.
+      #
+      option :edit_user_path, :string
+
+      # === CanCan abilities
+      #
+      # If your app or your engine has own CanCan abilities you must register them.
+      #
+      # == Example
+      #     LaissCms.config.abilities.add("MyCustom::Ability")
+      option :abilities, :collection, item_type: :class
+
+      # === Dashboard configuration
+      #
+      configuration :dashboard, Dashboard
+
+      # === Admin component registry
+      #
+      # Overridable admin ViewComponents keyed by role, so extensions can swap
+      # a component for their own.
+      #
+      configuration :admin_components, AdminComponents
+
+      # === Admin Content Security Policy
+      #
+      # The class building the Content Security Policy LaissCms sends with its
+      # own admin responses. Set to +nil+ to send no policy at all.
+      #
+      # It never replaces a policy the host application has configured, and it
+      # only applies to LaissCms's own controllers.
+      #
+      #    LaissCms.config.admin_content_security_policy = "MyApp::AdminContentSecurityPolicy"
+      #
+      option :admin_content_security_policy, :class, default: "LaissCms::Admin::ContentSecurityPolicy"
+
+      # === Publishable resolver
+      #
+      # The class used to resolve publication state for Publishable records
+      # (currently +LaissCms::Element+ and +LaissCms::PageVersion+).
+      #
+      # The default resolver uses the +public_on+ / +public_until+ timestamp
+      # columns. Apps or gems can provide a custom resolver that implements
+      # the same interface — see +LaissCms::Publishable::TimestampResolver+
+      # for the interface.
+      #
+      # == Example
+      #     LaissCms.config.publishable_resolver = "MyApp::CustomResolver"
+      option :publishable_resolver, :class, default: "LaissCms::Publishable::TimestampResolver"
+    end
+  end
+end

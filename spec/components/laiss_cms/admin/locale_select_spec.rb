@@ -1,0 +1,55 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+RSpec.describe LaissCms::Admin::LocaleSelect, type: :component do
+  subject! do
+    expect(LaissCms::I18n).to receive(:available_locales) { locales }
+    allow(vc_test_request).to receive(:path) { "/admin/dashboard" }
+    render
+  end
+
+  let(:render) { render_inline described_class.new }
+
+  context "with one available locale" do
+    let(:locales) { [:de] }
+
+    it "should not render anything" do
+      expect(rendered_content).to be_blank
+    end
+  end
+
+  context "with many available locales" do
+    let(:locales) { %i[de en] }
+
+    it "should return a select with available locales with current locale selected" do
+      expect(page).to have_selector("select[name='admin_locale'] option[value='de'] + option[value='en'][selected]", text: "EN")
+    end
+
+    context "with name given" do
+      let(:render) { render_inline described_class.new(:language) }
+
+      it "should return a select with available locales with current locale selected" do
+        expect(page).to have_selector("select[name='language']")
+      end
+    end
+
+    it "should return a select with auto submit wrapper" do
+      expect(page).to have_selector("laiss-cms-auto-submit select[name='admin_locale']")
+    end
+
+    it "submits the form to the current request path" do
+      expect(page).to have_selector("form[action='/admin/dashboard']")
+    end
+
+    context "with auto_submit false" do
+      let(:render) { render_inline described_class.new(:admin_locale, auto_submit: false) }
+
+      it "should return a single select without form and auto submit wrapper" do
+        expect(page).not_to have_selector("laiss-cms-auto-submit")
+        expect(page).not_to have_selector("form")
+        expect(page).to have_selector("select[name='admin_locale']")
+      end
+    end
+  end
+end

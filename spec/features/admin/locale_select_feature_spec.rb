@@ -3,10 +3,10 @@
 require "rails_helper"
 
 RSpec.describe "Locale select", type: :system do
-  let(:a_page) { create(:alchemy_page, :public) }
+  let(:a_page) { create(:laiss_cms_page, :public) }
 
   before do
-    allow(Alchemy::I18n).to receive(:translation_files).and_return ["alchemy.kl.yml", "alchemy.jp.yml", "alchemy.cz.yml"]
+    allow(LaissCms::I18n).to receive(:translation_files).and_return ["laiss_cms.kl.yml", "laiss_cms.jp.yml", "laiss_cms.cz.yml"]
     authorize_user(:as_admin)
   end
 
@@ -15,9 +15,9 @@ RSpec.describe "Locale select", type: :system do
     expect(page).to have_select("admin_locale", options: ["Kl", "Jp", "Cz"])
   end
 
-  context "when having available_locales set for Alchemy::I18n" do
+  context "when having available_locales set for LaissCms::I18n" do
     before do
-      allow(Alchemy::I18n).to receive(:available_locales).and_return [:jp, :cz]
+      allow(LaissCms::I18n).to receive(:available_locales).and_return [:jp, :cz]
     end
 
     it "provides only these locales" do
@@ -29,7 +29,7 @@ RSpec.describe "Locale select", type: :system do
   describe "user selects locale" do
     context "that is available" do
       before do
-        allow(Alchemy::I18n).to receive(:available_locales).and_return [:kl]
+        allow(LaissCms::I18n).to receive(:available_locales).and_return [:kl]
       end
 
       it "switches the locale" do

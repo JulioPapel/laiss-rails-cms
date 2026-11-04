@@ -11,7 +11,7 @@ async function loadPreview() {
 }
 
 function element(id) {
-  return document.querySelector(`[data-alchemy-element="${id}"]`)
+  return document.querySelector(`[data-laiss-cms-element="${id}"]`)
 }
 
 describe("preview", () => {
@@ -25,8 +25,8 @@ describe("preview", () => {
     listenerSpy = vi.spyOn(window, "addEventListener")
 
     document.body.innerHTML = `
-      <div data-alchemy-element="1">Element one</div>
-      <div data-alchemy-element="2">Element two</div>
+      <div data-laiss-cms-element="1">Element one</div>
+      <div data-laiss-cms-element="2">Element two</div>
     `
     Element.prototype.scrollIntoView = vi.fn()
     postMessageSpy = vi
@@ -51,10 +51,10 @@ describe("preview", () => {
     })
   }
 
-  it("does not create a global Alchemy object", async () => {
+  it("does not create a global LaissCms object", async () => {
     await loadPreview()
 
-    expect(window.Alchemy).toBeUndefined()
+    expect(window.LaissCms).toBeUndefined()
   })
 
   it("binds elements that are parsed after the script tag", async () => {
@@ -63,9 +63,9 @@ describe("preview", () => {
 
     await loadPreview()
 
-    // Host layouts may render page content below the alchemy/edit_mode
+    // Host layouts may render page content below the laiss_cms/edit_mode
     // partial, so it does not exist yet when the script runs.
-    document.body.innerHTML = `<div data-alchemy-element="3">Element three</div>`
+    document.body.innerHTML = `<div data-laiss-cms-element="3">Element three</div>`
     document.dispatchEvent(new Event("DOMContentLoaded"))
 
     element(3).dispatchEvent(new MouseEvent("mouseover"))
@@ -77,7 +77,7 @@ describe("preview", () => {
     await loadPreview()
 
     expect(postMessageSpy).toHaveBeenCalledWith(
-      { message: "Alchemy.previewReady" },
+      { message: "LaissCms.previewReady" },
       window.location.origin
     )
   })
@@ -120,7 +120,7 @@ describe("preview", () => {
       element(2).click()
 
       expect(postMessageSpy).toHaveBeenCalledWith(
-        { message: "Alchemy.focusElementEditor", element_id: "2" },
+        { message: "LaissCms.focusElementEditor", element_id: "2" },
         window.location.origin
       )
     })
@@ -210,7 +210,7 @@ describe("preview", () => {
     })
 
     it("selects the innermost of nested elements", async () => {
-      element(1).innerHTML = `<div data-alchemy-element="3">Nested</div>`
+      element(1).innerHTML = `<div data-laiss-cms-element="3">Nested</div>`
       await loadPreview()
 
       element(3).click()
@@ -218,19 +218,19 @@ describe("preview", () => {
       expect(element(3).style.outline).toEqual(SELECTED_OUTLINE)
       expect(element(1).style.outline).toEqual("")
       expect(postMessageSpy).toHaveBeenCalledWith(
-        { message: "Alchemy.focusElementEditor", element_id: "3" },
+        { message: "LaissCms.focusElementEditor", element_id: "3" },
         window.location.origin
       )
     })
   })
 
-  describe("Alchemy.focusElement message", () => {
+  describe("LaissCms.focusElement message", () => {
     it("selects the element with the given id", async () => {
       await loadPreview()
 
       window.dispatchEvent(
         new MessageEvent("message", {
-          data: { message: "Alchemy.focusElement", element_id: 2 }
+          data: { message: "LaissCms.focusElement", element_id: 2 }
         })
       )
 
@@ -243,7 +243,7 @@ describe("preview", () => {
 
       window.dispatchEvent(
         new MessageEvent("message", {
-          data: { message: "Alchemy.focusElement", element_id: 666 }
+          data: { message: "LaissCms.focusElement", element_id: 666 }
         })
       )
 
@@ -254,14 +254,14 @@ describe("preview", () => {
     })
   })
 
-  describe("Alchemy.blurElements message", () => {
+  describe("LaissCms.blurElements message", () => {
     it("deselects all elements", async () => {
       await loadPreview()
 
       element(1).click()
       window.dispatchEvent(
         new MessageEvent("message", {
-          data: { message: "Alchemy.blurElements" }
+          data: { message: "LaissCms.blurElements" }
         })
       )
 
@@ -274,7 +274,7 @@ describe("preview", () => {
       element(1).click()
       window.dispatchEvent(
         new MessageEvent("message", {
-          data: { message: "Alchemy.blurElements" }
+          data: { message: "LaissCms.blurElements" }
         })
       )
       element(1).dispatchEvent(new MouseEvent("mouseover"))
@@ -287,7 +287,7 @@ describe("preview", () => {
     const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {})
     await loadPreview()
 
-    const data = { message: "Alchemy.somethingElse" }
+    const data = { message: "LaissCms.somethingElse" }
     window.dispatchEvent(new MessageEvent("message", { data }))
 
     expect(infoSpy).toHaveBeenCalledWith("Received unknown message!", data)

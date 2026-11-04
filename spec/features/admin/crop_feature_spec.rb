@@ -7,25 +7,25 @@ RSpec.describe "Image Cropper", type: :system do
     authorize_user(:as_admin)
   end
 
-  let(:element) { create(:alchemy_element, name: "all_you_can_eat") }
-  let(:picture) { create(:alchemy_picture) }
+  let(:element) { create(:laiss_cms_element, name: "all_you_can_eat") }
+  let(:picture) { create(:laiss_cms_picture) }
   let(:ingredient) do
-    create(:alchemy_ingredient_picture, element: element, picture: picture)
+    create(:laiss_cms_ingredient_picture, element: element, picture: picture)
   end
 
   it "renders the image cropper with its settings" do
-    visit alchemy.crop_admin_ingredient_path(ingredient, picture_id: picture.id)
-    expect(page).to have_css("alchemy-image-cropper[default-box] img[src]", visible: :all)
+    visit laiss_cms.crop_admin_ingredient_path(ingredient, picture_id: picture.id)
+    expect(page).to have_css("laiss-cms-image-cropper[default-box] img[src]", visible: :all)
   end
 
   context "in the crop dialog", :js do
-    let(:element) { create(:alchemy_element, name: "article") }
+    let(:element) { create(:laiss_cms_element, name: "article") }
 
     let(:picture) do
-      create(:alchemy_picture, image_file: fixture_file_upload("500x500.png")).tap do |picture|
+      create(:laiss_cms_picture, image_file: fixture_file_upload("500x500.png")).tap do |picture|
         # The active_storage picture factory hard codes the metadata dimensions
         # to 1x1; dragonfly derives them from the actual image file.
-        if Alchemy.storage_adapter.name == :active_storage
+        if LaissCms.storage_adapter.name == :active_storage
           blob = picture.image_file.blob
           blob.update!(metadata: blob.metadata.merge(width: 500, height: 500))
         end
@@ -33,7 +33,7 @@ RSpec.describe "Image Cropper", type: :system do
     end
 
     let!(:ingredient) do
-      create(:alchemy_ingredient_picture, element: element, picture: picture, role: "image")
+      create(:laiss_cms_ingredient_picture, element: element, picture: picture, role: "image")
     end
 
     def crop_from_field
@@ -45,10 +45,10 @@ RSpec.describe "Image Cropper", type: :system do
     end
 
     it "allows cropping the image with the graphical cropper" do
-      visit alchemy.admin_elements_path(page_version_id: element.page_version_id)
+      visit laiss_cms.admin_elements_path(page_version_id: element.page_version_id)
       find("a.crop_link").click
 
-      within ".alchemy-dialog" do
+      within ".laiss-cms-dialog" do
         # cropperjs builds its crop box once the image is ready.
         expect(page).to have_css(".cropper-container .cropper-crop-box")
         click_button "Reset mask"
@@ -58,11 +58,11 @@ RSpec.describe "Image Cropper", type: :system do
       expect(crop_from_field.value).to eq("0x83")
       expect(crop_size_field.value).to eq("500x333")
 
-      within ".alchemy-dialog" do
+      within ".laiss-cms-dialog" do
         click_button "apply"
       end
 
-      expect(page).to have_no_css(".alchemy-dialog")
+      expect(page).to have_no_css(".laiss-cms-dialog")
 
       # Applying stores the mask in image coordinates. Since the mask was not
       # touched after resetting, the default box is stored (within rounding).

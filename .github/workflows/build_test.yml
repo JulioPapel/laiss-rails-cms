@@ -85,7 +85,7 @@ jobs:
           name: build-artifacts
           path: |
             vendor/javascript
-            app/assets/builds/alchemy/
+            app/assets/builds/laiss_cms/
             devise/app/assets/builds/
             pnpm-lock.yaml
 
@@ -150,39 +150,39 @@ jobs:
 
     env:
       DB: ${{ matrix.database }}
-      DB_USER: alchemy_user
+      DB_USER: laiss_cms_user
       DB_PASSWORD: password
       DB_HOST: "127.0.0.1"
       DEBIAN_FRONTEND: noninteractive
       RAILS_ENV: test
       RAILS_VERSION: ${{ matrix.rails }}
-      ALCHEMY_STORAGE_ADAPTER: ${{ matrix.storage }}
+      LAISS_CMS_STORAGE_ADAPTER: ${{ matrix.storage }}
       RUBY_YJIT_ENABLE: "1"
     services:
       postgres:
         image: ${{ matrix.database == 'postgresql' && 'postgres:latest' || '' }}
         env:
-          POSTGRES_USER: alchemy_user
+          POSTGRES_USER: laiss_cms_user
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: alchemy_cms_dummy_test
+          POSTGRES_DB: laiss_cms_cms_dummy_test
         ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 1s --health-timeout 1s --health-retries 30
       mariadb:
         image: ${{ matrix.database == 'mariadb' && 'mariadb:latest' || '' }}
         ports: ["3307:3306"]
         env:
-          MARIADB_USER: alchemy_user
+          MARIADB_USER: laiss_cms_user
           MARIADB_PASSWORD: password
-          MARIADB_DATABASE: alchemy_cms_dummy_test
+          MARIADB_DATABASE: laiss_cms_cms_dummy_test
           MARIADB_ROOT_PASSWORD: password
         options: --health-cmd="mariadb-admin ping" --health-interval=1s --health-timeout=1s --health-retries=30
       mysql:
         image: ${{ matrix.database == 'mysql' && 'mysql:latest' || '' }}
         ports: ["3306:3306"]
         env:
-          MYSQL_USER: alchemy_user
+          MYSQL_USER: laiss_cms_user
           MYSQL_PASSWORD: password
-          MYSQL_DATABASE: alchemy_cms_dummy_test
+          MYSQL_DATABASE: laiss_cms_cms_dummy_test
           MYSQL_ROOT_PASSWORD: password
         options: --health-cmd="mysqladmin ping" --health-interval=1s --health-timeout=1s --health-retries=30
     steps:
@@ -227,7 +227,7 @@ jobs:
           name: build-artifacts
       - name: Prepare database
         run: |
-          bundle exec rake alchemy:test:prepare
+          bundle exec rake laiss_cms:test:prepare
       - name: Run tests
         run: |
           bundle exec rspec
@@ -240,7 +240,7 @@ jobs:
         if: matrix.rails == '8.0' && matrix.ruby == '3.4'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: AlchemyCMS/alchemy_cms
+          slug: LaissCMS/laiss_cms
           disable_search: true
           files: ./coverage/coverage.xml
           # Flag each database leg so Codecov can carry a leg's coverage forward
@@ -317,8 +317,8 @@ jobs:
         id: generate_token
         uses: actions/create-github-app-token@v3
         with:
-          client-id: ${{ vars.ALCHEMY_BOT_APP_ID }}
-          private-key: ${{ secrets.ALCHEMY_BOT_APP_PRIVATE_KEY }}
+          client-id: ${{ vars.LAISS_CMS_BOT_APP_ID }}
+          private-key: ${{ secrets.LAISS_CMS_BOT_APP_PRIVATE_KEY }}
       - uses: actions/checkout@v7
         with:
           token: ${{ steps.generate_token.outputs.token }}
@@ -330,12 +330,12 @@ jobs:
           name: build-artifacts
       - name: Check for changes
         id: git-status
-        run: git diff --quiet vendor/javascript app/assets/builds/alchemy/ devise/app/assets/builds/ pnpm-lock.yaml || echo "changed=true" >> $GITHUB_OUTPUT
+        run: git diff --quiet vendor/javascript app/assets/builds/laiss_cms/ devise/app/assets/builds/ pnpm-lock.yaml || echo "changed=true" >> $GITHUB_OUTPUT
       - name: Commit and push
         if: steps.git-status.outputs.changed == 'true'
         run: |
-          git config --local user.name 'AlchemyCMS - CI Bot'
-          git config --local user.email 'alchemy@blish.cloud'
-          git add vendor/javascript app/assets/builds/alchemy/ devise/app/assets/builds/ pnpm-lock.yaml
+          git config --local user.name 'LaissCMS - CI Bot'
+          git config --local user.email 'laiss_cms@blish.cloud'
+          git add vendor/javascript app/assets/builds/laiss_cms/ devise/app/assets/builds/ pnpm-lock.yaml
           git commit -m "Update build artifacts" -m "Rebuilt assets after source or dependency changes."
           git push https://x-access-token:${{ steps.generate_token.outputs.token }}@github.com/${{ github.repository }}.git HEAD:${{ github.head_ref }}

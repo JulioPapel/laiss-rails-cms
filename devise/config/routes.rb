@@ -1,16 +1,16 @@
-Alchemy::Engine.routes.draw do
+LaissCms::Engine.routes.draw do
   namespace :admin,
-    path: Alchemy.admin_path,
-    constraints: Alchemy.admin_constraints do
+    path: LaissCms.admin_path,
+    constraints: LaissCms.admin_constraints do
     devise_for :user,
-      class_name: "Alchemy::User",
+      class_name: "LaissCms::User",
       singular: :user,
       skip: :all,
       controllers: {
-        sessions: "alchemy/admin/user_sessions",
-        passwords: "alchemy/admin/passwords"
+        sessions: "laiss_cms/admin/user_sessions",
+        passwords: "laiss_cms/admin/passwords"
       },
-      router_name: :alchemy
+      router_name: :laiss_cms
 
     devise_scope :user do
       get "/dashboard" => "dashboard#index",

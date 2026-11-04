@@ -4,7 +4,7 @@ require "fileutils"
 # path to your application root.
 APP_ROOT = File.expand_path("..", __dir__)
 
-# path to alchemy gem
+# path to laiss_cms gem
 GEM_ROOT = File.expand_path("../../..", __dir__)
 
 def system!(*args)

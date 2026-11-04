@@ -6,12 +6,12 @@ RSpec.describe "Page creation", type: :system do
   before { authorize_user(:as_admin) }
 
   describe "parent selection", :js do
-    let!(:homepage) { create(:alchemy_page, :language_root) }
+    let!(:homepage) { create(:laiss_cms_page, :language_root) }
 
     context "without having a parent id in the params" do
       it "contains a parent select" do
         visit new_admin_page_path
-        expect(page).to have_css("alchemy-page-select .ts-control")
+        expect(page).to have_css("laiss-cms-page-select .ts-control")
       end
     end
 
@@ -19,11 +19,11 @@ RSpec.describe "Page creation", type: :system do
       it "contains a hidden parent_id field" do
         visit new_admin_page_path(parent_id: homepage)
         expect(page).to have_field("page_parent_id", type: "hidden")
-        expect(page).to_not have_css("alchemy-page-select")
+        expect(page).to_not have_css("laiss-cms-page-select")
       end
     end
     context "with same name " do
-      let!(:existing_page) { create(:alchemy_page, parent: homepage, name: "Unique Name") }
+      let!(:existing_page) { create(:laiss_cms_page, parent: homepage, name: "Unique Name") }
       it "doesn't create a page with the same name" do
         visit admin_pages_path
 
@@ -32,7 +32,7 @@ RSpec.describe "Page creation", type: :system do
         fill_in "Name", with: "Unique Name"
         click_button "create"
 
-        expect(page).to have_css("div.alchemy-dialog-body form small.error", text: "has already been taken")
+        expect(page).to have_css("div.laiss-cms-dialog-body form small.error", text: "has already been taken")
       end
     end
   end
@@ -47,7 +47,7 @@ RSpec.describe "Page creation", type: :system do
 
     context "when having a Page in the clipboard" do
       before do
-        expect(Alchemy::Page).to receive(:all_from_clipboard_for_select).and_return [build_stubbed(:alchemy_page)]
+        expect(LaissCms::Page).to receive(:all_from_clipboard_for_select).and_return [build_stubbed(:laiss_cms_page)]
       end
 
       it "contains tabs for creating a new page and pasting from clipboard" do
@@ -56,7 +56,7 @@ RSpec.describe "Page creation", type: :system do
       end
 
       context "", js: true do
-        let(:root_page) { Alchemy::Page.last }
+        let(:root_page) { LaissCms::Page.last }
 
         before do
           visit admin_pages_path

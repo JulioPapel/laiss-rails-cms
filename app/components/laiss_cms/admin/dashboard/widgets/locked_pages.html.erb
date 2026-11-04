@@ -1,0 +1,54 @@
+<div class="widget-body">
+  <header>
+    <%= LaissCms.t('Currently locked pages') %>
+  </header>
+  <% if @all_locked_pages.blank? %>
+    <laiss-cms-message type="info">
+      <%= LaissCms.t('no pages') %>
+    </laiss-cms-message>
+  <% else %>
+    <div class="table-scroll">
+      <table class="list">
+        <% @all_locked_pages.each do |page| %>
+        <tr>
+          <td class="page_name">
+            <span class="label-with-icon">
+              <%= render_icon("file-edit") %>
+              <%= link_to_if current_laiss_cms_user.id == page.locked_by,
+                page.name,
+                laiss_cms.edit_admin_page_path(page),
+                data: {turbo_frame: "_top"} %>
+            </span>
+          </td>
+          <td class="site_name">
+            <% if multi_site? %>
+              <small><%= page.site_name %></small>
+            <% end %>
+          </td>
+          <td class="locale">
+            <% if page.site_languages.many? %>
+              <small><%= page.language.code.upcase %></small>
+            <% end %>
+          </td>
+          <td class="name">
+            <small>
+              <% if current_laiss_cms_user.id == page.locked_by %>
+                <%= LaissCms.t(:me) %>
+              <% else %>
+                <%= page.locker_name %>
+              <% end %>
+            </small>
+          </td>
+          <td class="button">
+            <% if (current_laiss_cms_user.id == page.locked_by) || can?(:manage, LaissCms::Current.site) %>
+              <%= button_to laiss_cms.unlock_admin_page_path(page), class: "icon_button small", title: LaissCms.t(:explain_unlocking) do %>
+                <%= render_icon(:close, size: '1x') %>
+              <% end %>
+            <% end %>
+          </td>
+        </tr>
+        <% end %>
+      </table>
+    </div>
+  <% end %>
+</div>

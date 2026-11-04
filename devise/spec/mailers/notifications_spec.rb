@@ -1,11 +1,11 @@
 require "rails_helper"
 
-module Alchemy
+module LaissCms
   describe Notifications do
     context "when a member user was created" do
       let(:user) do
         mock_model "User",
-          alchemy_roles: %w[member],
+          laiss_cms_roles: %w[member],
           email: "jon@doe.com",
           name: "John Doe",
           login: "jon.doe"
@@ -31,12 +31,12 @@ module Alchemy
     end
 
     context "when an admin user was created" do
-      let(:user) { mock_model("User", alchemy_roles: %w[admin], email: "jon@doe.com", name: "John Doe", login: "jon.doe") }
-      let(:mail) { Notifications.alchemy_user_created(user) }
+      let(:user) { mock_model("User", laiss_cms_roles: %w[admin], email: "jon@doe.com", name: "John Doe", login: "jon.doe") }
+      let(:mail) { Notifications.laiss_cms_user_created(user) }
 
       it "delivers a mail to user" do
         expect(mail.to).to eq([user.email])
-        expect(mail.subject).to eq("Your Alchemy Login")
+        expect(mail.subject).to eq("Your LaissCms Login")
       end
 
       it "mail body includes users login" do
@@ -51,7 +51,7 @@ module Alchemy
     describe "#reset_password_instructions" do
       let(:user) do
         mock_model "User",
-          alchemy_roles: %w[member],
+          laiss_cms_roles: %w[member],
           email: "jon@doe.com",
           name: "John Doe",
           login: "jon.doe",

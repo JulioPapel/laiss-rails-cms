@@ -1,0 +1,5 @@
+<div id="user_info">
+  <%= render LaissCms::Admin::CurrentUserName.new(user: current_laiss_cms_user) %>
+  <%= render LaissCms::Admin::TimezoneSelect.new %>
+  <%= render LaissCms::Admin::LocaleSelect.new %>
+</div>

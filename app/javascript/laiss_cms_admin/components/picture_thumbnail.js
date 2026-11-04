@@ -1,0 +1,112 @@
+// Shows spinner while loading images and
+// fades the image after its been loaded
+
+import Spinner from "laiss_cms_admin/spinner"
+
+export default class PictureThumbnail extends HTMLElement {
+  constructor() {
+    super()
+
+    this.spinner = new Spinner("small")
+  }
+
+  handleEvent(evt) {
+    switch (evt.type) {
+      case "load":
+        this.#onLoaded()
+        break
+      case "error":
+        this.#onError(evt)
+        break
+      default:
+        break
+    }
+  }
+
+  connectedCallback() {
+    this.classList.add("thumbnail_background")
+    if (this.src && !this.image) {
+      this.start()
+    }
+    this.#setImage()
+  }
+
+  disconnectedCallback() {
+    this.image?.removeEventListener("load", this)
+    this.image?.removeEventListener("error", this)
+    this.stop()
+  }
+
+  createImage(src = this.src, alt = this.name) {
+    this.image = new Image()
+    this.image.src = src
+    if (alt) {
+      this.image.alt = alt
+    }
+  }
+
+  start(src) {
+    this.createImage(src)
+    this.image.addEventListener("load", this)
+    this.image.addEventListener("error", this)
+    this.load()
+  }
+
+  load() {
+    if (this.image?.complete) {
+      return
+    }
+    this.setAttribute("loading", "loading")
+    this.innerHTML = ""
+    this.spinner.spin(this)
+  }
+
+  stop() {
+    this.classList.remove("loading")
+    this.spinner.stop()
+  }
+
+  #onLoaded() {
+    this.spinner.stop()
+    this.removeAttribute("loading")
+  }
+
+  #onError(evt) {
+    const message = `Could not load ${this.image.src}`
+    const hoist = this.closest(".ingredient-editor")
+    this.spinner.stop()
+    this.innerHTML = `
+      <sl-tooltip content="${message}" ${hoist ? "hoist" : ""}>
+        <laiss-cms-icon name="alert" class="error"></laiss-cms-icon>
+      </sl-tooltip>
+    `
+    console.error(message, evt)
+  }
+
+  #setImage() {
+    if (this.image?.complete) {
+      this.replaceChildren(this.image)
+    } else if (this.image) {
+      this.append(this.image)
+    }
+  }
+
+  set loading(value) {
+    value ? this.load() : this.stop()
+  }
+
+  set src(src) {
+    this.start(src)
+    this.#setImage()
+  }
+
+  get name() {
+    return this.getAttribute("name")
+  }
+
+  get src() {
+    return this.getAttribute("src")
+  }
+}
+
+customElements.define("laiss-cms-picture-thumbnail", PictureThumbnail)

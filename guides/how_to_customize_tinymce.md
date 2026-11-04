@@ -1,14 +1,14 @@
 # Customizing the Richtext Editor
 
-Alchemy uses [TinyMCE](https://www.tiny.cloud) as the richtext editor for [Richtext ingredients](ingredients#richtext). You can customize the toolbar, add plugins, apply custom stylesheets, and configure each editor instance independently.
+LaissCms uses [TinyMCE](https://www.tiny.cloud) as the richtext editor for [Richtext ingredients](ingredients#richtext). You can customize the toolbar, add plugins, apply custom stylesheets, and configure each editor instance independently.
 
 ## Default Configuration
 
-Alchemy ships with a sensible default configuration:
+LaissCms ships with a sensible default configuration:
 
 ~~~ ruby
 {
-  skin: "alchemy",
+  skin: "laiss_cms",
   width: "auto",
   resize: true,
   min_height: 250,
@@ -16,7 +16,7 @@ Alchemy ships with a sensible default configuration:
   statusbar: true,
   toolbar: [
     "bold italic underline | strikethrough subscript superscript | numlist bullist indent outdent | removeformat | fullscreen",
-    "pastetext charmap hr | undo redo | alchemy_link unlink anchor | code"
+    "pastetext charmap hr | undo redo | laiss_cms_link unlink anchor | code"
   ],
   fix_list_elements: true,
   convert_urls: false,
@@ -26,19 +26,19 @@ Alchemy ships with a sensible default configuration:
 ~~~
 
 ::: info NOTE
-Default plugins: `alchemy_link`, `anchor`, `charmap`, `code`, `directionality`, `fullscreen`, `link`, `lists`.
+Default plugins: `laiss_cms_link`, `anchor`, `charmap`, `code`, `directionality`, `fullscreen`, `link`, `lists`.
 :::
 
 ## Global Customization
 
-To change TinyMCE settings for all richtext editors in your application, set `Alchemy::Tinymce.init` in an initializer. Your settings are **merged** with the defaults, so you only need to specify what you want to override.
+To change TinyMCE settings for all richtext editors in your application, set `LaissCms::Tinymce.init` in an initializer. Your settings are **merged** with the defaults, so you only need to specify what you want to override.
 
 ~~~ ruby
-# config/initializers/alchemy.rb
-Alchemy::Tinymce.init = {
+# config/initializers/laiss_cms.rb
+LaissCms::Tinymce.init = {
   toolbar: [
     "bold italic underline | numlist bullist | removeformat | fullscreen",
-    "pastetext | undo redo | alchemy_link unlink | code"
+    "pastetext | undo redo | laiss_cms_link unlink | code"
   ]
 }
 ~~~
@@ -49,10 +49,10 @@ Global settings apply to all richtext editors in all elements. Use [per-ingredie
 
 ## Per-Ingredient Customization
 
-You can override TinyMCE settings for individual Richtext ingredients in `config/alchemy/elements.yml` using the `tinymce` setting:
+You can override TinyMCE settings for individual Richtext ingredients in `config/laiss_cms/elements.yml` using the `tinymce` setting:
 
 ~~~ yaml
-# config/alchemy/elements.yml
+# config/laiss_cms/elements.yml
 - name: article
   ingredients:
     - role: text
@@ -61,7 +61,7 @@ You can override TinyMCE settings for individual Richtext ingredients in `config
         tinymce:
           toolbar:
             - "bold italic underline | removeformat"
-            - "pastetext | undo redo | alchemy_link unlink | code"
+            - "pastetext | undo redo | laiss_cms_link unlink | code"
 ~~~
 
 Per-ingredient settings are merged with the global configuration, so you only need to specify the options you want to change for that specific editor.
@@ -77,7 +77,7 @@ Give editors a dropdown to apply predefined styles:
     tinymce:
       toolbar:
         - "bold italic underline | styleselect | removeformat | fullscreen"
-        - "pastetext | undo redo | alchemy_link unlink | code"
+        - "pastetext | undo redo | laiss_cms_link unlink | code"
       style_formats:
         - title: "Subheadline"
           block: "h3"
@@ -88,7 +88,7 @@ Give editors a dropdown to apply predefined styles:
 ~~~
 
 ::: tip
-Keep your style formats minimal. Alchemy's strength is structured content with separate elements for different content types. Resist the temptation to turn a single richtext field into a full page editor.
+Keep your style formats minimal. LaissCms's strength is structured content with separate elements for different content types. Resist the temptation to turn a single richtext field into a full page editor.
 :::
 
 ## Toolbar Buttons
@@ -105,7 +105,7 @@ Common buttons:
 | `indent` `outdent` | Indentation |
 | `removeformat` | Clear formatting |
 | `pastetext` | Paste as plain text |
-| `alchemy_link` `unlink` | Alchemy's link dialog |
+| `laiss_cms_link` `unlink` | LaissCms's link dialog |
 | `anchor` | Insert anchor |
 | `charmap` | Special characters |
 | `code` | View/edit HTML source |
@@ -122,21 +122,21 @@ See the [TinyMCE toolbar documentation](https://www.tiny.cloud/docs/tinymce/late
 
 TinyMCE can be extended with [community and premium plugins](https://www.tiny.cloud/docs/tinymce/latest/plugins/). Download the plugin and place it in `vendor/assets/javascripts/tinymce/plugins/` inside your app.
 
-Then append it to `Alchemy::Tinymce.plugins` and add its buttons to the toolbar:
+Then append it to `LaissCms::Tinymce.plugins` and add its buttons to the toolbar:
 
 ~~~ ruby
-# config/initializers/alchemy.rb
-Alchemy::Tinymce.plugins += ["table"]
-Alchemy::Tinymce.init = {
+# config/initializers/laiss_cms.rb
+LaissCms::Tinymce.plugins += ["table"]
+LaissCms::Tinymce.init = {
   toolbar: [
     "bold italic underline | numlist bullist | removeformat | fullscreen",
-    "pastetext | undo redo | alchemy_link unlink | table | code"
+    "pastetext | undo redo | laiss_cms_link unlink | table | code"
   ]
 }
 ~~~
 
 ::: info NOTE
-Plugins added to `Alchemy::Tinymce.plugins` beyond the built-in set are automatically preloaded in the admin interface.
+Plugins added to `LaissCms::Tinymce.plugins` beyond the built-in set are automatically preloaded in the admin interface.
 :::
 
 ## Custom Stylesheet
@@ -144,8 +144,8 @@ Plugins added to `Alchemy::Tinymce.plugins` beyond the built-in set are automati
 You can apply a stylesheet to the TinyMCE editor area so the editing experience matches your site's typography:
 
 ~~~ ruby
-# config/initializers/alchemy.rb
-Alchemy::Tinymce.init = {
+# config/initializers/laiss_cms.rb
+LaissCms::Tinymce.init = {
   content_css: "/assets/tinymce_content.css"
 }
 ~~~
@@ -153,14 +153,14 @@ Alchemy::Tinymce.init = {
 Create the stylesheet at `app/assets/stylesheets/tinymce_content.css`. This file is loaded inside the editor's iframe and controls how text appears while editing.
 
 ::: info NOTE
-Alchemy automatically switches between a light (`alchemy`) and dark (`alchemy-dark`) editor skin based on the user's OS preference. Setting a custom `content_css` overrides the built-in dark mode content stylesheet, so make sure your stylesheet works in both modes if your editors use dark mode.
+LaissCms automatically switches between a light (`laiss_cms`) and dark (`laiss-cms-dark`) editor skin based on the user's OS preference. Setting a custom `content_css` overrides the built-in dark mode content stylesheet, so make sure your stylesheet works in both modes if your editors use dark mode.
 :::
 
 ## HTML Sanitization
 
 A Richtext ingredient is a trusted-content field: by default its value is rendered as-is, so whatever markup is saved ends up unescaped in the page.
 
-To restrict what gets rendered, configure a `sanitizer:` setting on the ingredient. When it is present, Alchemy sanitizes the value at render time with Rails' [SafeListSanitizer](https://github.com/rails/rails-html-sanitizer#safelistsanitizer), keeping only the tags and attributes you list:
+To restrict what gets rendered, configure a `sanitizer:` setting on the ingredient. When it is present, LaissCms sanitizes the value at render time with Rails' [SafeListSanitizer](https://github.com/rails/rails-html-sanitizer#safelistsanitizer), keeping only the tags and attributes you list:
 
 ~~~ yaml
 - name: text
@@ -221,7 +221,7 @@ settings:
 Use YAML anchors to share TinyMCE configurations across multiple elements:
 
 ~~~ yaml
-# config/alchemy/elements.yml
+# config/laiss_cms/elements.yml
 - name: article
   ingredients:
     - role: text
@@ -229,7 +229,7 @@ Use YAML anchors to share TinyMCE configurations across multiple elements:
       settings:
         tinymce: &minimal_tinymce
           toolbar:
-            - "bold italic underline | alchemy_link unlink | code"
+            - "bold italic underline | laiss_cms_link unlink | code"
 
 - name: news
   ingredients:

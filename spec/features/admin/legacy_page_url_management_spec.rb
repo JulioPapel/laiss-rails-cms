@@ -7,11 +7,11 @@ RSpec.describe "Legacy page url management", type: :system, js: true do
     authorize_user(:as_admin)
   end
 
-  let!(:a_page) { create(:alchemy_page) }
+  let!(:a_page) { create(:laiss_cms_page) }
 
   def open_page_properties
     visit admin_pages_path
-    expect(page.find("alchemy-overlay")).to_not have_css(".visible")
+    expect(page.find("laiss-cms-overlay")).to_not have_css(".visible")
     page.find("a[href='#{configure_admin_page_path(a_page)}']", wait: 10).click
   end
 
@@ -71,7 +71,7 @@ RSpec.describe "Legacy page url management", type: :system, js: true do
 
       within "#legacy_page_urls" do
         expect(page).to_not have_content("a-page-link")
-        expect(page).to have_content(Alchemy.t("No page links for this page found"))
+        expect(page).to have_content(LaissCms.t("No page links for this page found"))
       end
       within "#legacy_urls_label" do
         expect(page).to have_content("(0) Links")

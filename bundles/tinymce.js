@@ -17,6 +17,6 @@ import "tinymce/plugins/directionality"
 import "tinymce/plugins/fullscreen"
 import "tinymce/plugins/link"
 import "tinymce/plugins/lists"
-import "tinymce/plugins/alchemy_link"
+import "tinymce/plugins/laiss_cms_link"
 
 export default tinymce

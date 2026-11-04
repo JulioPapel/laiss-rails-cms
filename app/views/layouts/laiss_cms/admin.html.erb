@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="<%= ::I18n.locale %>" class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title><%= render_laiss_cms_title %></title>
+    <link rel="shortcut icon" href="<%= asset_path('laiss_cms/favicon.ico') %>">
+    <link rel="preload" href="<%= asset_path("laiss_cms/icons-sprite.svg") %>" as="image" type="<%= Mime::Type.lookup_by_extension(:svg) %>" crossorigin>
+    <%= csrf_meta_tag %>
+    <%= csp_meta_tag %>
+    <meta name="robots" content="noindex">
+    <meta name="turbo-prefetch" content="false">
+    <meta name="turbo-cache-control" content="no-cache">
+    <%= stylesheet_link_tag('laiss_cms/theme', media: 'screen', 'data-turbo-track' => true) %>
+    <%= stylesheet_link_tag('laiss_cms/admin', media: 'screen', 'data-turbo-track' => true) %>
+    <%= stylesheet_link_tag('laiss_cms/admin/print', media: 'print', 'data-turbo-track' => true) %>
+    <% LaissCms.config.admin_stylesheets.each do |stylesheet| %>
+      <%= stylesheet_link_tag(stylesheet, 'data-turbo-track' => true) %>
+    <% end %>
+    <%= yield :stylesheets %>
+    <%= tag.script(nonce: content_security_policy_nonce) do %>
+      // Global LaissCms JavaScript object.
+      var LaissCms = {};
+      // JS translations
+      <%= laiss_cms_admin_js_translations %>
+    <% end %>
+    <%= render 'laiss_cms/admin/tinymce/setup' %>
+    <%= render 'laiss_cms/admin/partials/routes' %>
+    <%= javascript_importmap_tags("laiss_cms_admin", importmap: LaissCms.importmap) %>
+    <% LaissCms.config.admin_js_imports.each do |path| %>
+      <%= tag.script(type: "module", nonce: content_security_policy_nonce) do %>
+        import "<%= path %>"
+      <% end %>
+    <% end %>
+    <%= yield :javascript_includes %>
+  </head>
+  <%= content_tag :body, id: 'laiss_cms',
+    class: laiss_cms_body_class,
+    style: cookies["laiss-cms-elements-window-width"] && "--elements-window-width: #{cookies["laiss-cms-elements-window-width"]}px" do %>
+    <noscript>
+      <h1><%= LaissCms.t(:javascript_disabled_headline) %></h1>
+      <p><%= LaissCms.t(:javascript_disabled_text) %></p>
+    </noscript>
+    <laiss-cms-overlay text="<%= LaissCms.t(:please_wait) %>"></laiss-cms-overlay>
+    <%= render "laiss_cms/admin/left_menu" %>
+    <%= render 'laiss_cms/admin/partials/flash_notices' %>
+    <div id="main_content">
+      <%= yield %>
+    </div>
+    <% if current_laiss_cms_user %>
+      <%= render "laiss_cms/admin/top_menu", locked_pages: @locked_pages %>
+    <% end %>
+    <%= render 'laiss_cms/admin/uploader/setup' %>
+    <%= yield(:javascripts) %>
+  <% end %>
+</html>

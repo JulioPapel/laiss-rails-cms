@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= LaissCms.t("Welcome to LaissCms") %></title>
+    <%= stylesheet_link_tag("laiss_cms/welcome", media: "all") %>
+  </head>
+  <body>
+    <div class="container">
+      <%= image_tag("laiss_cms/laiss-cms-logo.svg") %>
+      <h3><%= LaissCms.t("You have successfully installed LaissCms") %></h3>
+      <p>
+        <%= LaissCms.t("Before creating your first page you need an admin user") %>.
+      </p>
+      <p>
+        <%= link_to LaissCms.t("Create admin user"), LaissCms.config.signup_path, class: "button" %>
+      </p>
+      <h4><%= LaissCms.t("More resources") %></h4>
+      <ul>
+        <li>
+          <%= link_to LaissCms.t("Read the guidelines"),
+            "https://guides.alchemy-cms.com/", target: "_blank", rel: "noopener" %>
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>

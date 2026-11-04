@@ -1,6 +1,6 @@
-[![Netlify Status](https://api.netlify.com/api/v1/badges/6a12b87f-d5a1-4b15-b723-112daf331c5a/deploy-status)](https://app.netlify.com/sites/alchemy-guides/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/6a12b87f-d5a1-4b15-b723-112daf331c5a/deploy-status)](https://app.netlify.com/sites/laiss-cms-guides/deploys)
 
-# The AlchemyCMS Guides
+# The LaissCMS Guides
 
 The guides are created with [VitePress](https://vitepress.dev/) and are written in [Markdown](https://daringfireball.net/projects/markdown/syntax).
 

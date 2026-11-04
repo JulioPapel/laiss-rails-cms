@@ -1,16 +1,16 @@
 fr:
   activerecord:
     attributes:
-      alchemy/user:
+      laiss_cms/user:
         current_password: "Votre mot de passe"
     errors:
       models:
-        alchemy/user:
+        laiss_cms/user:
           attributes:
             current_password:
               blank: "est requis pour modifier les rôles"
               invalid: "n'est pas correct"
-  alchemy:
+  laiss_cms:
     admin:
       users:
         confirm_password_for_role_change:

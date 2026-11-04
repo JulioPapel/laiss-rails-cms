@@ -1,7 +1,7 @@
 class ConvertSelectValueForMultiple < ActiveRecord::Migration[7.1]
   def up
-    say_with_time "Converting Alchemy::Ingredients::Select values to multiple" do
-      Alchemy::Ingredients::Select
+    say_with_time "Converting LaissCms::Ingredients::Select values to multiple" do
+      LaissCms::Ingredients::Select
         .where.not("value LIKE ?", '["%')
         .update_all(
           Arel.sql(

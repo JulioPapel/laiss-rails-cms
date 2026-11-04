@@ -1,13 +1,13 @@
 require "rails_helper"
 
 describe "User Routing" do
-  routes { Alchemy::Engine.routes }
+  routes { LaissCms::Engine.routes }
 
   it "routes to signup" do
     expect({
       get: "/admin/signup"
     }).to route_to(
-      controller: "alchemy/admin/users",
+      controller: "laiss_cms/admin/users",
       action: "signup"
     )
   end

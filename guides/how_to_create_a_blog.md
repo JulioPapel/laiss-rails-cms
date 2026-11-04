@@ -1,19 +1,19 @@
 # How To: Create a Blog
 
-This guide walks you through building a blog with Alchemy. Each blog post is a [page](pages) with its own URL, giving you a built-in publishing workflow, publication dates, and tagging support. The blog overview page automatically lists all published posts.
+This guide walks you through building a blog with LaissCms. Each blog post is a [page](pages) with its own URL, giving you a built-in publishing workflow, publication dates, and tagging support. The blog overview page automatically lists all published posts.
 
 You will create two [page layouts](pages#defining-page-layouts) — one for the overview and one for individual posts — along with their elements and view partials.
 
 ## Define Elements
 
-Define your blog elements in `config/alchemy/elements.yml`.
+Define your blog elements in `config/laiss_cms/elements.yml`.
 
 ### Post Header
 
 The post header captures all metadata in a single element — headline, author, hero image, and a teaser excerpt:
 
 ~~~ yaml
-# config/alchemy/elements.yml
+# config/laiss_cms/elements.yml
 - name: post_header
   unique: true
   taggable: true
@@ -85,7 +85,7 @@ The overview element with an editable headline. Its partial queries and renders 
 ## Define Page Layouts
 
 ~~~ yaml
-# config/alchemy/page_layouts.yml
+# config/laiss_cms/page_layouts.yml
 - name: blog
   unique: true
   cache: false # overview lists child pages, must reflect publish changes
@@ -112,11 +112,11 @@ Editors create new blog posts by adding child pages under the blog overview page
 Generate the view partials for your elements and page layouts:
 
 ~~~ bash
-bin/rails g alchemy:elements --skip
-bin/rails g alchemy:page_layouts --skip
+bin/rails g laiss_cms:elements --skip
+bin/rails g laiss_cms:page_layouts --skip
 ~~~
 
-The generated page layout partials render all elements with `<%= render_elements %>`. For the blog post, wrap it in an `<article>` tag in `app/views/alchemy/page_layouts/_blogpost.html.erb`:
+The generated page layout partials render all elements with `<%= render_elements %>`. For the blog post, wrap it in an `<article>` tag in `app/views/laiss_cms/page_layouts/_blogpost.html.erb`:
 
 ~~~ erb
 <article class="blog-post">
@@ -124,7 +124,7 @@ The generated page layout partials render all elements with `<%= render_elements
 </article>
 ~~~
 
-Then customize the element partials in `app/views/alchemy/elements/`:
+Then customize the element partials in `app/views/laiss_cms/elements/`:
 
 ### `_post_header.html.erb`
 
@@ -179,7 +179,7 @@ The overview element lists all published child pages:
     <% if header.ingredient_by_role(:image)&.picture %>
       <%= render header.ingredient_by_role(:image), size: "600x300", crop: true %>
     <% end %>
-    <h2><%= link_to post.title, show_alchemy_page_path(post) %></h2>
+    <h2><%= link_to post.title, show_laiss_cms_page_path(post) %></h2>
     <time><%= l(post.public_on, format: :long) %></time>
     <p><%= header.ingredient_by_role(:teaser)&.value&.truncate(200) %></p>
   </article>

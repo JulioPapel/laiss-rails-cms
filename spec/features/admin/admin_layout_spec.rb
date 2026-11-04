@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Admin layout", type: :system do
-  let(:user) { create(:alchemy_dummy_user, :as_admin, name: "Joe User") }
+  let(:user) { create(:laiss_cms_dummy_user, :as_admin, name: "Joe User") }
 
   before do
     authorize_user(user)

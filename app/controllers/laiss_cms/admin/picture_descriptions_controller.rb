@@ -1,0 +1,19 @@
+module LaissCms
+  module Admin
+    class PictureDescriptionsController < LaissCms::Admin::ResourcesController
+      include PictureDescriptionsFormHelper
+
+      def edit
+        @picture_description = @picture.descriptions.find_or_initialize_by(
+          language_id: params[:language_id]
+        )
+      end
+
+      private
+
+      def load_resource
+        @picture = LaissCms::Picture.find(params[:picture_id])
+      end
+    end
+  end
+end

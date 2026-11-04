@@ -24,6 +24,6 @@ jobs:
           # preserving its bot author (and committer), so the author check alone
           # would wrongly skip their tests. Exclude the backport branches, whose
           # tests must still run.
-          if [ "$AUTHOR_EMAIL" = "alchemy@blish.cloud" ] && [[ "${{ github.head_ref }}" != backport/* ]]; then
+          if [ "$AUTHOR_EMAIL" = "laiss_cms@blish.cloud" ] && [[ "${{ github.head_ref }}" != backport/* ]]; then
             echo "is_bot=true" >> $GITHUB_OUTPUT
           fi

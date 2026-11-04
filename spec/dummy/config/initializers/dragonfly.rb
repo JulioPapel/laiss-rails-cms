@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# AlchemyCMS Dragonfly configuration.
+# LaissCMS Dragonfly configuration.
 #
 # Only used with the legacy dragonfly storage adapter.
 #
@@ -15,7 +15,7 @@
 #
 if defined?(::Dragonfly)
   # Pictures
-  Dragonfly.app(:alchemy_pictures).configure do
+  Dragonfly.app(:laiss_cms_pictures).configure do
     dragonfly_url nil
     plugin :imagemagick
     secret "976ee38cf5e6d65dbf58f1d355825ba33239ab7a76a432818cd592526e9c78b5"
@@ -28,10 +28,10 @@ if defined?(::Dragonfly)
   end
 
   # Mount as middleware
-  Rails.application.middleware.use Dragonfly::Middleware, :alchemy_pictures
+  Rails.application.middleware.use Dragonfly::Middleware, :laiss_cms_pictures
 
   # Attachments
-  Dragonfly.app(:alchemy_attachments).configure do
+  Dragonfly.app(:laiss_cms_attachments).configure do
     datastore :file,
       root_path: Rails.root.join("uploads/attachments").to_s,
       store_meta: false

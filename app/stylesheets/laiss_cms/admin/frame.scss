@@ -1,0 +1,170 @@
+@use "base";
+@use "navigation";
+@use "../variables" as vars;
+
+// The guard only listens for events. It must not become a box of its own,
+// or it takes the place its content holds in a flex or grid parent.
+laiss-cms-dirty-guard {
+  display: contents;
+}
+
+laiss-cms-overlay {
+  visibility: hidden;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 400000;
+  background-color: transparent;
+  transition: all var(--transition-duration) var(--transition-easing);
+  transition-delay: 0;
+
+  &.visible {
+    visibility: visible;
+    transition-delay: 300ms;
+    transition-property: background-color;
+    background-color: rgba(229, 229, 229, 0.2);
+  }
+}
+
+div#overlay_text_box {
+  color: #333333;
+  font-size: 1.5em;
+  left: 50%;
+  line-height: 120px;
+  margin-left: -100px;
+  margin-top: -25px;
+  position: absolute;
+  text-align: center;
+  top: 50%;
+  width: 200px;
+
+  img {
+    position: relative;
+    top: 9px;
+  }
+}
+
+#logout {
+  z-index: 1;
+  flex: 0 0 auto;
+  width: 100%;
+
+  .main_navi_entry {
+    margin-bottom: 0;
+  }
+
+  &:not(:hover) {
+    background-color: var(--main-menu-bg-color);
+  }
+}
+
+#header {
+  display: flex;
+  height: var(--header-height);
+  background: var(--header-background);
+  border-bottom: var(--border-default);
+  position: relative;
+
+  a:hover {
+    text-decoration: none;
+  }
+
+  .page_status_and_name {
+    align-items: center;
+    padding: 0 var(--spacing-2);
+    height: 100%;
+    background-color: var(--toolbar-bg-color);
+    text-shadow: var(--text-shadow-light);
+    @extend .disable-user-select;
+    @extend .locked_page;
+    cursor: default;
+    border-bottom-color: var(--toolbar-bg-color);
+
+    .page_status {
+      &:first-of-type {
+        margin-left: var(--spacing-2);
+      }
+      margin-left: var(--spacing-1);
+      margin-bottom: 0;
+
+      // The lock icon is a bit too high, so we need to adjust it
+      &:last-child {
+        margin-bottom: 1px;
+      }
+    }
+  }
+}
+
+#main_content {
+  padding-top: calc(var(--top-menu-height) + var(--spacing-2));
+  padding-right: var(--spacing-2);
+  padding-bottom: var(--spacing-2);
+  padding-left: calc(var(--main-menu-width) + var(--spacing-2));
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+
+  .centered & {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &:has(.resources-table-wrapper) {
+    padding-top: var(--top-menu-height);
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: var(--main-menu-width);
+  }
+
+  &:has(#filter_bar),
+  &:has(.tag-list) {
+    padding-right: calc(var(--sidebar-width) + var(--spacing-2));
+
+    &:has(.resources-table-wrapper) {
+      padding-right: var(--sidebar-width);
+    }
+  }
+
+  &:has(.pagination-wrapper) {
+    padding-bottom: calc(var(--pagination-height) + var(--spacing-2));
+
+    &:has(.resources-table-wrapper) {
+      padding-bottom: var(--pagination-height);
+    }
+  }
+}
+
+#user_info {
+  display: flex;
+  align-items: center;
+  height: var(--header-height);
+  margin-left: auto;
+  border-bottom: var(--border-default);
+  border-left: var(--border-default);
+  white-space: nowrap;
+  background-color: var(--toolbar-bg-color);
+  gap: var(--spacing-1);
+
+  .current-user-name {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    padding-left: var(--spacing-3);
+
+    @media screen and (max-width: vars.$large-screen-break-point) {
+      display: none;
+    }
+  }
+}
+
+#admin_locale {
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  border-left: var(--border-default);
+}

@@ -9,13 +9,13 @@ next:
 
 # Deployment
 
-Alchemy is a standard Rails application. It works on any platform that runs Rails: Heroku, Render.com, Fly.io, DigitalOcean App Platform, and others. If you can deploy a Rails app, you can deploy Alchemy. This guide covers the production concerns specific to running AlchemyCMS. The key concern on platforms with ephemeral filesystems is [remote storage](#remote-storage) for uploaded files.
+LaissCms is a standard Rails application. It works on any platform that runs Rails: Heroku, Render.com, Fly.io, DigitalOcean App Platform, and others. If you can deploy a Rails app, you can deploy LaissCms. This guide covers the production concerns specific to running LaissCMS. The key concern on platforms with ephemeral filesystems is [remote storage](#remote-storage) for uploaded files.
 
 For general Rails deployment guidance, see [Deploying to Production](https://guides.rubyonrails.org/getting_started.html#deploying-to-production) in the official Rails guides.
 
 <ServiceAd href="https://blish.cloud/en/solutions/alchemycms">
 <template #before>Don't want to manage your own infrastructure? Our sponsor</template>
-<template #after>offers <a href="https://blish.cloud/en/solutions/alchemycms" target="_blank">managed Alchemy hosting</a>.</template>
+<template #after>offers <a href="https://blish.cloud/en/solutions/alchemycms" target="_blank">managed LaissCms hosting</a>.</template>
 </ServiceAd>
 
 For a step-by-step example, see the [Deploy with Kamal](how_to_deploy_with_kamal) guide.
@@ -30,7 +30,7 @@ Before deploying, make sure you have:
 
 ## Image Processing
 
-Alchemy requires an image processing library to be installed on your production server for cropping and resizing images.
+LaissCms requires an image processing library to be installed on your production server for cropping and resizing images.
 
 - **ActiveStorage** supports both **libvips** (recommended, faster and lower memory) and **ImageMagick**
 - **Dragonfly** only supports **ImageMagick**
@@ -68,7 +68,7 @@ Then set it as the active service in `config/environments/production.rb`:
 config.active_storage.service = :amazon
 ~~~
 
-**With Dragonfly**, use the [alchemy-dragonfly-s3](extensions#alchemy-dragonfly-s3) gem.
+**With Dragonfly**, use the [laiss-cms-dragonfly-s3](extensions#laiss-cms-dragonfly-s3) gem.
 
 See the [Rendering Images](render_images#remote-storage) guide for the full setup.
 
@@ -78,7 +78,7 @@ See [Extensions](extensions) for all available storage add-ons.
 
 ## Database
 
-Alchemy uses standard Rails migrations. Use `db:prepare` for every deploy:
+LaissCms uses standard Rails migrations. Use `db:prepare` for every deploy:
 
 ~~~bash
 bin/rails db:prepare
@@ -86,24 +86,24 @@ bin/rails db:prepare
 
 This creates the database if it doesn't exist yet, and runs any pending migrations.
 
-If you use Alchemy's page seeding feature, add the seeder to your `db/seeds.rb`:
+If you use LaissCms's page seeding feature, add the seeder to your `db/seeds.rb`:
 
 ~~~ruby
-Alchemy::Seeder.seed!
+LaissCms::Seeder.seed!
 ~~~
 
 :::tip NOTE
-This is optional. Even without it, Alchemy bootstraps the default site, language, and root page on first sign-in.
+This is optional. Even without it, LaissCms bootstraps the default site, language, and root page on first sign-in.
 :::
 
 ## Caching
 
-Alchemy sets `Cache-Control` headers on published pages. This works with any CDN or reverse proxy (Cloudflare, CloudFront, Nginx, etc.) without additional configuration.
+LaissCms sets `Cache-Control` headers on published pages. This works with any CDN or reverse proxy (Cloudflare, CloudFront, Nginx, etc.) without additional configuration.
 
 For efficient CDN caching, consider setting `stale_while_revalidate`:
 
 ~~~ruby
-Alchemy.config.page_cache.stale_while_revalidate = 3600
+LaissCms.config.page_cache.stale_while_revalidate = 3600
 ~~~
 
 :::tip INFO

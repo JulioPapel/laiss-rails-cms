@@ -1,17 +1,17 @@
 ---
 layout: home
 hero:
-  name: Alchemy
+  name: LaissCms
   image:
     src: /icon.svg
-    alt: AlchemyCMS Icon
+    alt: LaissCMS Icon
   text: The Rails CMS framework
   tagline: For teams that need full control
   actions:
     - text: Read the Guides →
       link: getting_started
       theme: brand
-    - text: About Alchemy
+    - text: About LaissCms
       link: about
       theme: alt
 features:

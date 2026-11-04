@@ -1,0 +1,37 @@
+<div id="left_menu">
+  <%= render LaissCms::Admin::MainNavigation::Menu.new %>
+
+  <div id="logout">
+    <div class="main_navi_entry">
+      <%= link_to_dialog(
+        safe_join([
+          render_icon(:question, class: 'module'),
+          tag.label(LaissCms.t("Help"))
+        ]),
+        laiss_cms.help_path,
+        {
+          title: LaissCms.t("LaissCMS Help"),
+          size: "500x400"
+        }
+      ) %>
+    </div>
+    <div class="main_navi_entry">
+      <% if current_laiss_cms_user %>
+        <%= link_to_dialog(
+          safe_join([
+            render_icon('logout-box-r', class: 'module'),
+            tag.label(LaissCms.t(:leave))
+          ]),
+          laiss_cms.leave_admin_path, {
+            size: "320x140",
+            title: LaissCms.t("Leave LaissCms")
+        }, {'data-laiss-cms-hotkey' => 'alt+q'}) %>
+      <% else %>
+        <%= link_to(laiss_cms.root_path) do %>
+          <%= render_icon "logout-box-r", size: "lg" %>
+          <label><%= LaissCms.t(:leave) %></label>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

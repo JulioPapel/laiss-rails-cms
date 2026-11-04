@@ -5,9 +5,9 @@ next: configuration
 
 # Render Images
 
-Alchemy uses [Dragonfly](https://markevans.github.io/dragonfly/) to render images.
+LaissCms uses [Dragonfly](https://markevans.github.io/dragonfly/) to render images.
 
-Images are stored as master images in the pictury library. The editor just assigns these master images to content elements you provide. You also set the image rendering bounderies. The max width and height values, or even the size an image should be cropped to. Alchemy even comes with a built in image cropping tool, so that your editors can define the mask to be used.
+Images are stored as master images in the pictury library. The editor just assigns these master images to content elements you provide. You also set the image rendering bounderies. The max width and height values, or even the size an image should be cropped to. LaissCms even comes with a built in image cropping tool, so that your editors can define the mask to be used.
 
 ## Configuration
 
@@ -62,7 +62,7 @@ sets the correct security token).
 
 ### Advanced rendering
 
-If you want to render an image on your own, please have a look at the `show_alchemy_picture_url` helper in the [Alchemy documentation](https://www.rubydoc.info/github/AlchemyCMS/alchemy_cms/Alchemy/UrlHelper#show_alchemy_picture_path-instance_method).
+If you want to render an image on your own, please have a look at the `show_laiss_cms_picture_url` helper in the [LaissCms documentation](https://www.rubydoc.info/github/LaissCMS/laiss_cms/LaissCms/UrlHelper#show_laiss_cms_picture_path-instance_method).
 
 ## Caching
 

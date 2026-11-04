@@ -3,10 +3,10 @@
 require "rails_helper"
 
 RSpec.describe "Locked pages feature", type: :system do
-  let(:a_page) { create(:alchemy_page) }
+  let(:a_page) { create(:laiss_cms_page) }
 
   let(:user) do
-    create(:alchemy_dummy_user, :as_author)
+    create(:laiss_cms_dummy_user, :as_author)
   end
 
   before do
@@ -15,18 +15,18 @@ RSpec.describe "Locked pages feature", type: :system do
   end
 
   it "displays tab for each locked page" do
-    visit alchemy.admin_pages_path
+    visit laiss_cms.admin_pages_path
 
     within "#locked_pages" do
-      expect(page).to have_link a_page.name, href: alchemy.edit_admin_page_path(a_page)
+      expect(page).to have_link a_page.name, href: laiss_cms.edit_admin_page_path(a_page)
     end
   end
 
   it "unlocks the page and removes its tab when clicking unlock", :js do
-    visit alchemy.admin_pages_path
+    visit laiss_cms.admin_pages_path
 
     within "#locked_page_#{a_page.id}" do
-      find("button[title='#{Alchemy.t(:explain_unlocking)}']").click
+      find("button[title='#{LaissCms.t(:explain_unlocking)}']").click
     end
 
     expect(page).to have_no_selector("#locked_page_#{a_page.id}")
@@ -34,10 +34,10 @@ RSpec.describe "Locked pages feature", type: :system do
   end
 
   it "unlocks the page from the dashboard widget and removes its tab", :js do
-    visit alchemy.admin_dashboard_path
+    visit laiss_cms.admin_dashboard_path
 
     within "#LockedPages" do
-      find("button[title='#{Alchemy.t(:explain_unlocking)}']").click
+      find("button[title='#{LaissCms.t(:explain_unlocking)}']").click
     end
 
     expect(page).to have_no_selector("#locked_page_#{a_page.id}")
@@ -47,11 +47,11 @@ RSpec.describe "Locked pages feature", type: :system do
 
   context "with multiple languages" do
     let!(:language) do
-      create(:alchemy_language, :klingon)
+      create(:laiss_cms_language, :klingon)
     end
 
     it "displays information for language" do
-      visit alchemy.admin_pages_path
+      visit laiss_cms.admin_pages_path
 
       within "#locked_page_#{a_page.id}" do
         expect(page).to have_content a_page.language.code
@@ -61,11 +61,11 @@ RSpec.describe "Locked pages feature", type: :system do
 
   context "with multiple sites" do
     let!(:site) do
-      create(:alchemy_site, host: "another-site.com")
+      create(:laiss_cms_site, host: "another-site.com")
     end
 
     it "displays information for site" do
-      visit alchemy.admin_pages_path
+      visit laiss_cms.admin_pages_path
 
       within "#locked_page_#{a_page.id}" do
         expect(page).to have_content a_page.site.name

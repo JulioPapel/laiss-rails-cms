@@ -3,16 +3,16 @@
 class AddCachedTagListToTaggables < ActiveRecord::Migration[7.2]
   # Only SQLite needs this: it has no real ALTER TABLE, so the remove_column
   # calls in down rebuild the tables via DROP TABLE, whose implicit DELETE
-  # cascades into every child row, emptying alchemy_ingredients among others.
+  # cascades into every child row, emptying laiss_cms_ingredients among others.
   # The adapter's PRAGMA foreign_keys = OFF guard against that is a silent
   # no-op inside a transaction.
   disable_ddl_transaction! if connection.adapter_name.match?(/sqlite/i)
 
   TAGGABLE_MODELS = %w[
-    Alchemy::Element
-    Alchemy::Page
-    Alchemy::Picture
-    Alchemy::Attachment
+    LaissCms::Element
+    LaissCms::Page
+    LaissCms::Picture
+    LaissCms::Attachment
   ]
 
   def up

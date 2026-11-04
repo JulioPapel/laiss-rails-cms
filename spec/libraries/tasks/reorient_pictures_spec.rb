@@ -1,23 +1,23 @@
 # frozen_string_literal: true
 
 require "rails_helper"
-require "alchemy/tasks/reorient_pictures"
+require "laiss_cms/tasks/reorient_pictures"
 
-RSpec.describe Alchemy::ReorientPictures, if: Alchemy.storage_adapter.dragonfly? do
-  before { Alchemy::Shell.silence! }
-  after { Alchemy::Shell.verbose! }
+RSpec.describe LaissCms::ReorientPictures, if: LaissCms.storage_adapter.dragonfly? do
+  before { LaissCms::Shell.silence! }
+  after { LaissCms::Shell.verbose! }
 
   describe ".call" do
     context "for a master that still carries an EXIF orientation" do
-      let(:picture) { Alchemy::Picture.last }
+      let(:picture) { LaissCms::Picture.last }
 
       before do
         # Skip the upload preprocessor so the master keeps its EXIF orientation
         # instead of being baked, simulating a legacy upload.
-        allow_any_instance_of(Alchemy::StorageAdapter::Dragonfly::Preprocessor)
+        allow_any_instance_of(LaissCms::StorageAdapter::Dragonfly::Preprocessor)
           .to receive(:call)
         # 100x200 stored, EXIF orientation 6, i.e. displayed rotated as 200x100
-        create(:alchemy_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
+        create(:laiss_cms_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
       end
 
       it "returns the affected picture ids" do
@@ -25,7 +25,7 @@ RSpec.describe Alchemy::ReorientPictures, if: Alchemy.storage_adapter.dragonfly?
       end
 
       it "prints a progress indicator" do
-        Alchemy::Shell.verbose!
+        LaissCms::Shell.verbose!
         expect { described_class.call }.to output(/o/).to_stdout
       end
 
@@ -38,24 +38,24 @@ RSpec.describe Alchemy::ReorientPictures, if: Alchemy.storage_adapter.dragonfly?
       it "clears the stale cached thumbs" do
         stale = picture.thumbs.create!(signature: "stale", uid: "pictures/#{picture.id}/stale/image.webp")
         described_class.call
-        expect(Alchemy::PictureThumb.where(id: stale.id)).not_to exist
+        expect(LaissCms::PictureThumb.where(id: stale.id)).not_to exist
       end
 
       context "when the picture is used in an element" do
         before do
-          create(:alchemy_ingredient_picture, related_object: picture)
+          create(:laiss_cms_ingredient_picture, related_object: picture)
         end
 
         it "invalidates the element and page caches" do
           expect {
             described_class.call
-          }.to have_enqueued_job(Alchemy::InvalidateElementsCacheJob)
-            .with("Alchemy::Picture", picture.id)
+          }.to have_enqueued_job(LaissCms::InvalidateElementsCacheJob)
+            .with("LaissCms::Picture", picture.id)
             .once
         end
 
         it "regenerates the frontend variants used by the ingredients" do
-          expect_any_instance_of(Alchemy::Ingredients::Picture)
+          expect_any_instance_of(LaissCms::Ingredients::Picture)
             .to receive(:picture_url).at_least(:once)
           described_class.call
         end
@@ -63,14 +63,14 @@ RSpec.describe Alchemy::ReorientPictures, if: Alchemy.storage_adapter.dragonfly?
     end
 
     context "when limited to specific picture ids" do
-      let(:other) { Alchemy::Picture.first }
-      let(:picture) { Alchemy::Picture.last }
+      let(:other) { LaissCms::Picture.first }
+      let(:picture) { LaissCms::Picture.last }
 
       before do
-        allow_any_instance_of(Alchemy::StorageAdapter::Dragonfly::Preprocessor)
+        allow_any_instance_of(LaissCms::StorageAdapter::Dragonfly::Preprocessor)
           .to receive(:call)
-        create(:alchemy_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
-        create(:alchemy_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
+        create(:laiss_cms_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
+        create(:laiss_cms_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
       end
 
       it "only processes the given pictures" do
@@ -81,10 +81,10 @@ RSpec.describe Alchemy::ReorientPictures, if: Alchemy.storage_adapter.dragonfly?
     end
 
     context "for a master that is already upright" do
-      let(:picture) { Alchemy::Picture.last }
+      let(:picture) { LaissCms::Picture.last }
 
       before do
-        create(:alchemy_picture, image_file: fixture_file_upload("500x500.png"))
+        create(:laiss_cms_picture, image_file: fixture_file_upload("500x500.png"))
       end
 
       it "leaves it untouched" do
@@ -93,14 +93,14 @@ RSpec.describe Alchemy::ReorientPictures, if: Alchemy.storage_adapter.dragonfly?
     end
 
     context "when a variant can not be regenerated" do
-      let(:picture) { Alchemy::Picture.last }
+      let(:picture) { LaissCms::Picture.last }
 
       before do
-        allow_any_instance_of(Alchemy::StorageAdapter::Dragonfly::Preprocessor)
+        allow_any_instance_of(LaissCms::StorageAdapter::Dragonfly::Preprocessor)
           .to receive(:call)
-        create(:alchemy_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
-        create(:alchemy_ingredient_picture, related_object: picture)
-        allow_any_instance_of(Alchemy::Ingredients::Picture)
+        create(:laiss_cms_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
+        create(:laiss_cms_ingredient_picture, related_object: picture)
+        allow_any_instance_of(LaissCms::Ingredients::Picture)
           .to receive(:picture_url).and_raise("boom")
       end
 
@@ -112,9 +112,9 @@ RSpec.describe Alchemy::ReorientPictures, if: Alchemy.storage_adapter.dragonfly?
 
     context "when the master file is missing from the datastore" do
       before do
-        allow_any_instance_of(Alchemy::StorageAdapter::Dragonfly::Preprocessor)
+        allow_any_instance_of(LaissCms::StorageAdapter::Dragonfly::Preprocessor)
           .to receive(:call)
-        create(:alchemy_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
+        create(:laiss_cms_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
         allow(described_class).to receive(:orientation_of)
           .and_raise(Dragonfly::Job::Fetch::NotFound, "uid not found")
       end
@@ -126,7 +126,7 @@ RSpec.describe Alchemy::ReorientPictures, if: Alchemy.storage_adapter.dragonfly?
     end
 
     context "when not using the Dragonfly storage adapter" do
-      before { allow(Alchemy.storage_adapter).to receive(:dragonfly?).and_return(false) }
+      before { allow(LaissCms.storage_adapter).to receive(:dragonfly?).and_return(false) }
 
       it "does nothing" do
         expect(described_class.call).to eq([])
@@ -143,12 +143,12 @@ RSpec.describe Alchemy::ReorientPictures, if: Alchemy.storage_adapter.dragonfly?
   end
 
   describe ".report (dry run)" do
-    let(:picture) { Alchemy::Picture.last }
+    let(:picture) { LaissCms::Picture.last }
 
     before do
-      allow_any_instance_of(Alchemy::StorageAdapter::Dragonfly::Preprocessor)
+      allow_any_instance_of(LaissCms::StorageAdapter::Dragonfly::Preprocessor)
         .to receive(:call)
-      create(:alchemy_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
+      create(:laiss_cms_picture, image_file: fixture_file_upload("exif-orientation-6.jpg"))
     end
 
     it "returns the affected picture ids" do
@@ -156,7 +156,7 @@ RSpec.describe Alchemy::ReorientPictures, if: Alchemy.storage_adapter.dragonfly?
     end
 
     it "prints the ids to reorient" do
-      Alchemy::Shell.verbose!
+      LaissCms::Shell.verbose!
       expect { described_class.report }.to output(/PICTURE_IDS=#{picture.id}/).to_stdout
     end
 
@@ -167,7 +167,7 @@ RSpec.describe Alchemy::ReorientPictures, if: Alchemy.storage_adapter.dragonfly?
     it "does not clear cached thumbs" do
       thumb = picture.thumbs.create!(signature: "sig", uid: "pictures/#{picture.id}/sig/image.webp")
       described_class.report
-      expect(Alchemy::PictureThumb.where(id: thumb.id)).to exist
+      expect(LaissCms::PictureThumb.where(id: thumb.id)).to exist
     end
   end
 end

@@ -9,11 +9,11 @@ The seeder creates pages, layout pages, and users from YAML files. Use it to set
 
 ## Setup
 
-The installer adds `Alchemy::Seeder.seed!` to your `db/seeds.rb` automatically. If you skipped the installer or need to add it manually:
+The installer adds `LaissCms::Seeder.seed!` to your `db/seeds.rb` automatically. If you skipped the installer or need to add it manually:
 
 ~~~ ruby
 # db/seeds.rb
-Alchemy::Seeder.seed!
+LaissCms::Seeder.seed!
 ~~~
 
 Then run:
@@ -24,10 +24,10 @@ bin/rails db:seed
 
 ## Seeding Pages
 
-Create a `db/seeds/alchemy/pages.yml` file with your page hierarchy. The file must contain exactly one root content page. Nest children under the `children` key:
+Create a `db/seeds/laiss_cms/pages.yml` file with your page hierarchy. The file must contain exactly one root content page. Nest children under the `children` key:
 
 ~~~ yaml
-# db/seeds/alchemy/pages.yml
+# db/seeds/laiss_cms/pages.yml
 - name: Homepage
   page_layout: index
   children:
@@ -43,7 +43,7 @@ Create a `db/seeds/alchemy/pages.yml` file with your page hierarchy. The file mu
       page_layout: contact
 ~~~
 
-Each entry accepts any `Alchemy::Page` attribute. The most common ones:
+Each entry accepts any `LaissCms::Page` attribute. The most common ones:
 
 | Attribute | Description |
 |-----------|-------------|
@@ -74,18 +74,18 @@ Layout pages (headers, footers, sidebars) are global pages not part of the conte
 
 ## Seeding Users
 
-Create a `db/seeds/alchemy/users.yml` file. Each entry is passed directly to your user model's `create!` method, so the attributes depend on your user model:
+Create a `db/seeds/laiss_cms/users.yml` file. Each entry is passed directly to your user model's `create!` method, so the attributes depend on your user model:
 
 ~~~ yaml
-# db/seeds/alchemy/users.yml
+# db/seeds/laiss_cms/users.yml
 - email: admin@example.com
   password: secret123
-  alchemy_roles:
+  laiss_cms_roles:
     - admin
 
 - email: editor@example.com
   password: secret123
-  alchemy_roles:
+  laiss_cms_roles:
     - editor
 ~~~
 

@@ -9,7 +9,7 @@ next:
 
 # Pages
 
-Pages in Alchemy do not hold content directly. Content is stored in [ingredients](ingredients) inside [elements](elements) that are placed on pages. A page defines which elements are available, how caching behaves, and where the page appears in the site's URL structure.
+Pages in LaissCms do not hold content directly. Content is stored in [ingredients](ingredients) inside [elements](elements) that are placed on pages. A page defines which elements are available, how caching behaves, and where the page appears in the site's URL structure.
 
 Pages are organized as a nested tree and have a unique URL slug. Each page has attributes for name, title, visibility, published status, and SEO metadata like meta description and meta keywords.
 
@@ -17,14 +17,14 @@ Every page has a [page layout](#defining-page-layouts) — a definition that con
 
 ## Defining Page Layouts
 
-Page layouts are defined in the `config/alchemy/page_layouts.yml` file. Each page layout needs at least a name.
+Page layouts are defined in the `config/laiss_cms/page_layouts.yml` file. Each page layout needs at least a name.
 
 ### Example
 
 A contact page with a headline, a contact form, and a text element. The page should be unique (only one per language), and must not be cached because of form validation messages.
 
 ~~~ yaml
-# config/alchemy/page_layouts.yml
+# config/laiss_cms/page_layouts.yml
 - name: contact
   cache: false
   unique: true
@@ -37,12 +37,12 @@ A contact page with a headline, a contact form, and a text element. The page sho
 ### name
 `String` _required_
 
-A lowercased unique name for the page layout. Separate words with underscores. This name is used to match the view partial in `app/views/alchemy/page_layouts/` and is [translatable](#translating-page-layout-names) for the admin interface.
+A lowercased unique name for the page layout. Separate words with underscores. This name is used to match the view partial in `app/views/laiss_cms/page_layouts/` and is [translatable](#translating-page-layout-names) for the admin interface.
 
 ### elements
 `Array`
 
-A list of [element](elements) names that can be placed on pages of this type. Elements are defined in `config/alchemy/elements.yml`.
+A list of [element](elements) names that can be placed on pages of this type. Elements are defined in `config/laiss_cms/elements.yml`.
 
 ~~~ yaml
 - name: homepage
@@ -116,7 +116,7 @@ A tooltip displayed to content editors when selecting this page layout. Set to `
 
 Each page layout has a view partial that is rendered inside the application layout (`app/views/layouts/application.html.erb`).
 
-Page layout partials live in `app/views/alchemy/page_layouts/` and are named after the page layout.
+Page layout partials live in `app/views/laiss_cms/page_layouts/` and are named after the page layout.
 
 ::: warning NOTE
 If no partial is found for a page layout, the `_standard.html.erb` partial is rendered instead.
@@ -124,10 +124,10 @@ If no partial is found for a page layout, the `_standard.html.erb` partial is re
 
 ### Template Generator
 
-Alchemy provides a generator that creates page layout partials for all defined layouts.
+LaissCms provides a generator that creates page layout partials for all defined layouts.
 
 ~~~ bash
-bin/rails g alchemy:page_layouts --skip
+bin/rails g laiss_cms:page_layouts --skip
 ~~~
 
 ::: tip
@@ -160,13 +160,13 @@ To define a global page, set `layoutpage: true` in the page layout definition.
 
 ### Rendering Elements from a Global Page
 
-Use the `from_page` option of the `render_elements` helper. Pass an `Alchemy::Page` instance.
+Use the `from_page` option of the `render_elements` helper. Pass an `LaissCms::Page` instance.
 
 ~~~ erb
 <%# app/views/layouts/application.html.erb %>
 <header>
   <%= render_elements only: "header",
-        from_page: Alchemy::Page.find_by(page_layout: "header") %>
+        from_page: LaissCms::Page.find_by(page_layout: "header") %>
 </header>
 
 <main>
@@ -175,7 +175,7 @@ Use the `from_page` option of the `render_elements` helper. Pass an `Alchemy::Pa
 
 <footer>
   <%= render_elements only: "footer",
-        from_page: Alchemy::Page.find_by(page_layout: "footer") %>
+        from_page: LaissCms::Page.find_by(page_layout: "footer") %>
 </footer>
 ~~~
 
@@ -186,7 +186,7 @@ Pages support time-based publishing with two timestamps:
 - **`public_on`** — the date and time the page becomes visible to visitors
 - **`public_until`** — the date and time the page is automatically unpublished
 
-Editors can set these in the page settings dialog. When a page is published, Alchemy duplicates the draft version's elements into the public version. Visitors always see the public version.
+Editors can set these in the page settings dialog. When a page is published, LaissCms duplicates the draft version's elements into the public version. Visitors always see the public version.
 
 ::: tip
 Setting `public_on` to a future date schedules the page for publication. Setting `public_until` lets you create time-limited content like promotions or announcements.
@@ -219,21 +219,21 @@ Do not cache page templates that contain forms (contact forms, comment forms, et
 Pages have `title`, `meta_description`, and `meta_keywords` attributes for SEO. Editors can set these in the page settings dialog.
 
 ::: tip NOTE
-Starting with Alchemy 8.1, these attributes have moved to `PageVersion`. This means SEO metadata changes need to be published just like content changes. In Alchemy 8.0, they are still stored directly on the page.
+Starting with LaissCms 8.1, these attributes have moved to `PageVersion`. This means SEO metadata changes need to be published just like content changes. In LaissCms 8.0, they are still stored directly on the page.
 :::
 
 ## URL Redirects
 
-When a page's URL changes — because it was renamed or moved in the tree — Alchemy automatically creates a 301 redirect from the old URL to the new one. These redirects can be managed in the admin page settings.
+When a page's URL changes — because it was renamed or moved in the tree — LaissCms automatically creates a 301 redirect from the old URL to the new one. These redirects can be managed in the admin page settings.
 
 ## Translating Page Layout Names
 
 Page layout names are passed through Rails' I18n.
 
 ~~~ yaml
-# config/locales/alchemy.de.yml
+# config/locales/laiss_cms.de.yml
 de:
-  alchemy:
+  laiss_cms:
     page_layout_names:
       contact: Kontakt
       search: Suche

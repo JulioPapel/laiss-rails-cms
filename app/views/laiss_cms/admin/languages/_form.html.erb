@@ -1,0 +1,23 @@
+<%= laiss_cms_form_for [laiss_cms, :admin, language] do |f| %>
+  <%= f.input :name, autofocus: true %>
+  <%= f.input :language_code, placeholder: LaissCms.t(:language_code_placeholder) %>
+  <%= f.input :country_code,
+    as: 'string',
+    placeholder: LaissCms.t(:country_code_placeholder),
+    hint: LaissCms.t(:country_code_foot_note) %>
+  <% if language.errors[:locale].present? || language.locale.present? %>
+    <%= f.input :locale,
+      collection: language.matching_locales.presence || ::I18n.available_locales,
+      selected: language.locale || language.language_code || ::I18n.default_locale.to_s %>
+  <% end %>
+  <%= f.input :frontpage_name %>
+  <%= f.input :page_layout,
+    collection: LaissCms::PageDefinition.all,
+    label_method: ->(p) { LaissCms::Page.human_layout_name(p['name']) },
+    value_method: ->(p) { p['name'] },
+    input_html: {is: 'laiss-cms-select'} %>
+  <%= f.input :public %>
+  <%= f.input :default %>
+  <%= f.hidden_field :site_id %>
+  <%= f.submit LaissCms.t(:save) %>
+<% end %>

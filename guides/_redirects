@@ -1,8 +1,8 @@
 # Redirect default Netlify subdomain to primary domain
-https://alchemy-guides.netlify.com/* https://guides.alchemy-cms.com/:splat 301!
+https://laiss-cms-guides.netlify.com/* https://guides.alchemy-cms.com/:splat 301!
 
 # Renamed/combined pages
-/alchemy_approach.html /about.html 301
+/laiss_cms_approach.html /about.html 301
 /architecture.html /about.html 301
 /best_practice_create_blog_template.html /how_to_create_a_blog_template.html 301
 /best_practice_create_form.html /how_to_create_a_contact_form.html 301

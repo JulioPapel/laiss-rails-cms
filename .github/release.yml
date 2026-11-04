@@ -23,7 +23,7 @@ changelog:
       labels:
         - i18n
 
-    - title: "alchemy-devise"
+    - title: "laiss-cms-devise"
       labels:
         - devise
 

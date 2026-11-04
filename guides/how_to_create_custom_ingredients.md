@@ -6,12 +6,12 @@ prev:
 
 # Custom Ingredients
 
-Alchemy provides many [built-in ingredient types](ingredients), but you can create your own to store custom data or associate ingredients with your existing models.
+LaissCms provides many [built-in ingredient types](ingredients), but you can create your own to store custom data or associate ingredients with your existing models.
 
-Each custom ingredient consists of a model class, a view component for the frontend, and an editor component for the admin interface. Alchemy uses [ViewComponent](https://viewcomponent.org) for both.
+Each custom ingredient consists of a model class, a view component for the frontend, and an editor component for the admin interface. LaissCms uses [ViewComponent](https://viewcomponent.org) for both.
 
 ::: tip
-The [alchemy-solidus](extensions#alchemy-solidus) extension is a good real-world example. It provides `SpreeProduct`, `SpreeTaxon` and `SpreeVariant` ingredient types that associate Alchemy elements with Solidus e-commerce models.
+The [laiss-cms-solidus](extensions#laiss-cms-solidus) extension is a good real-world example. It provides `SpreeProduct`, `SpreeTaxon` and `SpreeVariant` ingredient types that associate LaissCms elements with Solidus e-commerce models.
 :::
 
 ## Using the Generator
@@ -19,28 +19,28 @@ The [alchemy-solidus](extensions#alchemy-solidus) extension is a good real-world
 The ingredient generator creates the model and both components for you.
 
 ~~~ bash
-bin/rails g alchemy:ingredient MyIngredient
+bin/rails g laiss_cms:ingredient MyIngredient
 ~~~
 
 This creates three files:
 
-- `app/models/alchemy/ingredients/my_ingredient.rb` - the model
-- `app/components/alchemy/ingredients/my_ingredient_view.rb` - the frontend view
-- `app/components/alchemy/ingredients/my_ingredient_editor.rb` - the admin editor
+- `app/models/laiss_cms/ingredients/my_ingredient.rb` - the model
+- `app/components/laiss_cms/ingredients/my_ingredient_view.rb` - the frontend view
+- `app/components/laiss_cms/ingredients/my_ingredient_editor.rb` - the admin editor
 
 ::: tip
-Ingredients live under the `Alchemy::Ingredients` namespace. The type name in your `elements.yml` is the PascalCase class name, e.g. `MyIngredient`.
+Ingredients live under the `LaissCms::Ingredients` namespace. The type name in your `elements.yml` is the PascalCase class name, e.g. `MyIngredient`.
 :::
 
 ## The Model
 
-The generated model extends `Alchemy::Ingredient`. The main content is stored in the `value` column (a `text` column).
+The generated model extends `LaissCms::Ingredient`. The main content is stored in the `value` column (a `text` column).
 
 ~~~ ruby
-# app/models/alchemy/ingredients/my_ingredient.rb
-module Alchemy
+# app/models/laiss_cms/ingredients/my_ingredient.rb
+module LaissCms
   module Ingredients
-    class MyIngredient < Alchemy::Ingredient
+    class MyIngredient < LaissCms::Ingredient
       # Set additional attributes that get stored in the `data` JSON column
       # store_accessor :data, :some, :attribute
 
@@ -79,13 +79,13 @@ end
 Use `allow_settings` to define which settings from `elements.yml` are available to your ingredient. Only safelisted settings are accessible via the `settings` hash.
 
 ~~~ ruby
-class MyIngredient < Alchemy::Ingredient
+class MyIngredient < LaissCms::Ingredient
   allow_settings %i[format display_mode]
 end
 ~~~
 
 ~~~ yaml
-# config/alchemy/elements.yml
+# config/laiss_cms/elements.yml
 - name: my_element
   ingredients:
     - role: custom
@@ -100,7 +100,7 @@ end
 The `preview_text` method controls what is shown in the element's title bar in the admin. By default it shows the first 30 characters of `value`. Override it to show something more meaningful.
 
 ~~~ ruby
-class Person < Alchemy::Ingredient
+class Person < LaissCms::Ingredient
   related_object_alias :person, class_name: "My::Person"
 
   def preview_text(maxlength = 30)
@@ -113,11 +113,11 @@ end
 
 ## The View Component
 
-The view component controls how the ingredient is rendered on your website. It extends `Alchemy::Ingredients::BaseView`.
+The view component controls how the ingredient is rendered on your website. It extends `LaissCms::Ingredients::BaseView`.
 
 ~~~ ruby
-# app/components/alchemy/ingredients/my_ingredient_view.rb
-module Alchemy
+# app/components/laiss_cms/ingredients/my_ingredient_view.rb
+module LaissCms
   module Ingredients
     class MyIngredientView < BaseView
       def call
@@ -148,11 +148,11 @@ end
 
 ## The Editor Component
 
-The editor component controls the form fields in the admin interface. It extends `Alchemy::Ingredients::BaseEditor`.
+The editor component controls the form fields in the admin interface. It extends `LaissCms::Ingredients::BaseEditor`.
 
 ~~~ ruby
-# app/components/alchemy/ingredients/my_ingredient_editor.rb
-module Alchemy
+# app/components/laiss_cms/ingredients/my_ingredient_editor.rb
+module LaissCms
   module Ingredients
     class MyIngredientEditor < BaseEditor
       # The default editor renders a text field for the `value` column.
@@ -196,9 +196,9 @@ end
 ::: warning
 Avoid loading large collections into the editor. If your `input_field` renders a `select_tag` with all records from a model (e.g. all products or all people), every element editor will trigger a database query for the full set. This causes N+1 queries and slow admin pages.
 
-Instead, use a remote select that fetches results on demand via an API endpoint. Alchemy ships a `RemoteSelect` JavaScript base class (`alchemy_admin/components/remote_select`) that provides paginated, searchable selects using [Custom Elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements). Your custom element extends `RemoteSelect`, implements `_searchQuery()` and `_parseResponse()`, and your editor component renders the custom element tag instead of a `select_tag`.
+Instead, use a remote select that fetches results on demand via an API endpoint. LaissCms ships a `RemoteSelect` JavaScript base class (`laiss_cms_admin/components/remote_select`) that provides paginated, searchable selects using [Custom Elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements). Your custom element extends `RemoteSelect`, implements `_searchQuery()` and `_parseResponse()`, and your editor component renders the custom element tag instead of a `select_tag`.
 
-The [alchemy-solidus](extensions#alchemy-solidus) extension demonstrates this pattern. It defines `<alchemy-product-select>`, `<alchemy-variant-select>` and `<alchemy-taxon-select>` custom elements that query the Solidus API with pagination and search, avoiding loading thousands of records into memory.
+The [laiss-cms-solidus](extensions#laiss-cms-solidus) extension demonstrates this pattern. It defines `<laiss-cms-product-select>`, `<laiss-cms-variant-select>` and `<laiss-cms-taxon-select>` custom elements that query the Solidus API with pagination and search, avoiding loading thousands of records into memory.
 :::
 
 ## Associating with Models
@@ -206,10 +206,10 @@ The [alchemy-solidus](extensions#alchemy-solidus) extension demonstrates this pa
 You can associate any ActiveRecord model with an ingredient using `related_object_alias`. This stores the foreign key in the `related_object_id` column and sets up a `belongs_to` association.
 
 ~~~ ruby
-# app/models/alchemy/ingredients/person.rb
-module Alchemy
+# app/models/laiss_cms/ingredients/person.rb
+module LaissCms
   module Ingredients
-    class Person < Alchemy::Ingredient
+    class Person < LaissCms::Ingredient
       related_object_alias :person, class_name: "My::Person"
 
       def preview_text(maxlength = 30)
@@ -222,11 +222,11 @@ module Alchemy
 end
 ~~~
 
-Alchemy handles the rest. You can access the associated model in your view component.
+LaissCms handles the rest. You can access the associated model in your view component.
 
 ~~~ ruby
-# app/components/alchemy/ingredients/person_view.rb
-module Alchemy
+# app/components/laiss_cms/ingredients/person_view.rb
+module LaissCms
   module Ingredients
     class PersonView < BaseView
       delegate :person, to: :ingredient

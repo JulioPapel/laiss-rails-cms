@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-module Alchemy
+module LaissCms
   shared_examples_for "having a hint" do
     describe "#hint" do
       context "with hint as text" do
@@ -17,7 +17,7 @@ module Alchemy
         let(:hint) { {hint: true} }
 
         before do
-          expect(Alchemy).to receive(:t).with(translation_key, {scope: translation_scope}) do
+          expect(LaissCms).to receive(:t).with(translation_key, {scope: translation_scope}) do
             "The translated hint"
           end
         end

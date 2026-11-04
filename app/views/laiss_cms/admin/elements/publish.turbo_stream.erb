@@ -1,0 +1,28 @@
+<% if @element.errors.any? %>
+  <%= turbo_stream.replace "element-#{@element.id}-schedule",
+    partial: "schedule", locals: {element: @element} %>
+<% else %>
+  <% if @element.scheduled? %>
+    <laiss-cms-growl>
+      <%= LaissCms.t(:successfully_scheduled_element) %>
+    </laiss-cms-growl>
+  <% end %>
+  <turbo-stream action="close_current_dialog"></turbo-stream>
+  <turbo-stream action="reload_preview"></turbo-stream>
+  <%= turbo_stream.replace "element_#{@element.id}" do %>
+    <%= render LaissCms::Admin::ElementEditor.new(
+      element: @element
+    ) %>
+  <% end %>
+  <%= turbo_stream.replace "publish_page_button" do %>
+    <%= render LaissCms::Admin::PublishPageButton.new(
+      page: @element.page
+    ) %>
+  <% end %>
+  <%= turbo_stream.replace "preview_time_select" do %>
+    <%= render LaissCms::Admin::PreviewTimeSelect.new(
+      @element.page_version,
+      url: edit_admin_page_path(@element.page),
+      selected: params[:laiss_cms_preview_time]) %>
+  <% end %>
+<% end %>

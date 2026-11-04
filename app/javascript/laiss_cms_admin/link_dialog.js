@@ -1,0 +1,150 @@
+import { translate } from "laiss_cms_admin/i18n"
+import { Dialog } from "laiss_cms_admin/dialog"
+import { routes } from "laiss_cms_admin/routes"
+
+// Matches a URL fragment (#anchor) at the end of a string.
+// Covers RFC 3986 unreserved characters (ALPHA, DIGIT, "-", ".", "_", "~")
+// which are the characters valid in URL fragments and common in DOM element IDs.
+const ANCHOR_REGEX = /#[\w.~-]+$/
+
+// The server renders the expression as a JavaScript literal, so that whatever
+// a host application configures keeps the meaning it had as an inline script.
+// A replaced external tab may not render it, the server validates urls anyway.
+function isLinkUrl(url) {
+  const literal =
+    document.getElementById("external_link")?.dataset.linkUrlRegexp
+  if (!literal) return true
+
+  const end = literal.lastIndexOf("/")
+  return new RegExp(literal.slice(1, end), literal.slice(end + 1)).test(url)
+}
+
+// Represents the link Dialog that appears, if a user clicks the link buttons
+// in TinyMCE or on an Ingredient that has links enabled (e.g. Picture)
+//
+export class LinkDialog extends Dialog {
+  #onCreateLink
+
+  constructor(link) {
+    const url = new URL(routes.link_admin_pages_path, window.location)
+    const parameterMapping = {
+      url: link.url,
+      selected_tab: link.type,
+      link_title: link.title,
+      link_target: link.target
+    }
+
+    // searchParams.set would also add undefined values
+    Object.keys(parameterMapping).forEach((key) => {
+      if (parameterMapping[key]) {
+        url.searchParams.set(key, parameterMapping[key])
+      }
+    })
+
+    super(url.href, {
+      size: "600x320",
+      title: translate("Link")
+    })
+  }
+
+  /**
+   *  Called from Dialog class after the url was loaded
+   */
+  replace(data) {
+    // let Dialog class handle the content replacement
+    super.replace(data)
+    this.#attachEvents()
+  }
+
+  /**
+   * make the open method a promise
+   * maybe in a future version the whole Dialog will respond with a promise result if the dialog is closing
+   * @returns {Promise<unknown>}
+   */
+  open() {
+    super.open()
+    return new Promise((resolve) => (this.#onCreateLink = resolve))
+  }
+
+  /**
+   * Attaches click events to forms in the link dialog.
+   */
+  #attachEvents() {
+    // enable the dom selection in internal link tab
+    const internalForm = document.querySelector(
+      '[data-link-form-type="internal"]'
+    )
+    const attachmentSelect = document.querySelector(
+      '[data-link-form-type="file"] laiss-cms-attachment-select'
+    )
+
+    internalForm.addEventListener("LaissCms.RemoteSelect.Change", (e) => {
+      this.#updatePage(e.detail.added)
+    })
+
+    attachmentSelect.addEventListener("LaissCms.RemoteSelect.Change", (e) => {
+      const attachment = e.detail.added
+      document.getElementById("file_link").value = attachment
+        ? attachment.url
+        : ""
+    })
+
+    document.querySelectorAll("[data-link-form-type]").forEach((form) => {
+      form.addEventListener("submit", (e) => {
+        e.preventDefault()
+        this.#submitForm(e.target.dataset.linkFormType)
+      })
+    })
+  }
+
+  /**
+   * update page select and set anchor select
+   * @param page
+   */
+  #updatePage(page = null) {
+    const internalLink = document.getElementById("internal_link")
+    const domIdSelect = document.querySelector(
+      '[data-link-form-type="internal"] laiss-cms-dom-id-api-select'
+    )
+
+    internalLink.value = page ? page.url_path : ""
+    domIdSelect.page = page ? page.id : undefined
+  }
+
+  /**
+   * submit the form itself
+   * @param linkType
+   */
+  #submitForm(linkType) {
+    const elementAnchor = document.getElementById("element_anchor")
+    let url = document.getElementById(`${linkType}_link`).value
+
+    if (linkType === "internal" && elementAnchor.value !== "") {
+      // remove possible fragments on the url and attach the fragment (which contains the #)
+      url = url.replace(ANCHOR_REGEX, "") + elementAnchor.value
+    } else if (linkType === "external" && !isLinkUrl(url)) {
+      // show validation error and prevent link creation
+      this.#showValidationError()
+      return
+    }
+
+    // Create the link
+    this.#onCreateLink({
+      url: url.trim(),
+      title: document.getElementById(`${linkType}_link_title`).value,
+      target: document.getElementById(`${linkType}_link_target`)?.value,
+      type: linkType
+    })
+    this.close()
+  }
+
+  /**
+   * Shows validation errors
+   */
+  #showValidationError() {
+    const errors = document.getElementById("errors")
+    errors.querySelector("ul").innerHTML =
+      `<li>${LaissCms.t("url_validation_failed")}</li>`
+    errors.style.display = "block"
+  }
+}

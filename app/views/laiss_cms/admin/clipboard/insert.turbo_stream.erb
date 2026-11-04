@@ -1,0 +1,18 @@
+<% if @item.class.name == 'LaissCms::Element' && params[:remove] -%>
+  <% if @item.fixed? -%>
+    <turbo-stream action="remove_fixed_element" element-id="<%= @item.id %>"></turbo-stream>
+  <% else -%>
+    <%= turbo_stream.remove "element_#{@item.id}" %>
+  <% end -%>
+  <laiss-cms-growl>
+    <%= LaissCms.t("item moved to clipboard", name: @item.display_name_with_preview_text) %>
+  </laiss-cms-growl>
+<% else -%>
+  <laiss-cms-growl>
+    <%= LaissCms.t("item copied to clipboard", name: @item.class.name == "LaissCms::Element" ? @item.display_name_with_preview_text : @item.name) %>
+  </laiss-cms-growl>
+<% end -%>
+
+<%= turbo_stream.replace "clipboard_button", partial: "button" %>
+
+<%= render "update_nested_element_button" %>

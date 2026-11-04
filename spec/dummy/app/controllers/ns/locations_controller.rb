@@ -2,7 +2,7 @@
 
 module Ns
   class LocationsController < ApplicationController
-    include Alchemy::ControllerActions
+    include LaissCms::ControllerActions
 
     def index
     end

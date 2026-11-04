@@ -1,0 +1,194 @@
+@use "base";
+@use "../mixins";
+
+.resource-details {
+  display: flex;
+  gap: var(--spacing-5);
+
+  > .resource-preview {
+    flex-grow: 0;
+    width: 50%;
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  aside {
+    width: 100%;
+    flex-grow: 1;
+  }
+
+  .resource_info {
+    margin-bottom: var(--spacing-4);
+  }
+
+  &:has(.resource-preview:not(:empty)) {
+    aside {
+      width: 50%;
+    }
+  }
+}
+
+.resource-preview {
+  max-width: 50%;
+
+  iframe {
+    width: 100%;
+    background-color: white;
+    min-height: 565px;
+  }
+}
+
+.resource_info {
+  .value {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--form-left-column-width) var(
+        --form-right-column-width
+      );
+    align-items: baseline;
+    gap: 0 var(--spacing-2);
+
+    > label {
+      @include mixins.form-label;
+
+      laiss-cms-icon {
+        vertical-align: middle;
+      }
+    }
+
+    > p {
+      margin: var(--form-field-margin);
+      padding: var(--spacing-1) var(--spacing-2);
+      line-height: 21px;
+      min-height: var(--form-field-height);
+      background: var(--form-field-background-color);
+      border-radius: var(--border-radius_medium);
+
+      &:not(.value-block) {
+        @include mixins.truncate(100%, $wrap: nowrap);
+      }
+
+      &.value-block {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-1);
+        align-items: start;
+      }
+    }
+
+    &.with-icon {
+      > p {
+        white-space: nowrap;
+        padding-right: var(--spacing-10);
+      }
+    }
+  }
+
+  .icon_button--right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 0;
+    top: var(--spacing-1);
+    height: var(--form-field-height);
+    background-color: var(--form-field-addon-background-color);
+    padding: 0 var(--spacing-2);
+    transition: background-color 0.3s;
+    @extend .right-rounded-border;
+
+    &:hover {
+      cursor: pointer;
+      background-color: var(--icon-button-hover-bg-color);
+      text-decoration: none;
+    }
+  }
+
+  &.file-infos .value {
+    label {
+      text-align: left;
+    }
+  }
+}
+
+.file-infos,
+.resource-usage-info {
+  margin: var(--spacing-4) 0;
+}
+
+.resource-usage-info {
+  laiss-cms-message {
+    margin: var(--spacing-5) 0;
+  }
+
+  h2,
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    font-size: 1rem;
+  }
+
+  h2.resource-info-headline {
+    margin: var(--spacing-4) var(--spacing-3);
+  }
+}
+
+.resource_page_list {
+  list-style-type: none;
+  padding: 0;
+
+  > li {
+    background-color: var(--panel-background-color);
+    border-radius: var(--border-radius_medium);
+    padding: var(--spacing-2) var(--spacing-3) var(--spacing-2) var(--spacing-3);
+    margin-bottom: var(--spacing-1);
+  }
+
+  h3 {
+    margin: var(--spacing-2) 0 var(--spacing-3) 0;
+    font-weight: var(--font-weight_normal);
+  }
+
+  ul {
+    margin: var(--spacing-2) 0;
+    padding: 0;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding: var(--spacing-2);
+      margin-left: var(--spacing-6);
+      border-radius: var(--border-radius_medium);
+      background-color: var(--element-editor-background-color);
+      border: 1px solid var(--element-editor-border-color, var(--border-color));
+      white-space: normal;
+      margin-bottom: var(--spacing-2);
+    }
+
+    svg {
+      width: var(--spacing-4);
+      height: var(--spacing-4);
+      flex-shrink: 0;
+      align-self: flex-start;
+    }
+  }
+
+  p {
+    margin: 0;
+  }
+
+  a {
+    color: var(--text-color);
+    font-weight: var(--font-weight_bold);
+    text-decoration-color: transparent;
+
+    &:hover {
+      text-decoration-color: var(--text-link-color);
+      color: inherit;
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 ROOT = File.expand_path("..", __dir__)
 
-# The devise specs boot the dummy app with alchemy-devise loaded, the core specs
+# The devise specs boot the dummy app with laiss-cms-devise loaded, the core specs
 # without it, so each one runs in its own RSpec process from its own directory.
 LIBS = %w[. devise]
 

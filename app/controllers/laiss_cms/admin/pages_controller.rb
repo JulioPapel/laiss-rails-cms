@@ -1,0 +1,343 @@
+# frozen_string_literal: true
+
+module LaissCms
+  module Admin
+    class PagesController < ResourcesController
+      include OnPageLayout::CallbacksRunner
+      include LaissCms::Admin::Clipboard
+      include LaissCms::Admin::PreviewTime
+
+      helper "laiss_cms/pages"
+
+      before_action :load_resource, except: [:index, :flush, :new, :create, :copy_language_tree, :link, :tree]
+
+      authorize_resource class: LaissCms::Page, except: [:index]
+
+      before_action only: [:index, :flush, :new, :create, :copy_language_tree] do
+        authorize! :index, :laiss_cms_admin_pages
+      end
+
+      include LaissCms::Admin::CurrentLanguage
+
+      before_action :set_translation,
+        except: [:show]
+
+      before_action :set_preview_mode, only: [:show]
+
+      before_action :load_languages_and_layouts,
+        only: [:index]
+
+      before_action :set_view, only: [:index, :update]
+
+      before_action :set_page_version, only: [:show, :edit]
+
+      before_action :run_on_page_layout_callbacks,
+        if: :run_on_page_layout_callbacks?,
+        only: [:show]
+
+      add_laiss_cms_filter :by_page_layout, type: :select, options: ->(_q) do
+        PageDefinition.all.reject(&:layoutpage).tap do |page_layouts|
+          page_layouts.map! { |p| [LaissCms.t(p[:name], scope: "page_layout_names"), p[:name]] }
+        end
+      end
+
+      add_laiss_cms_filter :updated_at_gteq, type: :datepicker
+      add_laiss_cms_filter :updated_at_lteq, type: :datepicker
+      add_laiss_cms_filter :published, type: :checkbox
+      add_laiss_cms_filter :not_public, type: :checkbox
+      add_laiss_cms_filter :restricted, type: :checkbox
+
+      def index
+        @query = @current_language.pages.contentpages.ransack(search_filter_params[:q])
+
+        if @view == "list"
+          @query.sorts = default_sort_order if @query.sorts.empty?
+          items = @query.result
+
+          if search_filter_params[:tagged_with].present?
+            items = items.tagged_with(search_filter_params[:tagged_with])
+          end
+
+          items = items.page(params[:page] || 1).per(items_per_page)
+          @pages = items
+        elsif @current_language.root_page
+          @root_page = @current_language.root_page
+        end
+      end
+
+      def tree
+        @root_page = LaissCms::PageTreePreloader.new(
+          page: @current_language.root_page,
+          ability: current_ability,
+          user: current_laiss_cms_user
+        ).call
+      end
+
+      # Used by page preview iframe in Page#edit view.
+      #
+      def show
+        authorize! :edit_content, @page
+
+        Current.preview_page = @page
+        # Setting the locale to pages language, so the page content has it's correct translations.
+        ::I18n.locale = @page.language.locale
+        render(layout: LaissCms.config.admin_page_preview_layout || "application")
+      end
+
+      def info
+        render layout: !turbo_frame_request?
+      end
+
+      def new
+        @page ||= Page.new(layoutpage: params[:layoutpage] == "true", parent_id: params[:parent_id])
+        @page_layouts = Page.layouts_for_select(@current_language.id, layoutpages: @page.layoutpage?)
+      end
+
+      def create
+        @page = paste_from_clipboard || Page.new(page_params)
+        if @page.save
+          flash[:notice] = LaissCms.t("Page created", name: @page.name)
+          do_redirect_to(redirect_path_after_create_page)
+        else
+          new
+          render :new
+        end
+      end
+
+      # Edit the content of the page and all its elements and ingredients.
+      #
+      # Locks the page to current user to prevent other users from editing it meanwhile.
+      #
+      def edit
+        # fetching page via before filter
+        if page_is_locked?
+          flash[:warning] = LaissCms.t("This page is locked", name: @page.locker_name)
+          redirect_to admin_pages_path
+        elsif page_needs_lock?
+          @page.lock_to!(current_laiss_cms_user)
+        end
+        @preview_urls = LaissCms.config.preview_sources.map do |klass|
+          [
+            klass.model_name.human,
+            klass.new(routes: LaissCms::Engine.routes).url_for(@page)
+          ]
+        end
+        @preview_url = @preview_urls.first.last
+        @layoutpage = @page.layoutpage?
+        LaissCms::Current.language = @page.language
+      end
+
+      # Set page configuration like page names, meta tags and states.
+      def configure
+      end
+
+      # Updates page
+      #
+      # * fetches page via before filter
+      #
+      def update
+        @old_parent_id = @page.parent_id
+        if @page.update(page_params)
+          @notice = LaissCms.t("Page saved", name: @page.name)
+          @while_page_edit = request.referer.include?("edit")
+
+          if @view == "list"
+            flash[:notice] = @notice
+          end
+        else
+          render :configure, status: 422
+        end
+      end
+
+      # Fetches page via before filter, destroys it and redirects to page tree
+      def destroy
+        if @page.destroy
+          flash[:notice] = LaissCms.t("Page deleted", name: @page.name)
+
+          # Remove page from clipboard
+          remove_resource_from_clipboard(@page)
+        else
+          flash[:warning] = @page.errors.full_messages.to_sentence
+        end
+
+        if @page.layoutpage?
+          redirect_to laiss_cms.admin_layoutpages_path
+        else
+          redirect_to laiss_cms.admin_pages_path
+        end
+      end
+
+      def link
+        render LinkDialog::Tabs.new(**link_dialog_params)
+      end
+
+      def fold
+        # @page is fetched via before filter
+        was_folded = @page.folded?(current_laiss_cms_user.id)
+        @page.fold!(current_laiss_cms_user.id, !was_folded)
+
+        respond_to do |format|
+          format.turbo_stream do
+            if was_folded
+              @page = PageTreePreloader.new(
+                page: @page,
+                ability: current_ability,
+                user: current_laiss_cms_user
+              ).call
+            else
+              head 200
+            end
+          end
+        end
+      end
+
+      # Leaves the page editing mode and unlocks the page for other users
+      def unlock
+        # fetching page via before filter
+        @page.unlock!
+        @notice = LaissCms.t(:unlocked_page, name: @page.name)
+        respond_to do |format|
+          format.turbo_stream do
+            if params[:redirect_to].present?
+              flash[:notice] = @notice
+              redirect_to(unlock_redirect_path, allow_other_host: true)
+            end
+          end
+        end
+      end
+
+      def unlock_redirect_path
+        safe_redirect_path(fallback: admin_pages_path)
+      end
+
+      # Sets the page public and updates the published_at attribute that is used as cache_key
+      #
+      def publish
+        # fetching page via before filter
+        @page.publish!
+      end
+
+      def copy_language_tree
+        language_root_to_copy_from.copy_children_to(copy_of_language_root)
+        flash[:notice] = LaissCms.t(:language_pages_copied)
+        redirect_to admin_pages_path
+      end
+
+      def flush
+        PageVersion.where(page_id: @current_language.pages.select(:id)).published.touch_all
+        respond_to { |format| format.turbo_stream }
+      end
+
+      private
+
+      def resource_handler
+        @_resource_handler ||= LaissCms::Resource.new(controller_path, laiss_cms_module, LaissCms::Page)
+      end
+
+      def set_view
+        @view = params[:view] || session[:laiss_cms_pages_view] || "tree"
+        session[:laiss_cms_pages_view] = @view
+      end
+
+      def copy_of_language_root
+        Page.copy(
+          language_root_to_copy_from,
+          language_id: params[:languages][:new_lang_id],
+          language_code: @current_language.code
+        )
+      end
+
+      def language_root_to_copy_from
+        Page.language_root_for(params[:languages][:old_lang_id])
+      end
+
+      # Returns a pair, the path that a given tree node should take, and the path its children should take
+      #
+      # This function will add a node's own slug into their ancestor's path
+      # in order to create the full URL of a node
+      #
+      # @param [String]
+      #   The node's ancestors path
+      # @param [Hash]
+      #   A children node
+      #
+      def process_url(ancestors_path, item)
+        default_urlname = (ancestors_path.blank? ? "" : "#{ancestors_path}/") + item["slug"].to_s
+        {my_urlname: default_urlname, children_path: default_urlname}
+      end
+
+      def load_resource
+        @page = Page.includes(page_includes).find(params[:id])
+      end
+
+      def pages_from_raw_request
+        request.raw_post.split("&").map do |i|
+          parts = i.split("=")
+          {
+            parts[0].gsub(/[^0-9]/, "") => parts[1]
+          }
+        end
+      end
+
+      def redirect_path_after_create_page
+        if @page.editable_by?(current_laiss_cms_user)
+          params[:redirect_to] || edit_admin_page_path(@page)
+        else
+          admin_pages_path
+        end
+      end
+
+      def page_params
+        params.require(:page).permit(*secure_attributes)
+      end
+
+      def link_dialog_params
+        params.permit([:url, :selected_tab, :link_title, :link_target])
+      end
+
+      def secure_attributes
+        if can?(:create, LaissCms::Page)
+          Page::PERMITTED_ATTRIBUTES + [:language_root, :parent_id, :language_id, :language_code]
+        else
+          Page::PERMITTED_ATTRIBUTES
+        end
+      end
+
+      def page_is_locked?
+        return false if !@page.locker.try(:logged_in?)
+        return false if !current_laiss_cms_user.respond_to?(:id)
+
+        @page.locked? && @page.locker.id != current_laiss_cms_user.id
+      end
+
+      def page_needs_lock?
+        return true unless @page.locker
+
+        @page.locker.try!(:id) != current_laiss_cms_user.try!(:id)
+      end
+
+      # Overridden from LaissCms::Admin::Clipboard concern
+      def clipboard_items
+        @clipboard_items ||= Page.all_from_clipboard_for_select(clipboard, @current_language.id, layoutpages: @page.layoutpage?)
+      end
+
+      def set_page_version
+        @page_version = @page.draft_version
+      end
+
+      def load_languages_and_layouts
+        @language = @current_language
+        @languages_with_page_tree = Language.on_current_site.with_root_page
+        @page_layouts = Page.layouts_for_select(@language.id)
+      end
+
+      def set_preview_mode
+        @preview_mode = true
+      end
+
+      def page_includes
+        LaissCms::EagerLoading.page_includes(version: :draft_version)
+      end
+    end
+  end
+end

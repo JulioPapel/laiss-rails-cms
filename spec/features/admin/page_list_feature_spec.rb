@@ -7,15 +7,15 @@ RSpec.describe "Admin page list", type: :system do
   context "not logged in" do
     specify "it redirects to login" do
       visit admin_pages_path(view: "list")
-      expect(page.current_path).to eq(Alchemy.config.login_path)
+      expect(page.current_path).to eq(LaissCms.config.login_path)
     end
   end
 
   context "as authorized user" do
-    let!(:root_page) { create(:alchemy_page, :language_root, :public, name: "Intro") }
-    let!(:alchemy_page) { create(:alchemy_page, parent: root_page, name: "Page 1").tap { |p| p.update!(updated_at: Time.parse("2020-08-20")) } }
-    let!(:alchemy_page_2) { create(:alchemy_page, parent: root_page, name: "Contact", page_layout: "contact").tap { |p| p.update(updated_at: Time.parse("2020-08-24")) } }
-    let!(:alchemy_page_3) { create(:alchemy_page, :layoutpage, name: "Footer") }
+    let!(:root_page) { create(:laiss_cms_page, :language_root, :public, name: "Intro") }
+    let!(:laiss_cms_page) { create(:laiss_cms_page, parent: root_page, name: "Page 1").tap { |p| p.update!(updated_at: Time.parse("2020-08-20")) } }
+    let!(:laiss_cms_page_2) { create(:laiss_cms_page, parent: root_page, name: "Contact", page_layout: "contact").tap { |p| p.update(updated_at: Time.parse("2020-08-24")) } }
+    let!(:laiss_cms_page_3) { create(:laiss_cms_page, :layoutpage, name: "Footer") }
 
     context "with author role" do
       before do
@@ -135,10 +135,10 @@ RSpec.describe "Admin page list", type: :system do
       specify "can copy page into clipboard", :js do
         visit admin_pages_path(view: "list")
         within("table.list") do
-          page.find("tr:first-child alchemy-icon[name='file-copy']").click
+          page.find("tr:first-child laiss-cms-icon[name='file-copy']").click
         end
-        expect(page).to have_content("Copied #{alchemy_page_2.name} to clipboard")
-        expect(page).to have_css("alchemy-icon[name='clipboard'][icon-style='fill']")
+        expect(page).to have_content("Copied #{laiss_cms_page_2.name} to clipboard")
+        expect(page).to have_css("laiss-cms-icon[name='clipboard'][icon-style='fill']")
       end
     end
   end

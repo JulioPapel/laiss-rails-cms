@@ -1,46 +1,46 @@
 # Custom Authentication
 
-Alchemy 3.0 has removed its build in authentication into a separate gem called [alchemy-devise](https://github.com/AlchemyCMS/alchemy-devise).
+LaissCms 3.0 has removed its build in authentication into a separate gem called [laiss-cms-devise](https://github.com/LaissCMS/laiss-cms-devise).
 
-Now, that this is not in the core anymore it gives you the possibility to add your own custom authentification. You only have to tell Alchemy about your user class.
+Now, that this is not in the core anymore it gives you the possibility to add your own custom authentification. You only have to tell LaissCms about your user class.
 
 In this guide you will learn to:
 
-* add just enough code to make your User class work with Alchemy
+* add just enough code to make your User class work with LaissCms
 * add additionally methods to enhance the integration
 
 ## Activating your model
 
-Alchemy has some defaults for user model name and login logout path names:
+LaissCms has some defaults for user model name and login logout path names:
 
 ### Defaults
 
-* `Alchemy.user_class_name` defaults to `'User'`
-* `Alchemy.login_path` defaults to `'/login'`
-* `Alchemy.logout_path` defaults to `'/logout'`
+* `LaissCms.user_class_name` defaults to `'User'`
+* `LaissCms.login_path` defaults to `'/login'`
+* `LaissCms.logout_path` defaults to `'/logout'`
 
-Anyway, you can tell Alchemy about your authentication model configuration.
+Anyway, you can tell LaissCms about your authentication model configuration.
 
 ### Example
 
 ~~~ ruby
-# config/initializers/alchemy.rb
-Alchemy.user_class_name = 'Admin'
-Alchemy.login_path = '/auth/login'
-Alchemy.logout_path = '/auth/logout'
+# config/initializers/laiss_cms.rb
+LaissCms.user_class_name = 'Admin'
+LaissCms.login_path = '/auth/login'
+LaissCms.logout_path = '/auth/logout'
 ~~~
 
 ## Mandatory configuration
 
 ### Relationships
 - `has_many :folded_pages` -
-  This will allow alchemy to store page tree folding on a per user basis.
+  This will allow laiss_cms to store page tree folding on a per user basis.
 
 
 
 ### Setting roles
 
-The only method that AlchemyCMS needs from your user class is `alchemy_roles`. This method has to return an array of strings containing at least one of these roles:
+The only method that LaissCMS needs from your user class is `laiss_cms_roles`. This method has to return an array of strings containing at least one of these roles:
 
 * `member`
 * `author`
@@ -52,7 +52,7 @@ The only method that AlchemyCMS needs from your user class is `alchemy_roles`. T
 ~~~ ruby
 # app/models/user.rb
 
-def alchemy_roles
+def laiss_cms_roles
   if admin?
     %w(admin)
   else
@@ -65,15 +65,15 @@ end
 You can use your own authorization system to set the role. You only need to ensure that it returns an Array with at least one of the roles.
 :::
 
-That's it. Alchemy has everything it needs to use your user class as authentication model.
+That's it. LaissCms has everything it needs to use your user class as authentication model.
 
 ## Optional methods
 
-Although Alchemy does not need much to know about your user class, there are some few other attributes that are good to have in your user class which are:
+Although LaissCms does not need much to know about your user class, there are some few other attributes that are good to have in your user class which are:
 
 ### Name
 
-This would be used to say "Welcome back `#{@user.name}`" in the Alchemy dashboard.
+This would be used to say "Welcome back `#{@user.name}`" in the LaissCms dashboard.
 
 ### Example
 
@@ -95,7 +95,7 @@ This is used in the "logged in as" note on the top right corner of the admin int
 ~~~ ruby
 # app/models/user.rb
 
-def alchemy_display_name
+def laiss_cms_display_name
   # If you don't have a name, you could use the user's email
   "#{firstname} #{lastname}".strip
 end
@@ -103,7 +103,7 @@ end
 
 ## Preferred Language
 
-A locale String to set the users preferred translation of the Alchemy GUI.
+A locale String to set the users preferred translation of the LaissCms GUI.
 Anyway, the user has always the option to switch the language, but it is good
 to give your user its preferred language.
 
@@ -119,12 +119,12 @@ end
 ~~~
 
 ::: tip
-In a real world application you maybe want to store this as `alchemy_language` in the users table.
+In a real world application you maybe want to store this as `laiss_cms_language` in the users table.
 :::
 
 ## User stamp columns
 
-Alchemy stores updater and creator ids (if the columns are present).
+LaissCms stores updater and creator ids (if the columns are present).
 If you want to track which user updated a record you need to add:
 
 `creator_id` and `updater_id`
@@ -160,4 +160,4 @@ You also should add a `cached_tag_list` text column into your users table for be
 bin/rails g migration add_cached_tag_list_to_users cached_tag_list:text
 ~~~
 
-This is it! Now your user class should be a first class citizen of the Alchemy admin backend.
+This is it! Now your user class should be a first class citizen of the LaissCms admin backend.

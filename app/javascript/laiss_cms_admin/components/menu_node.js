@@ -1,0 +1,73 @@
+import { patch } from "laiss_cms_admin/utils/ajax"
+import { growl } from "laiss_cms_admin/growler"
+import { routes } from "laiss_cms_admin/routes"
+
+/**
+ * Custom element for menu nodes in the nodes tree
+ * Handles folding and unfolding of its children
+ */
+export class LaissCmsMenuNode extends HTMLElement {
+  connectedCallback() {
+    this.addEventListener("click", this)
+  }
+
+  disconnectedCallback() {
+    this.removeEventListener("click", this)
+  }
+
+  handleEvent(event) {
+    // Clicks of nested menu nodes bubble up here as well
+    if (event.target.closest("laiss-cms-node-folder") === this.folder) {
+      this.toggleFolded(event)
+    }
+  }
+
+  async toggleFolded(event) {
+    event.preventDefault()
+
+    try {
+      await patch(routes.node.toggle_folded_api_path(this.nodeId))
+      this.folded = !this.folded
+    } catch (error) {
+      growl(error.message || error, "error")
+    }
+  }
+
+  /**
+   * Shows the fold toggle only for nodes that have something to fold
+   */
+  updateFolder() {
+    this.folder.hidden = !(this.hasChildren || this.folded)
+  }
+
+  get folded() {
+    return this.hasAttribute("folded")
+  }
+
+  set folded(value) {
+    this.toggleAttribute("folded", value)
+    this.folder.toggleAttribute("folded", value)
+    this.childrenList.classList.toggle("folded", value)
+  }
+
+  get hasChildren() {
+    return (
+      this.childrenList.querySelectorAll(":scope > laiss-cms-menu-node").length >
+      0
+    )
+  }
+
+  get nodeId() {
+    return this.getAttribute("node-id")
+  }
+
+  get folder() {
+    return this.querySelector(":scope > li > .sitemap_node laiss-cms-node-folder")
+  }
+
+  get childrenList() {
+    return this.querySelector(":scope > li > ul.children")
+  }
+}
+
+customElements.define("laiss-cms-menu-node", LaissCmsMenuNode)

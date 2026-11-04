@@ -1,0 +1,102 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+require "timecop"
+
+RSpec.describe LaissCms::Admin::PagesController do
+  routes { LaissCms::Engine.routes }
+
+  before do
+    authorize_user(:as_admin)
+  end
+
+  it_behaves_like "a controller that loads current language"
+
+  it_behaves_like "a controller with clipboard functionality", :page
+
+  describe "#index" do
+    let!(:page) { create(:laiss_cms_page) }
+
+    context "with params[:view] set" do
+      subject! { get(:index, params: {view: "list"}) }
+
+      it "sets view to that value" do
+        expect(session[:laiss_cms_pages_view]).to eq("list")
+        expect(assigns[:view]).to eq("list")
+      end
+    end
+
+    context "with params[:view] not set" do
+      subject { get(:index) }
+
+      context "with session[:view] not set" do
+        it "uses tree view" do
+          subject
+          expect(session[:laiss_cms_pages_view]).to eq("tree")
+          expect(assigns[:view]).to eq("tree")
+        end
+      end
+
+      context "with session[:view] set" do
+        before do
+          session[:laiss_cms_pages_view] = "list"
+        end
+
+        it "uses the view from session" do
+          subject
+          expect(session[:laiss_cms_pages_view]).to eq("list")
+          expect(assigns[:view]).to eq("list")
+        end
+      end
+    end
+
+    context "with wrong or missing language in session" do
+      let!(:site_1) { create(:laiss_cms_site) }
+      let!(:site_1_default_language) { create :laiss_cms_language, site: site_1, default: true }
+
+      it "should fall back to existing language if session language does not exist" do
+        session[:laiss_cms_language_id] = 123456789
+
+        expect {
+          get :index
+        }.to_not raise_error
+      end
+    end
+  end
+
+  describe "#destroy" do
+    let(:page) { create(:laiss_cms_page) }
+
+    context "with nodes attached" do
+      let!(:node) { create(:laiss_cms_node, page: page) }
+
+      it "returns with error message" do
+        delete :destroy, params: {id: page.id, format: :js}
+        expect(response).to redirect_to(admin_pages_path)
+        expect(flash[:warning]).to \
+          eq("There are still menu nodes attached to this page. Please remove them first.")
+      end
+    end
+
+    context "without nodes" do
+      it "removes the page" do
+        delete :destroy, params: {id: page.id, format: :js}
+        expect(response).to redirect_to(admin_pages_path)
+        expect(flash[:notice]).to eq LaissCms.t("Page deleted", name: page.name)
+      end
+    end
+  end
+
+  describe "#publish" do
+    let(:page) { create(:laiss_cms_page) }
+
+    it "publishes the page" do
+      current_time = Time.current
+      Timecop.freeze(current_time) do
+        expect {
+          post :publish, params: {id: page}, format: :turbo_stream
+        }.to have_enqueued_job(LaissCms::PublishPageJob).with(page.id, public_on: current_time)
+      end
+    end
+  end
+end

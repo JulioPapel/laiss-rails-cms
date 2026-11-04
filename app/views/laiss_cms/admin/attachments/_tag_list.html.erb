@@ -1,0 +1,14 @@
+<% if LaissCms::Attachment.tag_counts.any? %>
+  <h3><%= LaissCms.t("Filter by tag") %></h3>
+  <%= render LaissCms::Admin::ListFilter.new(".tag-list li", placeholder: LaissCms.t("Filter tags")) %>
+  <ul>
+    <%= render LaissCms::Admin::TagsList.new('LaissCms::Attachment') %>
+  </ul>
+  <% if search_filter_params[:tagged_with].present? %>
+    <%= link_to(
+      render_icon(:times, size: '1x') + LaissCms.t('Remove tag filter'),
+      url_for(search_filter_params.except(:tagged_with)),
+      class: 'secondary button small with_icon'
+    ) %>
+  <% end %>
+<% end %>

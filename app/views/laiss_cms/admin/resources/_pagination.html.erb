@@ -1,0 +1,6 @@
+<div class="pagination-wrapper">
+  <%= paginate resources, theme: "laiss_cms" %>
+  <% unless local_assigns[:hide_per_page_select] %>
+    <%= render "laiss_cms/admin/resources/per_page_select" %>
+  <% end %>
+</div>

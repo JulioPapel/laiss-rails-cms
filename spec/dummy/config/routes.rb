@@ -15,5 +15,5 @@ Rails.application.routes.draw do
     resources :bookings
   end
 
-  mount Alchemy::Engine => "/"
+  mount LaissCms::Engine => "/"
 end

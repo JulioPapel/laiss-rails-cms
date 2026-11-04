@@ -11,7 +11,7 @@ Elements are reusable blocks of content that belong together, visually and conte
 
 Imagine you combine a headline, a text block and a picture - this is a typical element, maybe you want to call it an "article".
 
-Some people speak of widgets, blocks or components. All these are elements in Alchemy. Elements can be nested into each other and are the key of Alchemy's flexible content architecture.
+Some people speak of widgets, blocks or components. All these are elements in LaissCms. Elements can be nested into each other and are the key of LaissCms's flexible content architecture.
 
 They give you a powerful tool to build the CMS you need.
 
@@ -21,23 +21,23 @@ The ingredients of an element are of a specific [type](ingredients). Each ingred
 
 Each element has a template (they are called [partials in Rails](https://guides.rubyonrails.org/layouts_and_rendering.html#using-partials)).
 
-They live in `app/views/alchemy/elements/`.
+They live in `app/views/laiss_cms/elements/`.
 
 ::: tip NOTE
-You don't need to create the files yourself. Use [the built in generator](#generating-the-partials) to let Alchemy generate them for you.
+You don't need to create the files yourself. Use [the built in generator](#generating-the-partials) to let LaissCms generate them for you.
 :::
 
 ## Defining elements
 
-Elements are defined in the `config/alchemy/elements.yml` file. Element definitions are written in [YAML](http://yaml.org)
+Elements are defined in the `config/laiss_cms/elements.yml` file. Element definitions are written in [YAML](http://yaml.org)
 
 If this file does not exist yet, use the scaffold generator to do that now:
 
 ~~~ bash
-bin/rails g alchemy:install
+bin/rails g laiss_cms:install
 ~~~
 
-The generator also creates all the other basic folders and files for setting up your website with Alchemy.
+The generator also creates all the other basic folders and files for setting up your website with LaissCms.
 
 ::: warning NOTE
 The element definitions are cached. Please restart the server after editing the `elements.yml`.
@@ -46,7 +46,7 @@ The element definitions are cached. Please restart the server after editing the 
 ### Example element definition
 
 ~~~ yaml
-# config/alchemy/elements.yml
+# config/laiss_cms/elements.yml
 - name: article
   unique: true
   ingredients:
@@ -75,7 +75,7 @@ The following settings can be used to define elements in the `elements.yml`.
 
 * **name** `String` _required_
 
-  A lowercased **unique** name of the element. Separate words need to be underscored. The name is used in the `page_layouts.yml` file to define on which pages the element can be used. It is also part of the `app/views/alchemy/elements` view partials file names. The name is [translatable](#translating-elements) for the user in the admin frontend.
+  A lowercased **unique** name of the element. Separate words need to be underscored. The name is used in the `page_layouts.yml` file to define on which pages the element can be used. It is also part of the `app/views/laiss_cms/elements` view partials file names. The name is [translatable](#translating-elements) for the user in the admin frontend.
 
 * **unique** `Boolean` (Default: `false`)
 
@@ -216,7 +216,7 @@ Tags are a collection on the `element` object. `element.tag_list` returns an arr
 <%= element.tag_list.join(', ') %>
 ~~~
 
-Alchemy uses the [gutentag](https://github.com/pat/gutentag) gem, so please refer to the github [README](https://github.com/pat/gutentag/blob/master/README.md) or the [Wiki](https://github.com/pat/gutentag/wiki) for further informations.
+LaissCms uses the [gutentag](https://github.com/pat/gutentag) gem, so please refer to the github [README](https://github.com/pat/gutentag/blob/master/README.md) or the [Wiki](https://github.com/pat/gutentag/wiki) for further informations.
 
 ## Element with ingredient validations
 
@@ -230,14 +230,14 @@ Supported validations are
 
 The `format` validator needs to have a [regular expression](http://rubular.com) or a predefined matcher string as its value.
 
-There are already predefined format matchers listed in the `config/alchemy/config.yml` file.
+There are already predefined format matchers listed in the `config/laiss_cms/config.yml` file.
 
 It is also possible to add own format matchers there.
 
 ### Format matchers
 
 ~~~ yaml
-# config/alchemy/config.yml
+# config/laiss_cms/config.yml
 format_matchers:
   email: !ruby/regexp '/\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/'
   url: !ruby/regexp '/\A[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?\z/ix'
@@ -289,7 +289,7 @@ At first the name ingredient will be validated for `presence`, then for `uniquen
 
 Before you can use elements on pages, you need to define on which page layouts your element can be placed.
 
-So open `config/alchemy/page_layouts.yml` in your text editor and put the name of your new element into the list of available elements for a specific page layout.
+So open `config/laiss_cms/page_layouts.yml` in your text editor and put the name of your new element into the list of available elements for a specific page layout.
 
 ~~~ yaml
 - name: standard
@@ -306,7 +306,7 @@ All future created pages with page layout `standard` will automatically create t
 After typing the line below in your terminal, the rails generator will create the elements editor and view files.
 
 ~~~ bash
-bin/rails g alchemy:elements --skip
+bin/rails g laiss_cms:elements --skip
 ~~~
 
 The `--skip` flag command skips files that already exist
@@ -318,7 +318,7 @@ You can pass `--template-engine` or `-e` as an argument to use `haml`, `slim` or
 The default template engine depends on your settings in your Rails host app.
 :::
 
-The generator will create partials for each element in your `app/views/alchemy/elements` folder.
+The generator will create partials for each element in your `app/views/laiss_cms/elements` folder.
 
 According to the first example, the article element, the generator will create the `_article.html.erb` partial.
 
@@ -326,7 +326,7 @@ The generator does not only create these files, it also generates the necessary 
 
 ## Render elements in your layout
 
-Now that the above 'article' element example is associated with the 'standard' page layout, the element can be rendered on that layout `app/views/alchemy/page_layouts/_standard.html.erb`.
+Now that the above 'article' element example is associated with the 'standard' page layout, the element can be rendered on that layout `app/views/laiss_cms/page_layouts/_standard.html.erb`.
 
 ~~~ erb
 ...
@@ -364,7 +364,7 @@ Sometimes you only want to render specific elements on a specific page and maybe
 
 A common use case is to have global pages for header and footer parts:
 ~~~ yaml
-# config/alchemy/elements.yml
+# config/laiss_cms/elements.yml
 - name: header
   hint: Navigation bar at the top of every page
   ingredients:
@@ -375,7 +375,7 @@ A common use case is to have global pages for header and footer parts:
   ingredients:
     # ...
 
-# config/alchemy/page_layouts.yml
+# config/laiss_cms/page_layouts.yml
 
 - name: header
   unique: true
@@ -408,7 +408,7 @@ Which can be added to your `application.html.erb` file:
 
     <footer><%= render_elements from_page: 'footer' %></footer>
 
-    <%= render "alchemy/edit_mode" %>
+    <%= render "laiss_cms/edit_mode" %>
   </body>
 </html>
 ~~~
@@ -449,7 +449,7 @@ You need to use the elements view partial name instead of the element local vari
 
 ## Customizing the view partial
 
-The Alchemy element generator creates the basic html markup for you.
+The LaissCms element generator creates the basic html markup for you.
 
 Pretty useful, but maybe not what you need, sometimes. No problem, feel free to customize it. It's yours :).
 
@@ -488,7 +488,7 @@ You can pass additional arguments to add or change any html attributes of the wr
 ~~~
 
 ::: tip
-If you want to learn more about the helper methods used in these partials, please have a look at the [Documentation](http://rubydoc.info/search/github/AlchemyCMS/alchemy_cms?q=helper).
+If you want to learn more about the helper methods used in these partials, please have a look at the [Documentation](http://rubydoc.info/search/github/LaissCMS/laiss_cms?q=helper).
 :::
 
 ### Pass options to the ingredient view
@@ -515,7 +515,7 @@ If you only want to pass `html_options` you need to pass an empty hash as second
 ~~~
 
 ::: tip
-Not all ingredients have wrapper tags. A list of all ingredient views are [here](https://github.com/AlchemyCMS/alchemy_cms/tree/master/app/views/alchemy/ingredients).
+Not all ingredients have wrapper tags. A list of all ingredient views are [here](https://github.com/LaissCMS/laiss_cms/tree/master/app/views/laiss_cms/ingredients).
 :::
 
 ## Translating elements
@@ -525,7 +525,7 @@ You can translate them in your `config/locales` language yml file.
 
 ~~~ yaml
 de:
-  alchemy:
+  laiss_cms:
     element_names:
       contact_form: Kontaktformular
       search: Suche
@@ -538,7 +538,7 @@ This is useful for ingredients with the same name that should have different tra
 
 ~~~ yaml
 de:
-  alchemy:
+  laiss_cms:
     element_names:
       contact_form: Kontaktformular
     ingredient_roles:

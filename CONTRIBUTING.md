@@ -1,13 +1,13 @@
-Alchemy CMS is an open source project and we encourage contributions. Please read these
+LaissCms CMS is an open source project and we encourage contributions. Please read these
 contributors guidelines and our code of conduct before contributing.
 
 ## Filing an issue
 
-When filing an issue on the Alchemy CMS project, please provide these details:
+When filing an issue on the LaissCms CMS project, please provide these details:
 
 * A comprehensive list of steps to reproduce the issue.
 * What you're *expecting* to happen compared with what's *actually* happening.
-* The version of Alchemy *and* the version of Rails.
+* The version of LaissCms *and* the version of Rails.
 * Your application's complete Gemfile, as text (*not as an image*)
 * Any relevant stack traces ("Full trace" preferred)
 
@@ -20,10 +20,10 @@ formatted when the issue is posted.
 ## Pull requests
 
 We gladly accept pull requests to fix bugs and, in some circumstances, add new
-features to Alchemy.
+features to LaissCms.
 
-NOTE: Please discuss new features at the public Alchemy Trello board
-and/or the Alchemy discussion board, before sending a pull request.
+NOTE: Please discuss new features at the public LaissCms Trello board
+and/or the LaissCms discussion board, before sending a pull request.
 
 Here's a quick guide:
 
@@ -72,11 +72,11 @@ taken straight from the Ruby on Rails guide:
 
 ### JavaScript changes
 
-If you modify JavaScript source files under `app/javascript/alchemy_admin/`, you must rebuild the bundle and commit the artifact:
+If you modify JavaScript source files under `app/javascript/laiss_cms_admin/`, you must rebuild the bundle and commit the artifact:
 
     $ pnpm run build:admin
 
-Commit the updated `app/assets/builds/alchemy/alchemy_admin.min.js` alongside your source changes. For local development, `bin/start` (Docker) or `bin/dev` runs the watch process automatically.
+Commit the updated `app/assets/builds/laiss_cms/laiss_cms_admin.min.js` alongside your source changes. For local development, `bin/start` (Docker) or `bin/dev` runs the watch process automatically.
 
 Please follow these syntax guides:
 

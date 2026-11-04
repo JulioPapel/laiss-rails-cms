@@ -1,16 +1,16 @@
-# AlchemyCMS Translations
+# LaissCMS Translations
 
-Translation files for [AlchemyCMS](https://github.com/AlchemyCMS/alchemy_cms) 8.0 and above.
+Translation files for [LaissCMS](https://github.com/LaissCMS/laiss_cms) 8.0 and above.
 
-## Alchemy version
+## LaissCms version
 
-Since Alchemy CMS 9.0, `alchemy_i18n` is developed inside the [Alchemy CMS repository](https://github.com/AlchemyCMS/alchemy_cms/tree/main/i18n)
-and released together with `alchemy_cms` using the same version.
-Older versions are maintained in the [`alchemy_i18n` repository](https://github.com/AlchemyCMS/alchemy_i18n).
+Since LaissCms CMS 9.0, `laiss_cms_i18n` is developed inside the [LaissCms CMS repository](https://github.com/LaissCMS/laiss_cms/tree/main/i18n)
+and released together with `laiss_cms` using the same version.
+Older versions are maintained in the [`laiss_cms_i18n` repository](https://github.com/LaissCMS/laiss_cms_i18n).
 
-| Alchemy CMS | alchemy_i18n | Branch        |
+| LaissCms CMS | laiss_cms_i18n | Branch        |
 |-------------|-------------|---------------|
-| >= 9.0      | Same as Alchemy CMS | `main` of `alchemy_cms` |
+| >= 9.0      | Same as LaissCms CMS | `main` of `laiss_cms` |
 | 8.4         | >= 8.4.0    | `8.4-stable`  |
 | 8.3         | >= 8.2.0    | `8.2-stable`  |
 | 8.2         | >= 8.2.0    | `8.2-stable`  |
@@ -25,15 +25,15 @@ Older versions are maintained in the [`alchemy_i18n` repository](https://github.
 Add the gem to your `Gemfile` and run the install generator:
 
 ```
-bundle add alchemy_i18n
-bin/rails g alchemy_i18n:install
+bundle add laiss_cms_i18n
+bin/rails g laiss_cms_i18n:install
 ```
 
 Pass the locales you want to generate files for with the `--locales` option.
 Separate multiple locales by space.
 
 ```
-bin/rails g alchemy_i18n:install --locales de it es
+bin/rails g laiss_cms_i18n:install --locales de it es
 ```
 
 ## Available locales

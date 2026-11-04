@@ -40,7 +40,7 @@ const alchemyBadgeUrl = computed(() => {
     if (maxMatch) message = "< " + maxMatch[1]
   }
   const params = new URLSearchParams({
-    label: "alchemy",
+    label: "laiss_cms",
     message,
     color,
   })
@@ -55,7 +55,7 @@ onMounted(async () => {
     if (res.ok) {
       const data = await res.json()
       const alchemyDep = data.dependencies.runtime.find(
-        (dep) => dep.name === "alchemy_cms"
+        (dep) => dep.name === "laiss_cms"
       )
       if (alchemyDep) {
         alchemyRequirements.value = alchemyDep.requirements
@@ -76,7 +76,7 @@ onMounted(async () => {
       <img
         v-if="alchemyBadgeUrl"
         :src="alchemyBadgeUrl"
-        alt="Alchemy version"
+        alt="LaissCms version"
         loading="lazy"
       />
     </div>

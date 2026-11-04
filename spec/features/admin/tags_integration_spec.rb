@@ -3,9 +3,9 @@
 require "rails_helper"
 
 RSpec.describe "Tags", type: :system do
-  let!(:picture) { create(:alchemy_picture, tag_list: "Foo") }
-  let!(:picture2) { create(:alchemy_picture, tag_list: "Foo") }
-  let!(:a_page) { create(:alchemy_page, tag_list: "Bar") }
+  let!(:picture) { create(:laiss_cms_picture, tag_list: "Foo") }
+  let!(:picture2) { create(:laiss_cms_picture, tag_list: "Foo") }
+  let!(:a_page) { create(:laiss_cms_page, tag_list: "Bar") }
 
   before { authorize_user(:as_admin) }
 

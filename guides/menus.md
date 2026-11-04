@@ -9,36 +9,36 @@ next:
 
 # Menus
 
-Alchemy uses a dedicated menu system that is separate from the page tree. Menus are managed through **nodes** — tree-structured entries that can link to Alchemy pages, external URLs, or act as grouping labels.
+LaissCms uses a dedicated menu system that is separate from the page tree. Menus are managed through **nodes** — tree-structured entries that can link to LaissCms pages, external URLs, or act as grouping labels.
 
 This separation gives editors full control over navigation structure without being constrained by the page hierarchy. A page can appear in multiple menus, or not appear in any menu at all.
 
 ## Defining Menus
 
-Menu types are defined in the `config/alchemy/menus.yml` file. The installer creates this file with two default menus.
+Menu types are defined in the `config/laiss_cms/menus.yml` file. The installer creates this file with two default menus.
 
 ~~~ yaml
-# config/alchemy/menus.yml
+# config/laiss_cms/menus.yml
 - main_menu
 - footer_menu
 ~~~
 
-Each entry is a menu type name. Alchemy creates a root node for each menu type per language. Editors then build the menu tree by adding child nodes in the admin interface.
+Each entry is a menu type name. LaissCms creates a root node for each menu type per language. Editors then build the menu tree by adding child nodes in the admin interface.
 
 ## Generating Menu Partials
 
-Alchemy provides a generator that creates view partials for all defined menus.
+LaissCms provides a generator that creates view partials for all defined menus.
 
 ~~~ bash
-bin/rails g alchemy:menus
+bin/rails g laiss_cms:menus
 ~~~
 
 For each menu type, the generator creates two partials:
 
 | File | Purpose |
 |------|---------|
-| `app/views/alchemy/menus/<menu_type>/_wrapper.html.erb` | The outer container (e.g. `<ul>`) |
-| `app/views/alchemy/menus/<menu_type>/_node.html.erb` | A single menu item (e.g. `<li>`) |
+| `app/views/laiss_cms/menus/<menu_type>/_wrapper.html.erb` | The outer container (e.g. `<ul>`) |
+| `app/views/laiss_cms/menus/<menu_type>/_node.html.erb` | A single menu item (e.g. `<li>`) |
 
 ## Rendering Menus
 
@@ -68,8 +68,8 @@ The helper finds the root node for the given menu type in the current language a
 The wrapper partial receives the root node as `menu` and any options you passed to `render_menu`.
 
 ~~~ erb
-<%# app/views/alchemy/menus/main_menu/_wrapper.html.erb %>
-<% cache [menu, @page, Alchemy::Current.preview_page?] do %>
+<%# app/views/laiss_cms/menus/main_menu/_wrapper.html.erb %>
+<% cache [menu, @page, LaissCms::Current.preview_page?] do %>
   <ul class="nav">
     <%= render partial: menu.to_partial_path,
       collection: menu.children.includes(:page, :children),
@@ -84,12 +84,12 @@ The wrapper partial receives the root node as `menu` and any options you passed 
 The node partial receives each node and renders it as a menu item. Child nodes are rendered recursively.
 
 ~~~ erb
-<%# app/views/alchemy/menus/main_menu/_node.html.erb %>
-<% cache [node, @page, Alchemy::Current.preview_page?] do %>
+<%# app/views/laiss_cms/menus/main_menu/_node.html.erb %>
+<% cache [node, @page, LaissCms::Current.preview_page?] do %>
   <%= content_tag :li, class: ['nav-item', node.children.any? ? 'dropdown' : nil].compact do %>
     <%= link_to_if node.url,
       node.name,
-      Alchemy::Current.preview_page? ? 'javascript: void(0)' : node.url,
+      LaissCms::Current.preview_page? ? 'javascript: void(0)' : node.url,
       class: ['nav-link', current_page?(node.url) ? 'active' : nil].compact,
       title: node.title,
       target: node.external? ? '_blank' : nil,
@@ -111,7 +111,7 @@ Each node has the following properties that editors can set in the admin interfa
 
 ### Page
 
-An optional Alchemy page. When set, the node's name and URL are taken from the page automatically.
+An optional LaissCms page. When set, the node's name and URL are taken from the page automatically.
 
 ### Name
 
@@ -138,9 +138,9 @@ When `true`, adds `rel="nofollow"` to the link.
 Menu type names are translated through I18n. These names appear as root node labels in the admin interface.
 
 ~~~ yaml
-# config/locales/alchemy.de.yml
+# config/locales/laiss_cms.de.yml
 de:
-  alchemy:
+  laiss_cms:
     menu_names:
       main_menu: Hauptnavigation
       footer_menu: Fusszeile

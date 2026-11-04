@@ -2,23 +2,23 @@
 
 require "rails_helper"
 require "sprockets"
-require "alchemy/sprockets/skip_builds_compression"
+require "laiss_cms/sprockets/skip_builds_compression"
 
-RSpec.describe Alchemy::Sprockets::SkipBuildsCompression do
+RSpec.describe LaissCms::Sprockets::SkipBuildsCompression do
   let(:compressor_class) do
     Class.new do
       def call(input)
         {data: "compressed(#{input[:data]})"}
       end
-      prepend Alchemy::Sprockets::SkipBuildsCompression
+      prepend LaissCms::Sprockets::SkipBuildsCompression
     end
   end
 
   subject(:compress) { compressor_class.new.call(filename: filename, data: "css") }
 
-  context "for a stylesheet inside Alchemy's app/assets/builds" do
+  context "for a stylesheet inside LaissCms's app/assets/builds" do
     let(:filename) do
-      Alchemy::Engine.root.join("app/assets/builds/alchemy/admin.css").to_s
+      LaissCms::Engine.root.join("app/assets/builds/laiss_cms/admin.css").to_s
     end
 
     it "returns the data untouched, skipping compression" do

@@ -1,0 +1,22 @@
+# frozen_string_literal: true
+
+module LaissCms
+  class Api::IngredientsController < Api::BaseController
+    # Returns all ingredients as json object
+    #
+    # You can either load all or only these for :element_id or :page_id param
+    #
+    def index
+      @ingredients = LaissCms::Ingredient.accessible_by(current_ability, :index)
+
+      if params[:page_id].present?
+        @ingredients = @ingredients
+          .where(laiss_cms_page_versions: {page_id: params[:page_id]})
+          .merge(LaissCms::PageVersion.draft)
+          .joins(element: :page_version)
+      end
+
+      render json: @ingredients, adapter: :json, root: "ingredients"
+    end
+  end
+end

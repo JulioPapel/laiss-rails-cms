@@ -1,0 +1,52 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+RSpec.describe LaissCms::Taggable do
+  # LaissCms::Element is a taggable model that has the cached_tag_list column.
+  describe "cached_tag_list maintenance" do
+    it "caches the tag names on save" do
+      element = create(:laiss_cms_element, name: "article", tag_list: "red, yellow")
+      expect(element.reload.cached_tag_list).to eq(%w[red yellow])
+    end
+
+    it "updates the cache when tags change" do
+      element = create(:laiss_cms_element, name: "article", tag_list: "red, yellow")
+      element.update!(tag_list: "green")
+      expect(element.reload.cached_tag_list).to eq(%w[green])
+    end
+
+    it "clears the cache when all tags are removed" do
+      element = create(:laiss_cms_element, name: "article", tag_list: "red, yellow")
+      element.update!(tag_list: "")
+      expect(element.reload.cached_tag_list).to eq([])
+    end
+
+    it "updates the cache when a tag is replaced" do
+      element = create(:laiss_cms_element, name: "article", tag_list: "red, yellow")
+      LaissCms::Tag.replace(LaissCms::Tag.find_by(name: "red"), LaissCms::Tag.create!(name: "blue"))
+      expect(element.reload.cached_tag_list).to match_array(%w[blue yellow])
+    end
+
+    # MySQL cannot default a text column, so the cache column is nil for
+    # untagged records instead of the empty array other adapters store.
+    it "returns an empty array when the cache column is nil" do
+      element = create(:laiss_cms_element, name: "article")
+      allow(element).to receive(:cached_tag_list).and_return(nil)
+      expect(element.tag_list).to eq([])
+    end
+
+    it "does not query the tags when saving an untagged record" do
+      element = create(:laiss_cms_element, name: "article")
+      tag_queries = 0
+      sub = ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
+        payload = args.last
+        next if payload[:cached]
+        tag_queries += 1 if /gutentag_(tags|taggings)/i.match?(payload[:sql])
+      end
+      element.update!(public: false)
+      ActiveSupport::Notifications.unsubscribe(sub)
+      expect(tag_queries).to eq(0)
+    end
+  end
+end

@@ -11,18 +11,18 @@ next:
 
 Ingredients are the individual content fields within an [element](elements). Each ingredient has a type that determines what kind of data it stores and how it is edited in the admin interface.
 
-Alchemy comes with a set of built-in ingredient types for common needs. You can also [create your own ingredient types](how_to_create_custom_ingredients).
+LaissCms comes with a set of built-in ingredient types for common needs. You can also [create your own ingredient types](how_to_create_custom_ingredients).
 
 ::: tip
-The [alchemy-solidus](extensions#alchemy-solidus) extension is a good example of custom ingredients in action. It provides `SpreeProduct`, `SpreeTaxon` and `SpreeVariant` ingredient types that associate Alchemy elements with Solidus e-commerce models.
+The [laiss-cms-solidus](extensions#laiss-cms-solidus) extension is a good example of custom ingredients in action. It provides `SpreeProduct`, `SpreeTaxon` and `SpreeVariant` ingredient types that associate LaissCms elements with Solidus e-commerce models.
 :::
 
 ## Global Settings
 
-Ingredients are defined within an [element definition](elements#defining-elements) in `config/alchemy/elements.yml`. Each ingredient requires a `role` and `type`. You can also set hints and default values.
+Ingredients are defined within an [element definition](elements#defining-elements) in `config/laiss_cms/elements.yml`. Each ingredient requires a `role` and `type`. You can also set hints and default values.
 
 ~~~ yaml
-# config/alchemy/elements.yml
+# config/laiss_cms/elements.yml
 - name: article
   ingredients:
     - role: headline
@@ -46,7 +46,7 @@ A lowercased **unique** (per element) identifier for the ingredient. Separate wo
 ### type
 `String` _required_
 
-The ingredient type as a PascalCase class name (e.g. `Text`, `Richtext`, `Picture`). This maps to a class under `Alchemy::Ingredients`, so `Text` resolves to `Alchemy::Ingredients::Text`. Alchemy provides built-in types for [plain text](#text), [rich text](#richtext), [images](#picture), [booleans](#boolean) and more.
+The ingredient type as a PascalCase class name (e.g. `Text`, `Richtext`, `Picture`). This maps to a class under `LaissCms::Ingredients`, so `Text` resolves to `LaissCms::Ingredients::Text`. LaissCms provides built-in types for [plain text](#text), [rich text](#richtext), [images](#picture), [booleans](#boolean) and more.
 
 ### hint
 `String|Symbol|Boolean`
@@ -170,12 +170,12 @@ Restrict which HTML tags and attributes the rendered value may contain. When set
 
 ## Picture
 
-Stores a reference to a picture from the Alchemy library.
+Stores a reference to a picture from the LaissCms library.
 
 The editor renders a picture selector with cropping options. The view renders the assigned picture, resized and cropped as configured.
 
 ::: tip
-See the [rendering images](render_images) guide for more on Alchemy's image rendering engine.
+See the [rendering images](render_images) guide for more on LaissCms's image rendering engine.
 :::
 
 ### Example
@@ -428,7 +428,7 @@ This adds a "Custom color" option to the select that opens a free color picker f
 
 ## File
 
-Stores a reference to a file attachment from the Alchemy library.
+Stores a reference to a file attachment from the LaissCms library.
 
 The view renders a download link (`<a>` tag) to the attachment.
 
@@ -465,7 +465,7 @@ Only show attachments with these file extensions in the selection.
 
 ## Audio
 
-Stores a reference to an audio attachment from the Alchemy library.
+Stores a reference to an audio attachment from the LaissCms library.
 
 The view renders an HTML `<audio>` element with a `<source>` child.
 
@@ -512,7 +512,7 @@ Only show attachments with these file extensions in the selection.
 
 ## Video
 
-Stores a reference to a video attachment from the Alchemy library.
+Stores a reference to a video attachment from the LaissCms library.
 
 The view renders an HTML `<video>` element with a `<source>` child.
 
@@ -595,7 +595,7 @@ Either a `String` with the format of [Ruby's `strftime`](https://ruby-doc.org/st
 
 ## Page
 
-References an [Alchemy page](pages). The editor renders a page select box.
+References an [LaissCms page](pages). The editor renders a page select box.
 
 Useful for follow-up pages, related content links, or any case where you need to reference another page.
 
@@ -617,7 +617,7 @@ Additional query parameters appended to the page URL.
 
 ## Node
 
-References an Alchemy menu node. The editor renders a node select box.
+References an LaissCms menu node. The editor renders a node select box.
 
 Useful for linking to specific menu entries or navigation items.
 

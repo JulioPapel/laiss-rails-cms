@@ -1,10 +1,10 @@
 ---
 layout: home
 hero:
-  name: AlchemyCMS
+  name: LaissCMS
   image:
     src: /icon.svg
-    alt: AlchemyCMS Icon
+    alt: LaissCMS Icon
   text: The open source content framework built in Rails
   actions:
     - text: Get Started →
@@ -13,7 +13,7 @@ hero:
 features:
 - title: Not a common CMS
   icon: 🚀
-  details: Alchemy is a CMS framework. It enables you to build your own CMS.
+  details: LaissCms is a CMS framework. It enables you to build your own CMS.
 - title: Highly customizable
   icon: 🛠
   details: Build even complex websites in a shorter time frame.

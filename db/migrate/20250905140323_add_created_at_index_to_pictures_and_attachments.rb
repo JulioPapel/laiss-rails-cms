@@ -2,8 +2,8 @@ class AddCreatedAtIndexToPicturesAndAttachments < ActiveRecord::Migration[7.2]
   disable_ddl_transaction! if connection.adapter_name.match?(/postgres/i)
 
   def change
-    add_index :alchemy_pictures, :created_at, if_not_exists: true, algorithm: algorithm
-    add_index :alchemy_attachments, :created_at, if_not_exists: true, algorithm: algorithm
+    add_index :laiss_cms_pictures, :created_at, if_not_exists: true, algorithm: algorithm
+    add_index :laiss_cms_attachments, :created_at, if_not_exists: true, algorithm: algorithm
   end
 
   private

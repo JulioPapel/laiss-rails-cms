@@ -10,12 +10,12 @@ RSpec.describe "Admin Languages Features", type: :system do
   describe "creating a new language" do
     context "when selected locale is not an available locale" do
       before do
-        create(:alchemy_site)
+        create(:laiss_cms_site)
         allow(::I18n).to receive(:available_locales) { [:de, :en] }
       end
 
       it "shows a locale select and an error message" do
-        visit alchemy.new_admin_language_path
+        visit laiss_cms.new_admin_language_path
 
         fill_in "language_language_code", with: "kl"
         click_button "Save"
@@ -26,32 +26,32 @@ RSpec.describe "Admin Languages Features", type: :system do
     end
 
     context "with multiple sites" do
-      let!(:default_site) { create(:alchemy_site, :default) }
+      let!(:default_site) { create(:laiss_cms_site, :default) }
 
       let!(:site_2) do
-        create(:alchemy_site, host: "another-site.com")
+        create(:laiss_cms_site, host: "another-site.com")
       end
 
       let(:language) do
-        Alchemy::Language.last
+        LaissCms::Language.last
       end
 
       it "creates language for current site" do
-        visit alchemy.new_admin_language_path
+        visit laiss_cms.new_admin_language_path
 
         fill_in "language_name", with: "Klingon"
         fill_in "language_language_code", with: "kl"
         fill_in "language_frontpage_name", with: "Tuq"
         click_button "Save"
 
-        expect(language.site_id).to eq(Alchemy::Site.pluck(:id).first)
+        expect(language.site_id).to eq(LaissCms::Site.pluck(:id).first)
         expect(language.site_id).to_not eq(site_2.id)
       end
     end
   end
 
   describe "editing an language" do
-    let!(:language) { create(:alchemy_language, :german) }
+    let!(:language) { create(:laiss_cms_language, :german) }
 
     context "when selected locale has multiple matching locale files" do
       before do
@@ -59,7 +59,7 @@ RSpec.describe "Admin Languages Features", type: :system do
       end
 
       it "shows a locale select with matching locales only" do
-        visit alchemy.edit_admin_language_path(language)
+        visit laiss_cms.edit_admin_language_path(language)
 
         expect(page).to have_select("language_locale", options: ["de", "de-at"])
       end
@@ -71,7 +71,7 @@ RSpec.describe "Admin Languages Features", type: :system do
       end
 
       it "shows a locale select with matching locale only" do
-        visit alchemy.edit_admin_language_path(language)
+        visit laiss_cms.edit_admin_language_path(language)
 
         expect(page).to have_select("language_locale", options: %w[de])
       end
@@ -83,7 +83,7 @@ RSpec.describe "Admin Languages Features", type: :system do
       end
 
       it "shows a locale select with all available locales" do
-        visit alchemy.edit_admin_language_path(language)
+        visit laiss_cms.edit_admin_language_path(language)
 
         expect(page).to have_select("language_locale", options: %w[jp es])
       end

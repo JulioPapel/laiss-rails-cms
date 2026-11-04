@@ -11,10 +11,10 @@ on:
 jobs:
   publish:
     if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/v'))
-    uses: AlchemyCMS/.github/.github/workflows/release.yml@main
+    uses: LaissCMS/.github/.github/workflows/release.yml@main
     with:
-      version_file_path: lib/alchemy/version.rb
+      version_file_path: lib/laiss_cms/version.rb
       target_branch: ${{ github.event.pull_request.base.ref || github.ref_name }}
     secrets:
-      app_id: ${{ vars.ALCHEMY_BOT_APP_ID }}
-      app_private_key: ${{ secrets.ALCHEMY_BOT_APP_PRIVATE_KEY }}
+      app_id: ${{ vars.LAISS_CMS_BOT_APP_ID }}
+      app_private_key: ${{ secrets.LAISS_CMS_BOT_APP_PRIVATE_KEY }}

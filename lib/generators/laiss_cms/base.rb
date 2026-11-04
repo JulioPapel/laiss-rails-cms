@@ -1,0 +1,47 @@
+# frozen_string_literal: true
+
+require "rails/generators"
+
+module LaissCms
+  module Generators
+    class Base < ::Rails::Generators::Base
+      class_option :template_engine, type: :string, aliases: "-e", desc: 'Template engine for the views. Available options are "erb", "haml", and "slim".'
+
+      private
+
+      def conditional_template(source, destination)
+        files = Dir.glob(destination.gsub(/\.([a-z]+)$/, "*"))
+        if files.any?
+          ext = File.extname(files.first)[1..]
+
+          # If view already exists using a different template engine, change
+          # source and destination file names to use that engine.
+          if ext != template_engine.to_s
+            say_status :warning, "View uses unexpected template engine '#{ext}'.", :cyan
+            destination = destination.gsub(/#{template_engine}$/, ext)
+            source = source.gsub(/#{template_engine}$/, ext)
+          end
+        end
+
+        template source, destination
+      end
+
+      def template_engine
+        # Rails is clever enough to default this to whatever template
+        # engine is configured through its generator configuration,
+        # but we'll default it to erb anyway, just in case.
+        options[:template_engine] || "erb"
+      end
+
+      def load_laiss_cms_yaml(name)
+        YAML.safe_load(
+          ERB.new(File.read(Rails.root.join("config", "laiss_cms", name))).result,
+          permitted_classes: YAML_PERMITTED_CLASSES,
+          aliases: true
+        )
+      rescue Errno::ENOENT
+        puts "\nERROR: Could not read config/laiss_cms/#{name} file. Please run: `rails generate laiss_cms:install`"
+      end
+    end
+  end
+end

@@ -1,0 +1,53 @@
+<%= turbo_frame_tag("page_nodes") do %>
+  <table class="list">
+    <tr>
+      <th class="name">
+        <%= LaissCms::Node.model_name.human(count: @page.nodes.size) %>
+      </th>
+      <th class="tools"></th>
+    </tr>
+    <% nodes = @page.nodes.select(&:persisted?) %>
+    <% seperator = '<laiss-cms-icon name="arrow-right-s" style="vertical-align: text-bottom"></laiss-cms-icon>'.html_safe %>
+    <% if nodes.length > 0 %>
+      <% nodes.each do |node| %>
+        <tr class="even">
+          <td>
+            <%= safe_join(node.ancestors.map(&:name), seperator) %><%= seperator %><strong><%= node.name %></strong>
+          </td>
+          <td class="tools">
+            <sl-tooltip content="<%= LaissCms.t("delete_node") %>">
+              <%= link_to render_icon(:minus),
+                admin_node_path(node),
+                class: "icon_button",
+                data: { turbo_method: :delete, turbo_confirm: LaissCms.t('confirm_to_delete_node') } %>
+            </sl-tooltip>
+          </td>
+        </tr>
+      <% end %>
+    <% else %>
+      <tr class="even">
+        <td><%= LaissCms.t('No menu node for this page found') %></td>
+        <td class="tools"></td>
+      </tr>
+    <% end %>
+  </table>
+
+  <fieldset>
+    <legend><%= LaissCms.t('Create node on parent:') %></legend>
+
+    <%= laiss_cms_form_for([:admin, @page.nodes.build], id: "new_node_form") do |f| %>
+      <%= f.hidden_field :page_id, value: @page.id %>
+      <%= f.hidden_field :language_id, value: @page.language_id %>
+      <div class="inline-input">
+        <div class="left-column">
+          <%= render LaissCms::Admin::NodeSelect.new(nil, url: laiss_cms.api_nodes_path(language_id: @page.language_id, include: :ancestors)) do %>
+            <%= f.text_field :parent_id, class: 'laiss_cms_selectbox full_width' %>
+          <% end %>
+        </div>
+        <div class="right-column">
+          <button is="laiss-cms-button"><%= LaissCms.t(:create_node) %></button>
+        </div>
+      </div>
+    <% end %>
+  </fieldset>
+<% end %>

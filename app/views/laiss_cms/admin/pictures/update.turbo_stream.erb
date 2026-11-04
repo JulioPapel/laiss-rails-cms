@@ -1,0 +1,6 @@
+<laiss-cms-growl type="<%= @message[:type] %>">
+  <%= @message[:body] %>
+</laiss-cms-growl>
+<%= turbo_stream.replace("picture_#{@picture.id}") do %>
+  <%= render "picture", picture: @picture, picture_index: params[:picture_index] %>
+<% end %>

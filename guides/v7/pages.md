@@ -7,7 +7,7 @@ next: elements
 
 ## Overview
 
-In contrary to most CMSs pages in Alchemy **do not hold the actual content**. The actual content is stored in [ingredients](ingredients) inside of [elements](elements) pages are built of.
+In contrary to most CMSs pages in LaissCms **do not hold the actual content**. The actual content is stored in [ingredients](ingredients) inside of [elements](elements) pages are built of.
 
 Pages have a unique friendly url and are organized as nested tree and represent the structure of your website.
 
@@ -17,7 +17,7 @@ Every page has a [definition](#defining-page-layouts) which defines additional p
 
 ## Defining page types
 
-Page types are defined in the `config/alchemy/page_layouts.yml` file.
+Page types are defined in the `config/laiss_cms/page_layouts.yml` file.
 
 Every page type needs at least a name. You don't need to set every option. It depends on what you need for pages with that type.
 
@@ -69,11 +69,11 @@ Every page type needs at least a name. You don't need to set every option. It de
 
 * **controller** `String`
 
-  Controller to use instead of the default `Alchemy::PagesController`
+  Controller to use instead of the default `LaissCms::PagesController`
 
 * **action** `String`
 
-  Controllers action to use instead of the default `Alchemy::PagesController#show`
+  Controllers action to use instead of the default `LaissCms::PagesController#show`
 
 ### Example
 
@@ -86,7 +86,7 @@ This page must not be cached, because of validation messages and user specific f
 We also want to autogenerate the headline and the contactform element after the page gets created.
 
 ~~~ yaml
-# config/alchemy/page_layouts.yml
+# config/laiss_cms/page_layouts.yml
 - name: contact
   cache: false
   unique: true
@@ -100,9 +100,9 @@ Please ensure to restart the Rails server after editing `page_layouts.yml`.
 
 ## Page templates
 
-Each page type (called `page_layout` in Alchemy) has a Rails view partial which is yielded on the Rails application layout (`app/views/layouts/application.html.erb`).
+Each page type (called `page_layout` in LaissCms) has a Rails view partial which is yielded on the Rails application layout (`app/views/layouts/application.html.erb`).
 
-All page type partials live in the `app/views/alchemy/page_layouts` folder.
+All page type partials live in the `app/views/laiss_cms/page_layouts` folder.
 
 They are named after the pages `page_layout` you defined in the `page_layouts.yml` file.
 
@@ -112,12 +112,12 @@ If no page type partial is found for a page, the `_standard.html.erb` partial ge
 
 ### Template generator
 
-There is no need to create these partials manually. AlchemyCMS comes with a Rails generator task which creates these partials for you.
+There is no need to create these partials manually. LaissCMS comes with a Rails generator task which creates these partials for you.
 
 So after defining the page layouts, you can generate all the corresponding partials for them.
 
 ~~~ bash
-bin/rails g alchemy:page_layouts --skip
+bin/rails g laiss_cms:page_layouts --skip
 ~~~
 
 Using the example above, which defines a contact page type, the generator will create a partial named `_contact.html.erb`.
@@ -128,7 +128,7 @@ You can pass `--template-engine` or `-e` as option to use one of `haml`, `slim` 
 
 ### Rendering elements
 
-Alchemy does not place any HTML markup in your generated page layouts partial.
+LaissCms does not place any HTML markup in your generated page layouts partial.
 
 So:
 
@@ -139,7 +139,7 @@ So:
 is all you will see. Feel free to customize the HTML so it fits your needs.
 
 ::: tip
-The `render_elements` view helper has lots of options. Please have a look at the [`Alchemy::ElementsHelper` documentation](https://www.rubydoc.info/github/AlchemyCMS/alchemy_cms/Alchemy/ElementsHelper#render_elements-instance_method)
+The `render_elements` view helper has lots of options. Please have a look at the [`LaissCms::ElementsHelper` documentation](https://www.rubydoc.info/github/LaissCMS/laiss_cms/LaissCms/ElementsHelper#render_elements-instance_method)
 :::
 
 ## Global pages
@@ -155,16 +155,16 @@ To render an element from a global page use the `from_page` option of the `rende
 #### Example
 
 ~~~ erb
-<%= render_elements only: 'news_teaser', from_page: Alchemy::Page.find_by(name: 'sidebar') %>
+<%= render_elements only: 'news_teaser', from_page: LaissCms::Page.find_by(name: 'sidebar') %>
 ~~~
 
 ::: tip
-You can pass a `page_layout` name as a `String`, an `Array` of page type names, or an instance of a certain `Alchemy::Page`.
+You can pass a `page_layout` name as a `String`, an `Array` of page type names, or an instance of a certain `LaissCms::Page`.
 :::
 
 ## Caching
 
-If using the global caching option (defined in `config/alchemy/config.yml`) - which is enabled by default - your page requests will deliver cache headers. Most browsers, CDNs and proxys use these headers to cache the page.
+If using the global caching option (defined in `config/laiss_cms/config.yml`) - which is enabled by default - your page requests will deliver cache headers. Most browsers, CDNs and proxys use these headers to cache the page.
 
 ::: tip
 You can disable cache headers for certain pages by using the `cache: false` setting.
@@ -187,19 +187,19 @@ Be sure to not cache page templates that have elements with forms on it, like co
 ## Translate page type names
 
 Page type names are passed through the `I18n` library.
-You can translate them in your Alchemy locale files.
+You can translate them in your LaissCms locale files.
 
 ### Example
 
 ~~~ yaml
-# config/locales/alchemy.de.yml
+# config/locales/laiss_cms.de.yml
 de:
-  alchemy:
+  laiss_cms:
     page_layout_names:
       contact: Kontakt
       search: Suche
 ~~~
 
 ::: tip
-All translation keys used by Alchemy are scoped under the `alchemy` namespace.
+All translation keys used by LaissCms are scoped under the `laiss_cms` namespace.
 :::

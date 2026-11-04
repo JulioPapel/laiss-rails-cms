@@ -1,0 +1,7 @@
+<% if LaissCms.config.dashboard.widgets.any? %>
+  <div class="widgets">
+    <% LaissCms.config.dashboard.widgets.each do |widget, args| %>
+      <%= render widget.new(**args) %>
+    <% end %>
+  </div>
+<% end %>

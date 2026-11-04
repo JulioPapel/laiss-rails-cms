@@ -3,12 +3,12 @@ import path from "node:path"
 
 const resolve = {
   alias: {
-    alchemy_admin: path.resolve(__dirname, "app/javascript/alchemy_admin"),
+    laiss_cms_admin: path.resolve(__dirname, "app/javascript/laiss_cms_admin"),
     assets: path.resolve(__dirname, "vendor/assets/javascripts"),
     vendor: path.resolve(__dirname, "vendor/javascript"),
     "@hotwired/turbo-rails": path.resolve(
       __dirname,
-      "spec/javascript/alchemy_admin/turbo_rails_stub.js"
+      "spec/javascript/laiss_cms_admin/turbo_rails_stub.js"
     )
   }
 }
@@ -19,13 +19,13 @@ export default defineConfig({
       {
         resolve,
         define: {
-          "global.Alchemy": {}
+          "global.LaissCms": {}
         },
         test: {
           name: "admin",
           environment: "jsdom",
           globals: true,
-          root: "spec/javascript/alchemy_admin/",
+          root: "spec/javascript/laiss_cms_admin/",
           setupFiles: ["setup.js"]
         }
       },
