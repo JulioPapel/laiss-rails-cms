@@ -52,8 +52,8 @@ export class LaissCmsMenuNode extends HTMLElement {
 
   get hasChildren() {
     return (
-      this.childrenList.querySelectorAll(":scope > laiss-cms-menu-node").length >
-      0
+      this.childrenList.querySelectorAll(":scope > laiss-cms-menu-node")
+        .length > 0
     )
   }
 
@@ -62,7 +62,9 @@ export class LaissCmsMenuNode extends HTMLElement {
   }
 
   get folder() {
-    return this.querySelector(":scope > li > .sitemap_node laiss-cms-node-folder")
+    return this.querySelector(
+      ":scope > li > .sitemap_node laiss-cms-node-folder"
+    )
   }
 
   get childrenList() {

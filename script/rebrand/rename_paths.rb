@@ -252,22 +252,30 @@ def merge_files(entry)
 end
 
 # Concatenate the parts while dropping a `require` that an earlier part already
-# made. Without this the merged file would require itself: the entry point
-# `lib/laiss_cms.rb` used to `require "alchemy"`, and that file is now part of
-# this very file.
+# made, and dropping any part's leading magic comments after the first.
+#
+# Without both, the merged file keeps the second file's
+# `# frozen_string_literal: true` in the middle of the file, where it is ignored
+# and standardrb rejects it (Lint/MisplacedMagicComment).
 def merged_body(parts)
   seen = Set.new
-  kept = parts.flat_map do |part|
-    part.each_line.select do |line|
+  kept = parts.each_with_index.flat_map do |part, index|
+    part.each_line.with_index do |line, line_index|
+      # Drop repeated requires.
       if (match = line.match(/^require(_relative)? ["']([^"']+)["']/))
         key = match[2]
         next false unless seen.add?(key)
       end
+      # Drop magic comments from every part but the first.
+      next false if index.positive? && line_index < 3 && line.start_with?("# frozen_string_literal:")
+      # Drop the self-require the entry point made before the merge.
+      next false if index.positive? && line.match?(/^require ["']laiss_cms["']\s*$/)
+
       true
     end
   end
 
-  # Collapse the runs of blank lines the dropped requires leave behind.
+  # Collapse the runs of blank lines the dropped lines leave behind.
   kept.join.gsub(/\n{3,}/, "\n\n")
 end
 

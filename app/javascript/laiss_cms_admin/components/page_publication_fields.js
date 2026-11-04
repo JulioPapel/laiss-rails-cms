@@ -42,4 +42,7 @@ export class PagePublicationFields extends HTMLElement {
   }
 }
 
-customElements.define("laiss-cms-page-publication-fields", PagePublicationFields)
+customElements.define(
+  "laiss-cms-page-publication-fields",
+  PagePublicationFields
+)

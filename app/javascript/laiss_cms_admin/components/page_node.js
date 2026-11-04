@@ -107,8 +107,8 @@ export class LaissCmsPageNode extends HTMLElement {
     if (!childrenContainer) return false
 
     return (
-      childrenContainer.querySelectorAll(":scope > laiss-cms-page-node").length >
-      0
+      childrenContainer.querySelectorAll(":scope > laiss-cms-page-node")
+        .length > 0
     )
   }
 

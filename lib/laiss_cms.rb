@@ -54,7 +54,6 @@ module LaissCms
     deprecate link_dialog_tabs: "Use LaissCms.config.link_dialog_tabs instead", deprecator: LaissCms::Deprecation
   end
 end
-# frozen_string_literal: true
 
 # Instantiate the global LaissCms namespace
 require "laiss_cms"

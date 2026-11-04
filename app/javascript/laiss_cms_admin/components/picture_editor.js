@@ -5,7 +5,8 @@ import { growl } from "laiss_cms_admin/growler"
 import { routes } from "laiss_cms_admin/routes"
 
 const UPDATE_DELAY = 125
-const IMAGE_PLACEHOLDER = '<laiss-cms-icon name="image" size="xl"></laiss-cms-icon>'
+const IMAGE_PLACEHOLDER =
+  '<laiss-cms-icon name="image" size="xl"></laiss-cms-icon>'
 const THUMBNAIL_SIZE = "160x120"
 
 export class PictureEditor extends HTMLElement {

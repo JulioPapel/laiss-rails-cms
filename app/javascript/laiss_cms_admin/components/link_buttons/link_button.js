@@ -4,7 +4,8 @@ class LinkButton extends HTMLButtonElement {
     this.classList.add("icon_button")
     // Prevent accidental form submits if this component is wrapped inside a form
     this.setAttribute("type", "button")
-    this.innerHTML = '<laiss-cms-icon name="link" icon-style="m"></laiss-cms-icon>'
+    this.innerHTML =
+      '<laiss-cms-icon name="link" icon-style="m"></laiss-cms-icon>'
   }
 
   handleEvent(event) {
@@ -54,4 +55,6 @@ class LinkButton extends HTMLButtonElement {
   }
 }
 
-customElements.define("laiss-cms-link-button", LinkButton, { extends: "button" })
+customElements.define("laiss-cms-link-button", LinkButton, {
+  extends: "button"
+})
