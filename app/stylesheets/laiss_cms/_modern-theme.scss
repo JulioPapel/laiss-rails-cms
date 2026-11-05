@@ -55,17 +55,40 @@ $grey-700: #343b4a;
 $grey-800: #1f2431;
 $grey-900: #141824;
 
-// A border tone, separate from the fill ramp above. WCAG 1.4.11 requires 3:1
-// for a boundary that carries meaning, and the audit measured the obvious
-// candidates well short of it:
+// BORDER TONES — a two-tier system, and why it exists.
 //
-//   #e4e7ee on white 1.24:1   #d2d7e2 on white 1.44:1   #a7aebd on white 2.23:1
-//   #7c8494 on white 3.76:1   on #f7f8fb 3.54:1         on #f1f3f8 3.39:1
+// First pass used one tone everywhere (#7c8494). That satisfied WCAG 1.4.11 for
+// every boundary and simultaneously made the admin look "bulky": every card,
+// row and panel was outlined in the same mid-grey, so the page read as a grid of
+// boxes instead of a stack of surfaces on a tinted field. The owner's reference
+// is explicit about this — "borders are never thicker than 1px", "very light
+// grey (barely visible)", "depth comes from shadows, not outlines".
 //
-// So drawn borders use $border-strong (#7c8494), which clears 3:1 on every
-// surface in the theme. The lighter greys remain for decorative fills.
-$border: #7c8494;
-$border-soft: #c3c9d6;
+// So the tone now depends on what the boundary DOES:
+//
+//   $border-interactive  3:1 — a boundary that carries MEANING. Form control
+//                        edges, focus rings, the selected switch track. If a
+//                        user must see this edge to operate the control, it
+//                        must clear 1.4.11. This is $border (#7c8494): 3.76:1
+//                        on white, 3.54:1 on the page, 3.39:1 on recessed.
+//
+//   $border-surface      decorative — a boundary that merely separates two
+//                        surfaces whose contrast already tells them apart. Cards
+//                        on the page, table hairlines, sidebar edge, panel
+//                        dividers. WCAG 1.4.11 does not apply: nothing is
+//                        identifiable BY this line, and the white card on the
+//                        grey page is distinguishable without it (1.09:1 fill
+//                        step plus a shadow). Keeping these light is what makes
+//                        the design airy rather than boxed.
+//
+//   $border-hairline     the faintest separation, inside a card.
+//
+// Measured: #e4e7ee on white 1.24:1, #d2d7e2 1.44:1, #c3c9d6 1.66:1,
+// #a7aebd 2.23:1, #7c8494 3.76:1. The decorative tier sits at 1.66:1 — visible
+// as a line, invisible as a box.
+$border: #7c8494;          // interactive: 3:1 capable
+$border-surface: #c3c9d6;  // decorative: cards, tables, sidebar edge
+$border-hairline: #dfe3ec; // faintest, inside a card
 
 // Semantic, for the states the admin actually shows. The -500 tones are the
 // fills; the -700 tones are the text, because a 500 on a 50 background measured
@@ -143,12 +166,16 @@ $red-50: #fdecea;
   // =========================================================================
   --body-background-color: #{$grey-50};
   --panel-background-color: #ffffff;
-  --panel-border-color: #{$border-soft};
+  // Decorative: a card on the tinted page is already distinguishable by its
+  // white fill plus the shadow. The edge does not identify anything, so it does
+  // not owe 1.4.11 contrast — and keeping it light is what stops the "boxed"
+  // look the owner rejected.
+  --panel-border-color: #{$border-surface};
   --sidebar-background-color: #ffffff;
   --header-background: #ffffff;
   --toolbar-bg-color: #ffffff;
-  --toolbar-border-bottom: 1px solid #{$border-soft};
-  --toolbar-spacer-color: #{$border-soft};
+  --toolbar-border-bottom: 1px solid #{$border-surface};
+  --toolbar-spacer-color: #{$border-surface};
 
   --background-color: #ffffff;
   --raised-background-color: #ffffff;
@@ -164,14 +191,19 @@ $red-50: #fdecea;
   --highlight-color: #{$blue-600};
 
   // =========================================================================
-  // RULES. The Journal's hairlines were the "hidden lines": 1.84:1 on paper.
-  // grey-200 on white is 1.32:1, so boundaries use grey-300 (2.1:1) for drawn
-  // rules and grey-200 only for decorative separation inside a card.
+  // RULES — the two-tier system, see the $border-* note at the top.
+  //
+  // --border-color        interactive boundaries ONLY (controls, focus). 3:1.
+  // --border-inset-color  separation inside a card (row rules). Decorative.
+  // --table-border-color  table hairlines. Decorative: alignment and the row
+  //                       fill already distinguish rows, and a 3:1 rule under
+  //                       every row is exactly the spreadsheet look the
+  //                       reference avoids.
   // =========================================================================
   --border-color: #{$border};
-  --border-inset-color: #{$border-soft};
+  --border-inset-color: #{$border-hairline};
   --border-strong-color: #{$border};
-  --table-border-color: #{$border};
+  --table-border-color: #{$border-hairline};
 
   // =========================================================================
   // FOCUS + PRIMARY. Blue, per the reference. The ring is 3px at 25% so it reads
@@ -233,7 +265,7 @@ $red-50: #fdecea;
   --main-menu-active-text-color: #{$blue-600};
   --main-menu-hover-bg-color: #{$grey-100};
   --main-menu-indicator-color: #fc8708;
-  --sidebar-border-color: #{$border};
+  --sidebar-border-color: #{$border-surface};
 
   // =========================================================================
   // FORMS
@@ -287,7 +319,7 @@ $red-50: #fdecea;
   // ELEMENT EDITOR
   // =========================================================================
   --element-editor-background-color: #ffffff;
-  --element-editor-border-color: #{$border-soft};
+  --element-editor-border-color: #{$border-surface};
   --element-editor-dragged-background-color: #{$blue-50};
   --element-editor-dragged-border-color: #{$blue-400};
   --element-header-bg-color: #ffffff;
@@ -296,7 +328,7 @@ $red-50: #fdecea;
   --element-header-deprecated-bg-color: #{$grey-50};
   --element-deprecated-border-color: #{$grey-300};
   --element-toolbar-background-color: #{$grey-50};
-  --element-toolbar-border-color: #{$border-soft};
+  --element-toolbar-border-color: #{$border-hairline};
   --element-dirty-border-color: #{$blue-400};
   --element-dirty-header-color: #{$blue-600};
 
@@ -334,7 +366,7 @@ $red-50: #fdecea;
   // MISC SURFACES the components already reference
   // =========================================================================
   --code-background-color: #{$grey-50};
-  --code-border-color: #{$border-soft};
+  --code-border-color: #{$border-surface};
   --picture-thumbnail-background-color: #{$grey-100};
   --picture-thumbnail-toolbar-bg-color: #ffffff;
   --thumbnail-background: #{$grey-100};

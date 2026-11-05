@@ -88,7 +88,10 @@ body {
 .empty-state,
 .resources-table-wrapper {
   background-color: var(--panel-background-color);
-  border: 1px solid var(--border-color);
+  // Decorative edge: the white fill on the tinted page plus the shadow already
+  // separate this surface. A 3:1 outline here is what made the design read as a
+  // grid of boxes rather than a stack of cards.
+  border: 1px solid var(--panel-border-color);
   border-radius: var(--radius-md);
   // The soft lift: 2px of shadow, not a box.
   box-shadow: var(--elevation-card);
@@ -433,10 +436,16 @@ input[type="radio"] {
     }
 
     &.active > a {
-      background-color: var(--main-menu-active-bg-color);
+      // The reference marks the current item with COLOUR and an UNDERLINE, not a
+      // filled pill. Measured from the reference: the active label is blue with
+      // a 2px underline the width of the word; there is no background fill.
+      //
+      // The filled pill plus a 3px edge bar was the single biggest contributor
+      // to the "bulky" reading: two heavy signals where the reference uses one
+      // light one, and a saturated block in a column of plain text.
+      background-color: transparent;
       color: var(--main-menu-active-text-color);
       font-weight: var(--font-weight_semibold);
-      // The indicator replaces the Journal's inset rule.
       box-shadow: none;
 
       laiss-cms-icon,
@@ -445,21 +454,25 @@ input[type="radio"] {
         color: var(--main-menu-active-text-color);
       }
 
-      // Orange bar on the leading edge: the "you are here" signal, and the only
-      // place orange appears in the chrome.
-      &::before {
-        content: "";
-        position: absolute;
-        left: calc(-1 * var(--spacing-2));
-        top: 50%;
-        width: 3px;
-        height: 20px;
-        margin-top: -10px;
-        border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
-        background-color: var(--main-menu-indicator-color);
+      // Underline sits under the label only, matching the reference's word-width
+      // rule, and is drawn on the label element so it cannot span the row.
+      label {
+        position: relative;
+
+        &::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: calc(-1 * var(--spacing-1));
+          height: 2px;
+          border-radius: var(--radius-xs);
+          background-color: currentcolor;
+        }
       }
     }
 
+    // The old leading bar is gone; nothing to neutralise here.
     label {
       font-size: var(--text-md);
       font-weight: inherit;
