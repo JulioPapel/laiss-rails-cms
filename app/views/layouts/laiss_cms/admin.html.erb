@@ -1,8 +1,14 @@
 <!DOCTYPE html>
-<%# data-theme, when set, forces a theme regardless of the OS. It is read by
-    theme.scss (the CSS token contract) and by the TinyMCE component, so both the
-    chrome and the editor iframe switch together. Nil means "follow the OS". %>
-<html lang="<%= ::I18n.locale %>" class="no-js"<% if LaissCms.config.admin_theme.present? %> data-theme="<%= LaissCms.config.admin_theme %>"<% end %>>
+<%# data-theme pins the theme. It is resolved on the SERVER (see
+    LaissCms::Admin::ThemePreference) from, in order: the user's saved choice,
+    the host's `admin_theme` config, then nothing at all. When it is nil the CSS
+    media queries in theme.scss follow the operating system.
+
+    Resolving on the server is what prevents a flash of the wrong theme: the
+    attribute is present in the first HTML byte, before any stylesheet or script
+    runs. A client-side script that set the attribute after load would paint the
+    OS theme first and then correct itself. %>
+<html lang="<%= ::I18n.locale %>" class="no-js"<% if laiss_cms_theme %> data-theme="<%= laiss_cms_theme %>"<% end %>>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

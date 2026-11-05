@@ -101,17 +101,38 @@ export class Tinymce extends HTMLElement {
   }
 
   /**
-   * Set up listener for OS theme changes
+   * Set up listeners for theme changes.
+   *
+   * Two sources, because the admin's theme can change in two ways:
+   *
+   *   - the OS switches appearance, when the user is following the system
+   *   - the user picks light or dark in the admin's theme control, which sets
+   *     `data-theme` on <html>
+   *
+   * Only listening to the media query (the previous behaviour) meant the editor
+   * iframe kept its old skin after an explicit choice: the chrome switched and
+   * the editor did not. The MutationObserver covers that second case.
    * @private
    */
   _setupThemeChangeListener() {
     this.darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
-    this.themeChangeHandler = (event) => this._handleThemeChange(event)
+    this.themeChangeHandler = () => this._handleThemeChange()
     this.darkModeMediaQuery.addEventListener("change", this.themeChangeHandler)
+
+    this.attributeObserver = new MutationObserver((mutations) => {
+      const themeChanged = mutations.some(
+        (mutation) => mutation.attributeName === "data-theme"
+      )
+      if (themeChanged) this._handleThemeChange()
+    })
+    this.attributeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"]
+    })
   }
 
   /**
-   * Remove theme change listener
+   * Remove theme change listeners
    * @private
    */
   _removeThemeChangeListener() {
@@ -121,43 +142,46 @@ export class Tinymce extends HTMLElement {
         this.themeChangeHandler
       )
     }
+    if (this.attributeObserver) {
+      this.attributeObserver.disconnect()
+      this.attributeObserver = null
+    }
   }
 
   /**
-   * Handle OS theme change and update TinyMCE skin
-   * @param {MediaQueryListEvent} event - The media query change event
+   * Rebuild the editor when the effective theme no longer matches the skin in
+   * use. Reading `this.isDark` (rather than the event) means both sources share
+   * one code path and an explicit choice correctly beats the OS query.
    * @private
    */
-  _handleThemeChange(event) {
+  _handleThemeChange() {
     const editor = tinymce.get(this.editorId)
-    if (editor) {
-      const skin = event.matches ? DARK_THEME : LIGHT_THEME
-      const css = (readJSONScript("laiss_cms_tinymce_defaults") || {})
-        .content_css
-      const content_css =
-        css && typeof css === "object"
-          ? event.matches
-            ? css.dark
-            : css.light
-          : css
+    if (!editor) return
 
-      // Update the skin by reinitializing the editor with new configuration.
-      //
-      // `this.configuration` already resolves content_css from `isDark`, so the
-      // spread must come FIRST and the explicit skin last. Spreading it after
-      // content_css was silently overwriting the resolved value with the raw
-      // {light, dark} map, which TinyMCE ignores.
-      editor.remove()
-      tinymce
-        .init({
-          ...this.configuration,
-          content_css,
-          skin
-        })
-        .then((editors) => {
-          editors.forEach((editor) => this._setupEditor(editor))
-        })
-    }
+    // No-op when the theme did not actually change: the OS media query also
+    // fires on systems where an explicit data-theme overrides it, and the
+    // observer sees every attribute write.
+    if (editor.settings.skin === this.preferredTheme) return
+
+    const skin = this.preferredTheme
+    const content_css = this.preferredContentCss
+
+    // Update the skin by reinitializing the editor with new configuration.
+    //
+    // `this.configuration` already resolves content_css from `isDark`, so the
+    // spread must come FIRST and the explicit skin last. Spreading it after
+    // content_css was silently overwriting the resolved value with the raw
+    // {light, dark} map, which TinyMCE ignores.
+    editor.remove()
+    tinymce
+      .init({
+        ...this.configuration,
+        content_css,
+        skin
+      })
+      .then((editors) => {
+        editors.forEach((editor) => this._setupEditor(editor))
+      })
   }
 
   get configuration() {

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_20_153412) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_05_030139) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -317,6 +317,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_20_153412) do
     t.index ["image_file_name"], name: "index_laiss_cms_pictures_on_image_file_name"
     t.index ["name"], name: "index_laiss_cms_pictures_on_name"
     t.index ["updater_id"], name: "index_laiss_cms_pictures_on_updater_id"
+  end
+
+  create_table "laiss_cms_preferences", force: :cascade do |t|
+    t.string "scope", null: false
+    t.integer "owner_id"
+    t.string "key", null: false
+    t.text "value"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["scope", "owner_id", "key"], name: "index_laiss_cms_preferences_unique", unique: true
   end
 
   create_table "laiss_cms_sites", force: :cascade do |t|

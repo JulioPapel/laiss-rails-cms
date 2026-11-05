@@ -776,6 +776,57 @@ en:
       error_notification:
         default_message: "Please review the problems below."
 
+    # Colour theme control (top bar + drawer)
+    "Colour theme": "Colour theme"
+    "Use the light theme": "Use the light theme"
+    "Use the dark theme": "Use the dark theme"
+    "Follow the system appearance": "Follow the system appearance"
+    Light: "Light"
+    Dark: "Dark"
+    System: "System"
+    "Theme could not be saved. Please try again.": "Theme could not be saved. Please try again."
+
+    # Settings screen
+    settings:
+      title: "Settings"
+      description: "Defaults for this LaissCms installation. Changes are saved immediately for anything marked as applied at runtime."
+      saved: "Settings saved."
+      runtime: "Applies immediately"
+      restart: "Takes effect after a restart"
+      sections:
+        site: "Site"
+        appearance: "Appearance"
+        uploads: "Uploads"
+        behaviour: "Behaviour"
+        read_only: "Read-only"
+      fields:
+        site_name: "Site name"
+        site_name_hint: "Shown in the admin title and the default site record."
+        default_locale: "Default language"
+        default_locale_hint: "Language new pages are authored in."
+        theme_default: "Default colour theme"
+        theme_default_hint: "What a user sees before choosing their own. Users can override this from the top bar."
+        items_per_page: "Rows per page"
+        items_per_page_hint: "How many records the admin lists per page."
+        upload_limit: "Files per upload"
+        upload_limit_hint: "Maximum number of files accepted in a single upload."
+        file_size_limit: "File size limit (MB)"
+        file_size_limit_hint: "Largest single file the uploader accepts."
+        cache_pages: "Cache pages"
+        cache_pages_hint: "Serve cached copies of published pages."
+        show_page_searchable_checkbox: "Show the searchable checkbox"
+        show_page_searchable_checkbox_hint: "Adds a per-page search indexing toggle to the page editor."
+        auto_logout_time: "Auto logout (minutes)"
+        auto_logout_time_hint: "Idle time before an author is signed out. Production only."
+      read_only_hint: "These come from config/laiss_cms/*.yml and the environment. Change them there and restart."
+      none: "Not configured"
+      errors:
+        heading: "Some settings were not saved"
+        not_a_number: "must be a whole number"
+        out_of_range: "must be between %{min} and %{max}"
+        not_allowed: "is not an available choice"
+        blank: "cannot be empty"
+
   # LaissCms date formats
   date:
     formats:

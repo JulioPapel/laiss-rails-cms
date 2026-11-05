@@ -1,5 +1,8 @@
 <div id="user_info">
   <%= render LaissCms::Admin::CurrentUserName.new(user: current_laiss_cms_user) %>
+  <%# The theme control sits with the other per-user controls: it is a personal
+      preference, exactly like timezone and language, not a site-wide setting. %>
+  <%= render "laiss_cms/admin/theme_toggle", current: laiss_cms_theme_choice %>
   <%= render LaissCms::Admin::TimezoneSelect.new %>
   <%= render LaissCms::Admin::LocaleSelect.new %>
 </div>

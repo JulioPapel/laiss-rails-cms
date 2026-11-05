@@ -1,0 +1,15 @@
+<%#
+  The light / dark / system control.
+
+  Rendered in two places, which is why it is a partial: the desktop top bar
+  (#header) and the footer of the mobile drawer. Both render the same element
+  with the same current value, so the two never disagree.
+
+  `current` is resolved on the server, so the control is correct in the first
+  paint. Locals:
+    current  — "light", "dark" or "system"
+%>
+<laiss-cms-theme-toggle
+  current="<%= local_assigns.fetch(:current, "system") %>"
+  endpoint="<%= laiss_cms.admin_theme_path %>"
+  label="<%= LaissCms.t("Colour theme") %>"></laiss-cms-theme-toggle>

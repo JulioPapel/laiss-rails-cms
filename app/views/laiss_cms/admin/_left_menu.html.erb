@@ -2,6 +2,10 @@
   <%= render LaissCms::Admin::MainNavigation::Menu.new %>
 
   <div id="logout">
+    <%# The drawer is the only navigation surface below the desktop breakpoint,
+        and the top bar scrolls its controls out of reach on a phone, so the
+        theme control is repeated here rather than being mobile-inaccessible. %>
+    <%= render "laiss_cms/admin/theme_toggle", current: laiss_cms_theme_choice %>
     <div class="main_navi_entry">
       <%= link_to_dialog(
         safe_join([

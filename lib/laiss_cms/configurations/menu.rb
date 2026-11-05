@@ -84,6 +84,14 @@ module LaissCms
               condition: -> { can?(:index, :laiss_cms_admin_attachments) }
             }
           ]
+        },
+        {
+          name: "settings",
+          title: "settings.title",
+          position: 8,
+          icon: "settings-3",
+          url: -> { laiss_cms.admin_settings_path },
+          condition: -> { can?(:show, :laiss_cms_admin_settings) }
         }
       ].freeze
     end

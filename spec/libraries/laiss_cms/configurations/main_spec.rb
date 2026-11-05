@@ -125,7 +125,7 @@ RSpec.describe LaissCms::Configurations::Main do
 
     it "holds the core navigation entries" do
       expect(menu).to all(be_a(LaissCms::Configurations::MenuItem))
-      expect(menu.map(&:name)).to eq(%w[dashboard pages menus languages sites tags archive])
+      expect(menu.map(&:name)).to eq(%w[dashboard pages menus languages sites tags archive settings])
     end
 
     it "keeps positions, titles and icons" do
@@ -136,13 +136,14 @@ RSpec.describe LaissCms::Configurations::Main do
         [4, "modules.languages", "translate-2", "none"],
         [5, "modules.sites", "global", nil],
         [6, "modules.tags", "price-tag-3", nil],
-        [7, "modules.library", "archive-drawer", nil]
+        [7, "modules.library", "archive-drawer", nil],
+        [8, "settings.title", "settings-3", nil]
       ])
     end
 
     it "links the core entries to their index pages" do
       expect(menu.map { |item| item.path(view_context) }).to eq(
-        %w[/admin/dashboard /admin/pages /admin/nodes /admin/languages /admin/sites /admin/tags /admin/pictures]
+        %w[/admin/dashboard /admin/pages /admin/nodes /admin/languages /admin/sites /admin/tags /admin/pictures /admin/settings]
       )
     end
 
@@ -166,7 +167,10 @@ RSpec.describe LaissCms::Configurations::Main do
         [:index, :laiss_cms_admin_languages],
         [:index, :laiss_cms_admin_sites],
         [:index, :laiss_cms_admin_tags],
-        [:index, :laiss_cms_admin_pictures], [:index, :laiss_cms_admin_pictures], [:index, :laiss_cms_admin_attachments]
+        [:index, :laiss_cms_admin_pictures], [:index, :laiss_cms_admin_pictures], [:index, :laiss_cms_admin_attachments],
+        # Settings is a singular resource, so it is guarded with :show rather
+        # than :index — there is no collection to index.
+        [:show, :laiss_cms_admin_settings]
       ])
     end
 

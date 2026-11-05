@@ -152,6 +152,33 @@ module LaissCms
       end
     end
 
+    # Apply values saved from the admin's Settings screen.
+    #
+    # Runs AFTER the YAML above, so an edit made in the browser wins over the
+    # file default. It runs after :load_config_initializers too, which means a
+    # host app's own `LaissCms.configure do ... end` block still wins over both:
+    # code beats a saved value, and a saved value beats a file. That ordering is
+    # deliberate — the repo is the source of truth, the database is the override.
+    #
+    # `config.to_prepare` so it re-applies on every code reload in development
+    # without needing a process restart, and so a test that truncates the
+    # preferences table sees the YAML defaults again.
+    initializer "laiss_cms.saved_settings", after: :load_config_initializers do |app|
+      app.config.to_prepare do
+        next unless defined?(LaissCms::Preference) && LaissCms::Preference.available?
+
+        stored = LaissCms::Preference.get(
+          LaissCms::Preference::SETTINGS, "config", fallback: nil
+        )
+        next if stored.blank?
+
+        LaissCms::Admin::Settings.apply_snapshot(
+          LaissCms.config,
+          LaissCms::Admin::Settings.restore(stored)
+        )
+      end
+    end
+
     config.after_initialize do
       if LaissCms.config.user_class
         ActiveSupport.on_load(:active_record) do

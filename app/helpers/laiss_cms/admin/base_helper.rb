@@ -12,6 +12,12 @@ module LaissCms
     module BaseHelper
       include LaissCms::BaseHelper
       include LaissCms::Admin::NavigationHelper
+      # The admin layout resolves the theme before rendering (see
+      # ThemePreferenceHelper). Controllers outside the admin's own hierarchy —
+      # Devise's sessions and passwords controllers — include THIS module rather
+      # than inheriting from BaseController, so the helper has to travel with it
+      # or the layout cannot render.
+      include LaissCms::Admin::ThemePreferenceHelper
 
       # Returns a string showing the name of the currently logged in user.
       #

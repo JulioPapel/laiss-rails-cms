@@ -32,6 +32,15 @@ class Datepicker extends HTMLElement {
       enableTime,
       noCalendar: this.inputType === "time",
       time_24hr: translate("formats.time_24hr"),
+      // Mount the calendar inside this element rather than appending it to
+      // <body>. flatpickr defaults to a body-level absolute popup, which
+      // detached it from the editor and could open outside the visible area
+      // (the report of "a window outside of the area"). Static positioning keeps
+      // it inside the element editor, clipped and scrolling with it, and
+      // inherits the theme because it stays inside the themed subtree.
+      static: true,
+      // Never let the calendar escape its container on small screens.
+      positionElement: undefined,
       onValueUpdate(_selectedDates, _dateStr, instance) {
         instance.element
           .closest("laiss-cms-element-editor")

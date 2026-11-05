@@ -189,6 +189,11 @@ module LaissCms
         # Navigation
         can :index, [:laiss_cms_admin_sites, :laiss_cms_admin_styleguide]
 
+        # Settings. Only admins may read or change engine-wide configuration;
+        # authors and editors keep working with the defaults. The theme toggle
+        # is deliberately NOT gated here — it is a per-user preference.
+        can [:show, :update], :laiss_cms_admin_settings
+
         # Controller actions
         can [:info, :update_check], :laiss_cms_admin_dashboard
 

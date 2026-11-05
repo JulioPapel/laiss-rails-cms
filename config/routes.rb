@@ -105,6 +105,13 @@ LaissCms::Engine.routes.draw do
 
     resources :sites
 
+    # Settings. `settings` is the screen; `theme` is the light/dark control the
+    # top bar and drawer both post to. They are separate actions because they
+    # write different things: a theme is a per-user preference, a setting is
+    # engine-wide and needs :manage on the settings resource.
+    resource :settings, only: [:show, :update]
+    resource :theme, only: [:update], controller: "theme"
+
     get "/styleguide", to: "styleguide#index"
   end
 

@@ -1,0 +1,428 @@
+@use "../mixins";
+
+// ===========================================================================
+// Settings screen and theme control.
+//
+// Both are new surfaces, so neither adds a token: they are built from the
+// existing paper/ink scales, spacing scale, radius and rules. The only new
+// vocabulary is the shape of the settings rows and the segmented theme control.
+//
+// Why a definition list rather than a table: the rows are label → control pairs
+// read in order, not records compared across columns. A table would imply a
+// comparison that does not exist.
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// Theme control. A three-way segmented control: light / system / dark.
+//
+// It is one bordered block with shared internal rules rather than three floating
+// buttons, so it reads as a single control with a selected state — the same
+// visual grammar as the rest of the monochrome chrome.
+// ---------------------------------------------------------------------------
+.theme-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  flex: 0 0 auto;
+  border: var(--border-default);
+  border-radius: var(--journal-radius);
+  overflow: hidden;
+  // Sits inside the top bar, whose own rule already separates it from content.
+  background-color: var(--panel-background-color);
+
+  &__option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-1);
+    min-width: var(--journal-touch-target);
+    height: calc(var(--header-height) - 10px);
+    padding: 0 var(--spacing-2);
+    margin: 0;
+    border: 0;
+    // A hairline between options only, never around the outside.
+    border-left: var(--border-default);
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-color-muted);
+    font-family: var(--font-sans);
+    font-size: var(--font-size_small);
+    font-weight: var(--font-weight_normal);
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background-color var(--journal-motion-fast) var(--journal-motion-easing),
+      color var(--journal-motion-fast) var(--journal-motion-easing);
+
+    &:first-child {
+      border-left: 0;
+    }
+
+    &:hover {
+      background-color: var(--icon-button-hover-bg-color);
+      color: var(--text-color);
+    }
+
+    &:focus-visible {
+      @include mixins.default-focus-style;
+      // The ring would be clipped by `overflow: hidden` on the group, so it is
+      // drawn inset instead.
+      outline-offset: calc(-1 * var(--focus-ring-width));
+      position: relative;
+      z-index: 1;
+    }
+
+    // Selected: inverted block, the same treatment as an active nav entry.
+    &[aria-checked="true"] {
+      background-color: var(--main-menu-active-bg-color);
+      color: var(--main-menu-active-text-color);
+      font-weight: var(--font-weight_semibold);
+
+      &:hover {
+        background-color: var(--main-menu-active-bg-color);
+        color: var(--main-menu-active-text-color);
+      }
+    }
+  }
+
+  &__icon {
+    width: var(--icon-size-sm);
+    height: var(--icon-size-sm);
+    fill: currentcolor;
+    flex: 0 0 auto;
+  }
+
+  // The label is what makes the control self-explanatory on desktop. On the
+  // narrowest screens only the icon shows, and the accessible name carries the
+  // meaning — which is why the name lives on aria-label, not on this text.
+  &__text {
+    white-space: nowrap;
+  }
+}
+
+@media screen and (max-width: 599px) {
+  .theme-toggle__text {
+    // Visually hidden, still announced.
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+// Inside the drawer the control is full width and sits with the other
+// footer actions, so it does not look pasted into a corner.
+#left_menu .theme-toggle {
+  display: flex;
+  width: 100%;
+  margin-top: var(--spacing-2);
+  border-color: var(--border-color);
+
+  .theme-toggle__option {
+    flex: 1 1 auto;
+    height: var(--journal-touch-target);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Settings screen
+// ---------------------------------------------------------------------------
+.settings-page {
+  max-width: 62rem;
+}
+
+.settings-page__header {
+  margin-bottom: var(--journal-fluid-section-gap);
+}
+
+.settings-page__title {
+  margin: 0 0 var(--spacing-2);
+  font-size: var(--font-size_xlarge);
+  font-weight: var(--font-weight_semibold);
+  line-height: 1.15;
+  letter-spacing: var(--journal-letter-spacing-tight);
+  color: var(--text-color);
+}
+
+.settings-page__lede {
+  margin: 0;
+  max-width: 46rem;
+  font-size: var(--font-size_medium);
+  line-height: 1.5;
+  color: var(--text-color-muted);
+}
+
+.settings-page__errors {
+  margin-bottom: var(--spacing-6);
+  padding: var(--spacing-3) var(--spacing-4);
+  border: 1px solid var(--border-color);
+  border-left-width: 3px;
+  border-left-color: var(--text-color);
+  border-radius: var(--journal-radius);
+  background-color: var(--notice-error-background-color);
+  color: var(--notice-error-text-color);
+
+  strong {
+    display: block;
+    margin-bottom: var(--spacing-1);
+    font-weight: var(--font-weight_semibold);
+  }
+
+  ul {
+    margin: 0;
+    padding-left: var(--spacing-4);
+  }
+}
+
+// A section is a titled block separated by a rule, not a card. The rows are read
+// top to bottom, so they get a shared rule and a baseline grid rather than one
+// box each.
+.settings-section {
+  padding-top: var(--spacing-6);
+  border-top: 1px solid var(--border-color);
+
+  & + & {
+    margin-top: var(--spacing-6);
+  }
+
+  &__head {
+    margin-bottom: var(--spacing-4);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--font-size_large);
+    font-weight: var(--font-weight_semibold);
+    line-height: 1.3;
+    color: var(--text-color);
+  }
+
+  &__note {
+    margin: var(--spacing-2) 0 0;
+    max-width: 46rem;
+    font-size: var(--font-size_small);
+    line-height: 1.5;
+    color: var(--text-color-muted);
+  }
+}
+
+// Three columns: label, control, effect. On narrow screens they stack, and the
+// effect badge moves under the control where it still reads as metadata.
+.settings-field {
+  display: grid;
+  grid-template-columns: minmax(11rem, 16rem) minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: var(--spacing-4);
+  padding: var(--spacing-3) 0;
+  border-bottom: 1px solid var(--border-inset-color);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &__label {
+    padding-top: calc((var(--form-field-height) - 1.5em) / 2);
+    font-size: var(--font-size_medium);
+    font-weight: var(--font-weight_semibold);
+    line-height: 1.5;
+    color: var(--form-field-label-color);
+
+    label {
+      // Labels are text, not controls.
+      cursor: default;
+    }
+  }
+
+  &__control {
+    min-width: 0;
+  }
+
+  &__output {
+    display: inline-flex;
+    align-items: center;
+    height: var(--form-field-height);
+    font-family: var(--font-mono);
+    font-size: var(--font-size_small);
+    color: var(--text-color-muted);
+  }
+
+  &__hint {
+    margin: var(--spacing-1) 0 0;
+    font-size: var(--font-size_small);
+    line-height: 1.5;
+    color: var(--text-color-muted);
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  &__effect {
+    padding-top: 2px;
+  }
+
+  // Read-only rows are still legible — the value is information, not a
+  // disabled control — so only the control tone drops, not the whole row.
+  &--read-only .settings-field__label {
+    color: var(--text-color-muted);
+  }
+}
+
+.settings-input {
+  width: 100%;
+  max-width: 26rem;
+  height: var(--form-field-height);
+  padding: var(--form-field-padding);
+  border: var(--form-field-border-width) var(--form-field-border-style)
+    var(--form-field-border-color);
+  border-radius: var(--border-radius_medium);
+  background-color: var(--form-field-background-color);
+  color: var(--form-field-text-color);
+  font-family: var(--font-sans);
+  font-size: var(--form-field-font-size);
+  line-height: var(--form-field-line-height);
+
+  &:focus-visible {
+    @include mixins.default-focus-style;
+  }
+
+  &--number {
+    max-width: 8rem;
+  }
+
+  &--select {
+    max-width: 18rem;
+  }
+}
+
+.settings-badge {
+  display: inline-block;
+  padding: 2px var(--spacing-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--journal-radius-pill);
+  font-size: var(--font-size_small);
+  line-height: 1.6;
+  white-space: nowrap;
+  color: var(--text-color-muted);
+
+  // Both states are monochrome; the difference is weight, not hue, matching the
+  // notice convention elsewhere. The runtime badge reads as "live" via a filled
+  // rule on the left, the restart badge as "file" via a dashed border.
+  &--runtime {
+    border-left: 3px solid var(--text-color);
+    color: var(--text-color);
+  }
+
+  &--restart {
+    border-style: dashed;
+  }
+}
+
+.settings-form__actions {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-6);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--border-color);
+}
+
+// A switch, not a checkbox: a single boolean whose two states are "on" and
+// "off" reads better as a track than as a tick box, and the tick box carries
+// its own inconsistent default styling from the browser.
+.settings-switch {
+  display: inline-flex;
+  align-items: center;
+  // 44px keeps the whole control a valid touch target even though the track is
+  // smaller.
+  min-height: var(--journal-touch-target);
+  cursor: pointer;
+
+  &__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+
+    // The visible track reflects state and focus, rather than the input itself.
+    &:checked + .settings-switch__track {
+      background-color: var(--button-bg-color);
+      border-color: var(--button-border-color);
+    }
+
+    &:checked + .settings-switch__track .settings-switch__thumb {
+      transform: translateX(16px);
+      background-color: var(--button-text-color);
+    }
+
+    &:focus-visible + .settings-switch__track {
+      @include mixins.default-focus-style;
+    }
+
+    &:disabled + .settings-switch__track {
+      background-color: var(--button-disabled-bg-color);
+      border-color: var(--button-disabled-border-color);
+    }
+  }
+
+  &__track {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 22px;
+    border: 1px solid var(--form-field-border-color);
+    border-radius: var(--journal-radius-pill);
+    background-color: var(--form-field-background-color);
+    transition: background-color var(--journal-motion-fast)
+      var(--journal-motion-easing);
+  }
+
+  &__thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--text-color-muted);
+    transition: transform var(--journal-motion-fast) var(--journal-motion-easing);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Narrow screens: the grid collapses and the badge moves under the control.
+// ---------------------------------------------------------------------------
+@media screen and (max-width: 767px) {
+  .settings-field {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--spacing-2);
+    padding: var(--spacing-4) 0;
+
+    &__label {
+      padding-top: 0;
+    }
+
+    &__effect {
+      padding-top: 0;
+    }
+
+    &__control .settings-input {
+      max-width: 100%;
+    }
+  }
+
+  .settings-form__actions .button {
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle__option,
+  .settings-switch__track,
+  .settings-switch__thumb {
+    transition: none;
+  }
+}
