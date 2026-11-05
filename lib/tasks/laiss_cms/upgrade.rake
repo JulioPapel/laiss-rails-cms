@@ -16,7 +16,7 @@ namespace :laiss_cms do
   end
 
   namespace :upgrade do
-    desc "LaissCms Upgrader: Prepares the database and updates Alchemys configuration file."
+    desc "LaissCms Upgrader: Prepares the database and updates LaissCMS's configuration file."
     task prepare: [
       "laiss_cms:upgrade:database",
       "laiss_cms:upgrade:config"

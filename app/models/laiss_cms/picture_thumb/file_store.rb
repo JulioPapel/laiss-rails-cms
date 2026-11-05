@@ -20,7 +20,7 @@ module LaissCms
 
         private
 
-        # Alchemys dragonfly datastore config seperates the storage path from the public server
+        # LaissCMS's dragonfly datastore config seperates the storage path from the public server
         # path for security reasons. The Dragonfly FileDataStorage does not support that,
         # so we need to build the path on our own.
         def server_path(uid)

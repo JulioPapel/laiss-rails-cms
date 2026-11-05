@@ -1,6 +1,6 @@
 # Creating own Ingredients
 
-Alchemys powerful content storage technology is build around ingredients. They are ActiveRecord models that have an editor and a presentation view partial.
+LaissCMS's powerful content storage technology is build around ingredients. They are ActiveRecord models that have an editor and a presentation view partial.
 
 LaissCms has lots of [build in ingredients](https://github.com/LaissCMS/laiss_cms/tree/main/app/models/laiss_cms/ingredients). But you can create your own ingredient and even associate them with your existing models. This guide shows how.
 

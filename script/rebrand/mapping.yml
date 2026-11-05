@@ -106,6 +106,16 @@
   kind: constant
   expect: LaissCmsSitemap
 
+# Possessive form. `Alchemy` + "s" has no word boundary, so the bare-constant
+# rule skips it and it survives as "Alchemys" in prose and comments. Listed
+# explicitly rather than loosening the boundary rule.
+- id: alchemy_possessive
+  from: Alchemys
+  to: LaissCMS's
+  mode: word
+  kind: brand
+  expect: "LaissCMS's"
+
 - id: alchemy_const_bare
   from: Alchemy
   to: LaissCms

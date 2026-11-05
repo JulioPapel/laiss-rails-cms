@@ -11,7 +11,7 @@ After reading this guide you will be able to:
 
 To override the default settings you have to create a `tinymce.rb` initializer file into `config/initializers`.
 
-Alchemys default settings for TinyMCE can be found in the [documentation](https://www.rubydoc.info/github/LaissCMS/laiss_cms/LaissCms/Tinymce)
+LaissCMS's default settings for TinyMCE can be found in the [documentation](https://www.rubydoc.info/github/LaissCMS/laiss_cms/LaissCms/Tinymce)
 
 ### A Minimal Editor
 

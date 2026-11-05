@@ -52,7 +52,7 @@ module LaissCms
       #
       # Called after a LaissCms::Picture has been created (after an image has been uploaded)
       #
-      # Generates three types of thumbnails that are used by Alchemys picture archive and
+      # Generates three types of thumbnails that are used by LaissCMS's picture archive and
       # persists them in the configures file store (Default Dragonfly::FileDataStore).
       #
       # @see Picture::THUMBNAIL_SIZES
