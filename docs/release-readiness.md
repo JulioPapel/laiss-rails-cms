@@ -7,6 +7,14 @@ Regenerate the mechanical rows with `script/audit`; run the suites with
 `script/gates`. This document is a reading of the repository on 2026-11-05 at
 `5b2223d3e`, and the two scripts are how to check whether it is still true.
 
+> **Superseded for 0.1.0.beta7 (2026-11-05).** The rows below were established at
+> `5b2223d3e` for beta6 and are kept as that record. Several numbers moved since:
+> the version constant and tag are now `0.1.0.beta7` (rows 1, 2), the core suite is
+> 4,399 examples (row 4), the JS suite is 823 tests (row 7), and the install checks
+> were run against the beta6 tag (rows 13–15). The beta7 figures are in
+> `docs/releases/v0.1.0.beta7.md` and in the gate output at
+> `v0.1.0.beta7`. Re-run `script/gates` at the tag to re-establish these rows.
+
 **In one line:** the software is well tested locally and the delivery machinery has
 never executed once. Publication readiness depends on clearing a billing lock and
 watching four CI jobs run for the first time.

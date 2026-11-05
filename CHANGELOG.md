@@ -8,6 +8,47 @@ CMS engine; that derivation is recorded in `LICENSE` and nowhere else.
 
 ## Unreleased
 
+## 0.1.0.beta7 — admin UI reverted to the original, near-black sidebar
+
+**Releases beta1–beta5 no longer exist**; `v0.1.0.beta6` remains available.
+
+- **The theme migration was reverted.** The admin was being restyled by adopting an
+  external Bootstrap theme ("Focus"), which rewrote the admin's markup page by page —
+  views, components, partials, the icon class and the simple_form wrapper. That was the
+  wrong method: a UI lift changes how an interface looks, not the interface. It is undone
+  in full, not finished.
+
+  Restored to their pre-theme state: all 68 admin stylesheets (byte-identical), the build
+  artifacts (the compiled `admin.css` is byte-identical), every view, partial and component
+  that had been rewritten, `icon.js` emitting `class="icon"` again, and the simple_form
+  error wrapper (`small.error`) that the theme had changed to Bootstrap's
+  `.invalid-feedback` across 71 `f.input` call sites. Bootstrap 4.3.1 and Bootstrap Icons
+  are removed entirely, with their licensing notices.
+
+  Two dashboard widgets are deliberately not restored because they made outbound requests
+  on every page load: a news reader (`alchemy-cms.com`) and an update checker
+  (`rubygems.org`).
+
+  Features added during that period are kept rather than deleted: Settings, Events, the
+  bundled sign-in screens, user management and the notification mailers.
+
+- **Sidebar background is now near-black (`#0f1218`).** The brand's own hue (220°, from
+  `#00349c`) at 7.5% lightness and 20% saturation — deliberate rather than flat black, and
+  still in the brand's family rather than a neutral grey. CSS only: no ERB, no class names,
+  no custom elements, verified by diffing the compiled CSS.
+
+  Measured contrast: nav labels 21.00:1, icons 18.75:1, Help/Leave 21.00:1, active label on
+  the orange fill 7.69:1, orange fill against the sidebar 7.69:1, muted text 10.05:1.
+
+  Two failures that predate this release are fixed as a consequence: the active label was
+  4.37:1 on orange (below AA), and sub-navigation hover was white on a pale orange at
+  2.24:1. Hover and active are now distinct states — they previously shared one rule, so a
+  hovered entry looked selected.
+
+- Retired the per-screen migration-log gate: it enforced a rule for a process that no longer
+  runs. The script and the log are kept, with instructions to re-enable.
+- Test baselines return to the original suite's own counts: 4,399 specs, 823 JS tests.
+
 ## 0.1.0.beta6 — migration tooling removed; earlier betas withdrawn
 
 **This is the only installable version.** The tags for beta1–beta5 have been removed
