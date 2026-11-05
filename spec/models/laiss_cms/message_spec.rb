@@ -30,12 +30,10 @@ RSpec.describe "LaissCms::Message" do
       # Reloading again afterwards restores the class as it is defined for the
       # real config, so the result does not depend on example order.
       around do |example|
-        begin
-          example.run
-        ensure
-          LaissCms.send(:remove_const, :Message)
-          load LaissCms::Engine.root.join("app/models/laiss_cms/message.rb")
-        end
+        example.run
+      ensure
+        LaissCms.send(:remove_const, :Message)
+        load LaissCms::Engine.root.join("app/models/laiss_cms/message.rb")
       end
 
       before do

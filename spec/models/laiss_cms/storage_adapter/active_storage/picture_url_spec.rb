@@ -53,9 +53,9 @@ RSpec.describe LaissCms::StorageAdapter::ActiveStorage::PictureUrl, if: LaissCms
   end
 
   context "with invariable image file" do
-    # The factory now sequences picture names so no two pictures share a variant
-  # URL. This spec asserts on the filename in that URL, so it pins the name.
-  let(:picture) { create(:laiss_cms_picture, name: "image", image_file:) }
+    # The factory sequences picture names so no two pictures share a variant URL.
+    # This spec asserts on the filename in that URL, so it pins the name.
+    let(:picture) { create(:laiss_cms_picture, name: "image", image_file:) }
     let(:image_file) { fixture_file_upload("icon.svg") }
 
     it "returns the url for the original image" do

@@ -1,25 +1,24 @@
-# Copy this file into the CMS repository as:
+# Tells railscms.laiss.pt to rebuild its documentation when this repository's
+# guides change. The site renders this repository's markdown at build time, so
+# without this the published docs only refresh on the site's daily schedule.
 #
-#   .github/workflows/notify-site.yml
+# It fires on exactly two occasions: a green main, and a tag push. Deliberately
+# not on every push as well, because a green main already implies a push and the
+# notification would be sent twice.
 #
-# It tells railscms.laiss.pt to rebuild its documentation when the guides change.
-# The site renders the CMS repository's own markdown at build time, so without
-# this the published docs only refresh on the site's daily schedule.
-#
-# It fires on exactly two occasions, as asked: a green main, and a tag push.
-# Deliberately not on every push as well, because a green main already implies a
-# push, and the notification would be sent twice.
-#
-# One repository secret is required on the CMS repository, not on the site:
+# One repository secret is required here, not on the site:
 #
 #   SITE_DISPATCH_TOKEN
 #     A fine-grained personal access token (or GitHub App installation token)
 #     with "Contents: read and write" on JulioPapel/site-laiss-rails-cms.
-#     Nothing else. It cannot read the CMS repository's secrets, and the site
+#     Nothing else. It cannot read this repository's secrets, and the site
 #     repository never sees it.
 #
 # "Contents: write" is what GitHub requires to create a repository_dispatch
 # event on another repository. "Metadata: read" is granted automatically.
+#
+# If the secret is absent the job succeeds with a notice instead of failing, so
+# a fresh clone does not show a red check before the secret is configured.
 
 name: Notify the site
 

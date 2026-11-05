@@ -33,19 +33,10 @@ RSpec::Core::RakeTask.new(:spec)
 
 task default: "laiss_cms:test:all"
 
-namespace :laiss_cms_i18n do
-  Bundler::GemHelper.new(File.expand_path("i18n", __dir__), "laiss_cms_i18n").install
-end
-
-namespace :laiss_cms_devise do
-  Bundler::GemHelper.new(File.expand_path("devise", __dir__), "laiss-cms-devise").install
-end
-
+# One gem ships everything: the translations are folded into the engine, and the
+# devise integration is code inside the engine that only activates when the
+# `devise` gem is present. Only the main gemspec is built or released.
 Bundler::GemHelper.install_tasks
-task build: "laiss_cms_i18n:build"
-task release: "laiss_cms_i18n:release:rubygem_push"
-task build: "laiss_cms_devise:build"
-task release: "laiss_cms_devise:release:rubygem_push"
 
 namespace :laiss_cms do
   namespace :test do
