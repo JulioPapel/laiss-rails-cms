@@ -1164,3 +1164,29 @@ The original was right.
 the ghost squares, the 900px logo, the 0×0 bars, the collapsed columns — were consequences
 of replacing working markup with theme markup, not faults in the admin. A CSS lift would
 have avoided all of them, and the visual result would have been the same.
+
+## Items already identified for the CSS uplift (Phase 2)
+
+The owner named four on the restored Pages index. **All four are achievable in CSS alone**,
+which is the test of whether they belong in Phase 2 at all:
+
+| Item | CSS-only? | How |
+|---|---|---|
+| Page names render light grey; should be the strongest text in the table | **yes** | the name cell is `<td class="name">`; raise its colour/weight |
+| "offline" is plain text, not a badge | **yes** | `td.status .page_status` already exists as a selector; give it a chip |
+| Row action icons cramped; want the theme's spacing and a 44px target | **yes** | `.icon_button` sizing/padding; no markup change |
+| "7 Pages" heading oversized vs the toolbar beside it | **yes** | `#main_content h1` / `.resources-header` scale |
+
+None requires touching ERB, a class name, or a custom element — which is exactly why they
+belong in the uplift rather than in another markup pass.
+
+## Scope for Phase 2, stated as a constraint
+
+A single new stylesheet layer, loaded last, changing only: typography, colour, spacing,
+radius, border and shadow. **Zero ERB changes. Zero class renames. Zero custom element
+changes.** If a visual change cannot be made without touching markup, it is out of scope and
+gets reported rather than done.
+
+The reference images the owner supplied (`app/stylesheets/laiss_cms/_modern-theme.scss` was
+the last attempt at them, and `docs/design/reference-spec.md` holds the measured spec) are the
+target. What was wrong last time was not the target — it was achieving it by rewriting markup.
