@@ -22,7 +22,13 @@ module LaissCms
       end
 
       def update
-        submitted = params.fetch(:settings, {}).permit!.to_h
+        # Only the keys the catalogue declares are ever read, and each is
+        # validated and coerced by Settings.write. `permit` over the declared set
+        # (rather than `permit!`) means an unlisted key cannot even reach the
+        # loop, which is the difference between "we ignore it" and "it was never
+        # accepted".
+        allowed = LaissCms::Admin::Settings.writable.map(&:key)
+        submitted = params.fetch(:settings, {}).permit(*allowed).to_h
         @errors = {}
 
         LaissCms::Admin::Settings.writable.each do |field|
