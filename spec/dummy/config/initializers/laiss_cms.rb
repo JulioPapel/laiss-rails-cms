@@ -2,10 +2,11 @@
 
 LaissCms.configure do |config|
   config.abilities.add("Ability")
-  # When loaded, the laiss-cms-devise engine provides authentication and sets
-  # the user_class (and signup path) to its LaissCms::User. The core test
-  # suite uses the DummyUser stub instead.
-  config.user_class = "DummyUser" if Rails.env.test? && !defined?(LaissCms::Devise::Engine)
+  # When loaded, the devise integration provides authentication and sets the
+  # user_class (and signup path) to its LaissCms::User. The core test suite uses
+  # the DummyUser stub instead, so the stub only wins when that integration is
+  # absent.
+  config.user_class = "DummyUser" if Rails.env.test? && !LaissCms.const_defined?(:Devise)
   config.menu.add(
     name: "events",
     title: "Events",

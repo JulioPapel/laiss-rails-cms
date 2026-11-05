@@ -51,8 +51,16 @@ module LaissCms
       end
 
       def is_safe_redirect_path?(path)
-        mount_path = laiss_cms.root_path
-        path.to_s.match? %r{^#{mount_path}#{LaissCms.admin_path}/}
+        # `laiss_cms.root_path` is "/" when the engine is mounted at the root and
+        # "" in a controller spec, while `LaissCms.admin_path` is written without a
+        # leading slash ("admin"). Interpolating the two directly produced
+        # "^//admin/", a pattern that never matches, which silently sent every
+        # redirect to the bare admin root. Building the prefix from normalised
+        # parts avoids depending on either one's exact spelling.
+        mount_path = laiss_cms.root_path.to_s.sub(%r{/\z}, "")
+        admin_path = LaissCms.admin_path.to_s.sub(%r{\A/}, "")
+        prefix = "#{mount_path}/#{admin_path}"
+        path.to_s.match? %r{\A#{Regexp.escape(prefix)}/}
       end
 
       def relative_referer_path(referer = request.referer)

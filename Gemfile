@@ -15,13 +15,15 @@ if ENV["DB"] == "mysql" || ENV["DB"] == "mariadb"
 end
 gem "pg", "~> 1.0" if ENV["DB"] == "postgresql"
 
-gem "laiss_cms_i18n", path: "i18n"
+# Translations for every locale except English now ship inside laiss_cms itself
+# (config/locales/extra), so there is no separate gem to require.
 
-# Devise based authentication for the dummy app, so auth can be exercised
-# against local LaissCms core changes. The dummy app only requires it in
-# development and for the devise specs, because the core specs use the
-# DummyUser stub instead.
-gem "laiss-cms-devise", path: "devise", require: false
+# Devise based authentication. The integration code ships inside laiss_cms
+# itself; only the `devise` gem is separate, and it stays optional so the core
+# specs (which use the DummyUser stub) and any host app with its own sign-in run
+# without it. The dummy app requires the integration in development and for the
+# devise specs, never for the core specs.
+gem "devise", ">= 4.9", "< 6.0", require: false
 
 if ENV.fetch("LAISS_CMS_STORAGE_ADAPTER", "active_storage") == "active_storage"
   gem "ruby-vips"

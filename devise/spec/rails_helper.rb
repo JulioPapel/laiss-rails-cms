@@ -20,7 +20,7 @@ require "laiss_cms/test_support"
 FactoryBot.definition_file_paths.append(LaissCms::TestSupport.factories_path)
 FactoryBot.reload
 
-require "laiss_cms/devise/test_support/factories"
+require "laiss_cms/devise_support/test_support/factories"
 
 ActionMailer::Base.delivery_method = :test
 ActionMailer::Base.perform_deliveries = true

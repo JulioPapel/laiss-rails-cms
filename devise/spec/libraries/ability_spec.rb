@@ -4,7 +4,7 @@ require "cancan/matchers"
 describe LaissCms::Permissions do
   subject { ability }
 
-  let(:ability) { LaissCms::Devise::Ability.new(user) }
+  let(:ability) { LaissCms::DeviseAbility.new(user) }
 
   context "A guest user" do
     let(:user) { nil }

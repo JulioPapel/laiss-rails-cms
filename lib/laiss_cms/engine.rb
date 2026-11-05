@@ -33,12 +33,69 @@ module LaissCms
       end
     end
 
+    # The sign-in screens load a small stylesheet of their own. It used to be
+    # precompiled by the separate devise engine; folded in, it is listed here and
+    # only when that integration is active, so apps without it do not precompile an
+    # asset they never reference.
+    initializer "laiss_cms.devise_assets" do |app|
+      next unless LaissCms.const_defined?(:Devise) && LaissCms::Devise.available?
+      next unless app.config.respond_to?(:assets) && app.config.assets.respond_to?(:precompile)
+
+      app.config.assets.precompile << "laiss_cms_devise.css"
+    end
+
     initializer "laiss_cms.propshaft" do |app|
       if defined?(::Propshaft)
         if app.config.assets.server
           # Monkey-patch Propshaft::Asset to enable access
           # of TinyMCE assets without a hash digest.
           require_relative "propshaft/tinymce_asset"
+        end
+      end
+    end
+
+    # Translations for every locale except English live in
+    # config/locales/extra/ and need NO initializer.
+    #
+    # Rails globs `config/locales/**/*.yml` for every engine root, so placing the
+    # files at LaissCms::Engine.root/config/locales/extra/ is enough: verified 10
+    # files on I18n.load_path from a plain boot, with nothing in this file doing
+    # it. An explicit initializer was tried first and registered `de` twice,
+    # because Rails had already globbed it — a duplicate that I18n silently
+    # merges, so the only symptom was a doubled entry in the load path.
+    #
+    # The vendor JS for flatpickr and select2 still needs adding, because asset
+    # paths are not globbed from engines the way locale files are.
+    #
+    # Guarded: `--minimal` apps (and any app without sprockets or propshaft) have
+    # no `config.assets` at all, and this initializer must not be what stops them
+    # booting. Verified against a scratch app with neither.
+    initializer "laiss_cms.locale_assets" do |app|
+      next unless app.config.respond_to?(:assets) && app.config.assets.respond_to?(:paths)
+
+      asset_path = root.join("vendor/assets/javascripts").to_s
+      paths = app.config.assets.paths.map(&:to_s)
+      app.config.assets.paths << asset_path unless paths.include?(asset_path)
+    end
+
+    # Pin the per-locale JS for flatpickr and select2. These are fetched by name
+    # at runtime, so the importmap cannot discover them.
+    initializer "laiss_cms.locale_importmap_pins" do |app|
+      engine_root = root
+
+      app.config.to_prepare do
+        locales = Array(app.config.i18n.available_locales).map(&:to_s).reject { |l| l == "en" }
+
+        locales.each do |locale|
+          flatpickr = engine_root.join("vendor/assets/javascripts/flatpickr", "#{locale}.js")
+          if File.exist?(flatpickr)
+            LaissCms.importmap.pin "flatpickr/#{locale}.js", to: "flatpickr/#{locale}.js"
+          end
+
+          select2 = engine_root.join("vendor/assets/javascripts/select2", "select2_locale_#{locale}.js")
+          if File.exist?(select2)
+            LaissCms.importmap.pin "select2/#{locale}.js", to: "select2_locale_#{locale}.js"
+          end
         end
       end
     end
@@ -61,7 +118,16 @@ module LaissCms
         LaissCms.config.admin_importmaps.each do |admin_import|
           LaissCms.importmap.draw admin_import.importmap_path
           watch_paths += admin_import.source_paths.to_a
-          app.config.assets.paths += admin_import.source_paths.to_a
+          # Read inside to_prepare, not captured outside it: the configuration is
+          # rebuilt between the initializer and this block, so a reference taken
+          # earlier points at an array nobody reads, which silently emptied the
+          # rendered importmap. Guarded because a `--minimal` app has no
+          # `config.assets` at all.
+          if app.config.respond_to?(:assets) && app.config.assets.respond_to?(:paths)
+            admin_import.source_paths.to_a.each do |source_path|
+              app.config.assets.paths << source_path unless app.config.assets.paths.include?(source_path)
+            end
+          end
           if admin_import[:name] != "laiss_cms_admin"
             LaissCms.config.admin_js_imports.add(admin_import.name)
           end
@@ -176,6 +242,36 @@ module LaissCms
           LaissCms.config,
           LaissCms::Admin::Settings.restore(stored)
         )
+      end
+    end
+
+    # The registration that used to live in the devise engine's own
+    # config/initializers. Guarded, because none of it is meaningful without the
+    # authentication screens the ability and the navigation entry point at.
+    initializer "laiss_cms.devise_admin" do |app|
+      next unless LaissCms.const_defined?(:Devise) && LaissCms::Devise.available?
+
+      app.config.to_prepare do
+        LaissCms.config.abilities.add("LaissCms::DeviseAbility")
+
+        LaissCms::Modules.register_module({
+          name: "users",
+          engine_name: "laiss_cms",
+          position: 4.1,
+          navigation: {
+            name: "modules.users",
+            controller: "/laiss_cms/admin/users",
+            action: "index",
+            icon: "group"
+          }
+        })
+
+        LaissCms.config.signup_path = "/admin/signup"
+        LaissCms.config.login_path = "/admin/login"
+        LaissCms.config.logout_path = "/admin/logout"
+        LaissCms.config.logout_method = ::Devise.sign_out_via.to_s
+        LaissCms.config.edit_user_path = "/admin/users/:id/edit"
+        LaissCms.config.admin_users_path = "/admin/users"
       end
     end
 

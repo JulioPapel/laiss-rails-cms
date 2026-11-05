@@ -14,7 +14,6 @@ What actually ships in this repository:
 | Gem | What it is |
 | --- | --- |
 | `laiss_cms` | The engine |
-| `laiss_cms_i18n` (`i18n/`) | Translations beyond English |
 | `laiss-cms-devise` (`devise/`) | Devise-based authentication, optional |
 
 All three are consumed from git at a tag. See the

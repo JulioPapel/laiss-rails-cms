@@ -24,7 +24,7 @@ class Datepicker extends HTMLElement {
   get flatpickrOptions() {
     const enableTime = /time/.test(this.inputType)
     const options = {
-      // laiss_cms_i18n supports `zh_CN` etc., but flatpickr only has two-letter codes (`zh`)
+      // The admin's locales include `zh-CN`, but flatpickr only has two-letter codes (`zh`)
       locale: locale.slice(0, 2),
       altInput: true,
       altFormat: translate(`formats.${this.inputType}`),

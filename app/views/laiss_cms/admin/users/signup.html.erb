@@ -1,0 +1,20 @@
+<%= content_for :stylesheets do %>
+  <%= stylesheet_link_tag "laiss_cms_devise" %>
+<% end %>
+
+<% content_for(:main_menu_style) { 'collapsed-menu' } %>
+
+<div class="login_signup_box">
+  <%= render "laiss_cms/admin/user_sessions/logo" do %>
+    <p>
+      <strong><%= LaissCms.t('Welcome to LaissCms') %></strong>
+    </p>
+    <p><%= LaissCms.t("Please Signup") %></p>
+  <% end %>
+
+  <div class="panel">
+    <%= laiss_cms_form_for [:admin, @user] do |f| %>
+      <%= render 'fields', f: f %>
+    <% end %>
+  </div>
+</div>

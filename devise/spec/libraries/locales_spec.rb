@@ -1,10 +1,14 @@
 require "rails_helper"
 
 RSpec.describe "LaissCms::Devise locales" do
+  # These translations are folded into laiss_cms: laiss_cms_users.* holds the
+  # admin user screens and laiss_cms_devise.* holds Devise's own messages. The
+  # list is derived from the files so a newly added locale is covered without
+  # editing this spec.
   let(:locales) do
-    Dir[LaissCms::Devise::Engine.root.join("config", "locales", "*.yml")]
-      .map { File.basename(_1, ".yml") }
-      .reject { _1.start_with?("devise.") }
+    Dir[LaissCms::Engine.root.join("config", "locales", "extra", "laiss_cms_users.*.yml")]
+      .map { File.basename(_1)[/\.([\w-]+)\.yml\z/, 1] }
+      .compact
   end
 
   it "ships more than the default locale" do

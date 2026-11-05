@@ -7,9 +7,11 @@ class ApplicationController < ActionController::Base
 
   private
 
-  # When loaded, the laiss-cms-devise engine handles authentication and
-  # provides its own +current_user+ helper, so we must not shadow it.
-  unless defined?(LaissCms::Devise::Engine)
+  # When loaded, the devise integration handles authentication and provides its
+  # own +current_user+ helper, so we must not shadow it. That integration is now
+  # part of laiss_cms rather than a separate engine, so the test is whether it is
+  # active, not whether an engine constant exists.
+  unless LaissCms.const_defined?(:Devise) && LaissCms::Devise.available?
     def current_user
       return if Rails.env.test?
 
