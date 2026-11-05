@@ -61,6 +61,7 @@
 @use "admin/sitemap_polish";
 @use "admin/navigation_polish";
 @use "admin/chrome_polish";
+@use "admin/sidebar_collapse";
 // The Modern theme's component layer: the new grammar (white cards on a tinted
 // page, blue primary, 8/12px radii). Additive; no element is rewritten.
 @use "admin/modern_components";

@@ -54,6 +54,21 @@
         menu markup itself is unchanged, and every existing custom element
         inside it keeps working. Above the breakpoint the wrapper is inert. %>
     <laiss-cms-drawer target="left_menu" label="<%= LaissCms.t(:menu) %>">
+      <% if sidebar_collapsible? %>
+        <%# Sidebar collapse toggle. A plain link: the state is server-rendered and
+            flipped by a session value, so no custom element or JS is involved.
+            aria-expanded describes the NAVIGATION (true = rail open). %>
+        <%= link_to sidebar_toggle_path,
+          class: "sidebar-collapse-toggle",
+          "aria-controls": "left_menu",
+          "aria-expanded": (!sidebar_collapsed?).to_s,
+          "aria-label": LaissCms.t(!sidebar_collapsed? ? :collapse_sidebar : :expand_sidebar,
+            default: !sidebar_collapsed? ? "Collapse sidebar" : "Expand sidebar"),
+          title: LaissCms.t(!sidebar_collapsed? ? :collapse_sidebar : :expand_sidebar,
+            default: !sidebar_collapsed? ? "Collapse sidebar" : "Expand sidebar") do %>
+          <span class="sidebar-collapse-toggle__bars" aria-hidden="true"></span>
+        <% end %>
+      <% end %>
       <%= render "laiss_cms/admin/left_menu" %>
     </laiss-cms-drawer>
     <%= render 'laiss_cms/admin/partials/flash_notices' %>

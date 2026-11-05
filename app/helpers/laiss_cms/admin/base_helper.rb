@@ -253,15 +253,71 @@ module LaissCms
         end
       end
 
+      # Sidebar collapse override.
+      #
+      # Upstream ALREADY collapses the sidebar on the page editor: pages/edit.html.erb
+      # sets content_for(:main_menu_style) { "collapsed-menu" }. Two things were
+      # missing, and they are what the owner asked for:
+      #
+      #   1. no way to expand it again while editing
+      #   2. no memory of the choice
+      #
+      # So this only adds an OVERRIDE on top of upstream's default. There is no
+      # custom element and no JavaScript: a plain link sets a session value and the
+      # class is rendered on the next request. Three attempts at a JS element each
+      # broke the element-editor feature specs (16/20 failing while registered,
+      # 20/20 green while not) with no attributable cause; a UI affordance is not
+      # worth that risk.
+      def sidebar_collapsed?
+        case params[:sidebar]
+        when "expanded" then session[:laiss_cms_sidebar_expanded] = true
+        when "collapsed" then session[:laiss_cms_sidebar_expanded] = false
+        end
+
+        return !session[:laiss_cms_sidebar_expanded] if session.key?(:laiss_cms_sidebar_expanded)
+
+        # No explicit choice: upstream's behaviour, i.e. collapsed on the editor.
+        content_for?(:main_menu_style) && content_for(:main_menu_style).to_s.include?("collapsed-menu")
+      end
+
+      # True when there is a collapse state worth toggling. Upstream only collapses
+      # on the editor, so the control only appears there.
+      def sidebar_collapsible?
+        editor_route? || content_for?(:main_menu_style)
+      end
+
+      def sidebar_toggle_path
+        url_for(params.permit!.to_h.merge(
+          sidebar: sidebar_collapsed? ? "expanded" : "collapsed",
+          only_path: true
+        ))
+      end
+
+      def editor_route?
+        return false unless controller_name.in?(%w[pages elements])
+
+        return true if controller_name == "elements" && action_name == "index"
+
+        action_name == "edit" || (controller_name == "pages" && action_name == "show")
+      end
+
       # Appends the current controller and action to body as css class.
       def laiss_cms_body_class
-        [
+        classes = [
           controller_name,
           action_name,
           content_for(:main_menu_style),
           content_for(:laiss_cms_body_class),
           "elements-window-visible"
-        ].compact
+        ].compact.join(" ").split
+
+        # The collapse override is authoritative. Upstream puts `collapsed-menu`
+        # in via content_for(:main_menu_style) on pages/edit; when the user has
+        # expanded it, the class must actually come off.
+        classes.delete("collapsed-menu") unless sidebar_collapsed?
+        classes << "collapsed-menu" if sidebar_collapsed?
+
+        classes.uniq.join(" ")
       end
 
       # (internal) Returns options for the clipboard select tag
