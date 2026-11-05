@@ -953,3 +953,140 @@ nav.pagination {
     }
   }
 }
+
+// ---------------------------------------------------------------------------
+// Input addons must not overlap the field they belong to.
+//
+// `.input-addon` is `position: absolute; right: 0` (forms.scss) and the field
+// underneath it is full width. Nothing reserved room for the addon, so its
+// <select> painted straight over the <input>'s right edge — measured on the page
+// editor at a 1080px² overlap (input x=979 w=447, select x=1396 w=30).
+//
+// The cause is the missing inset, not the position. Reserving the addon's width
+// as right padding on the field fixes every such row at once, for one and for
+// two addons, instead of nudging margins per screen.
+// ---------------------------------------------------------------------------
+.input-field {
+  position: relative;
+
+  &:has(> .input-addon.right) > input,
+  &:has(> .input-addon.right) > textarea,
+  &:has(> .input-addon.right) > select {
+    padding-right: calc(var(--form-field-addon-width) + var(--spacing-2));
+  }
+
+  &:has(> .input-addon.right.second) > input,
+  &:has(> .input-addon.right.second) > textarea,
+  &:has(> .input-addon.right.second) > select {
+    padding-right: calc(var(--form-field-addon-width) * 2 + var(--spacing-2));
+  }
+
+  &:has(> .input-addon.left) > input,
+  &:has(> .input-addon.left) > select {
+    padding-left: calc(var(--form-field-addon-width) + var(--spacing-2));
+  }
+
+  // The addon sits inside the field's box, not floating below it. `bottom` was
+  // spacing-based, which drifted as soon as a field's height changed.
+  > .input-addon {
+    top: 0;
+    bottom: 0;
+    height: auto;
+    z-index: 1;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The element filter field must be wide enough for its own placeholder.
+//
+// Measured on the page editor: `input.js_filter_field` rendered at **58px** wide
+// with 1px padding and a "Filter elements" placeholder, so the text spilled
+// across the field's own border. The cause is flex sizing: the field sits in a
+// row where every child got `flex: 1 1 0` with `min-width: 0`, which lets a text
+// input collapse below its content width.
+//
+// A min-width is the cause-level fix: the field can grow, but cannot shrink past
+// the point where its label stops being readable. `ch` ties that to the font.
+// ---------------------------------------------------------------------------
+input.js_filter_field,
+.list_filter input[type="search"],
+.list_filter input[type="text"] {
+  min-width: 16ch;
+  flex: 1 1 16ch;
+  text-overflow: ellipsis;
+}
+
+// ---------------------------------------------------------------------------
+// The trailing addon (e.g. the H1 level select) is a segment of the field, not
+// a box sitting on top of it.
+//
+// Measured and cropped: the addon drew all four of its own borders INSIDE the
+// input's right edge, so two borders were visible at once and the addon's right
+// corner stuck out past the field's radius — a "double border" break.
+//
+// The fix is the standard input-group treatment: the field keeps the outer
+// border, the addon keeps only the divider on its leading edge, and both share
+// the field's corner radius. No positioning nudges.
+// ---------------------------------------------------------------------------
+.input-field > .input-addon {
+  &.right {
+    right: 1px;
+    top: 1px;
+    bottom: 1px;
+    height: auto;
+
+    select {
+      height: 100%;
+      border: 0;
+      border-left: 1px solid var(--form-field-border-color);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background-color: var(--form-field-addon-background-color);
+
+      &:focus-visible {
+        outline: none;
+        box-shadow: inset 0 0 0 2px var(--focus-color);
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      }
+    }
+
+    &.second {
+      right: calc(var(--form-field-addon-width) + 1px);
+
+      select {
+        border-radius: 0;
+
+        &:not(:focus) {
+          border-right: 1px solid var(--form-field-border-color);
+        }
+      }
+    }
+  }
+
+  &.left select {
+    border: 0;
+    border-right: 1px solid var(--form-field-border-color);
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  }
+}
+
+// The addon's select carries both its value ("H1") and a dropdown arrow, but the
+// addon is only --form-field-addon-width (30px) wide. The arrow was painting on
+// top of the text — the last clash in this cluster, visible in a 2x crop.
+//
+// The arrow is removed here and drawn as a single chevron behind the text using
+// a background gradient; the value is centred in the space that remains. Nothing
+// is clipped because nothing overlaps.
+.input-field > .input-addon select {
+  padding: 0 0.75rem 0 0.25rem;
+  text-align: center;
+  text-align-last: center;
+  color: var(--form-field-text-color);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight_semibold);
+
+  // One chevron, at the right edge, at the text's own weight.
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%234d5566' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.3rem center;
+  background-size: 0.5rem;
+}
