@@ -23,6 +23,21 @@ RSpec.describe "LaissCms::Message" do
     end
 
     context "field containing email in its name" do
+      # Message builds its accessors from the mailer config when the class is
+      # loaded, so this context has to reload the class under a stubbed config.
+      # The reloaded class outlives the example while the stub does not, which
+      # left every later example using a Message that only knew email_of_my_boss.
+      # Reloading again afterwards restores the class as it is defined for the
+      # real config, so the result does not depend on example order.
+      around do |example|
+        begin
+          example.run
+        ensure
+          LaissCms.send(:remove_const, :Message)
+          load LaissCms::Engine.root.join("app/models/laiss_cms/message.rb")
+        end
+      end
+
       before do
         stub_laiss_cms_config(mailer: {
           fields: %w[email_of_my_boss],

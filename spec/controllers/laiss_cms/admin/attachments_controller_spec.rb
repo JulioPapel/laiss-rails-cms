@@ -42,8 +42,16 @@ module LaissCms
 
     describe "#index" do
       it "should always paginate the records" do
-        expect_any_instance_of(ActiveRecord::Relation).to receive(:page).and_call_original
+        # Asserting the paginated relation the action actually built, rather than
+        # spying with `expect_any_instance_of(ActiveRecord::Relation)`. A spy on
+        # that base class is shared across every relation in the process, so the
+        # example failed whenever another example had already exercised a
+        # relation — it depended on file order, not on this controller.
         get :index
+
+        attachments = controller.instance_variable_get(:@attachments)
+        expect(attachments.limit_value).to eq(LaissCms.config.items_per_page)
+        expect(attachments.offset_value).to eq(0)
       end
 
       context "when params[:tagged_with] is set" do

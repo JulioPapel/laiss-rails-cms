@@ -11,13 +11,24 @@ RSpec.describe "Admin settings", type: :request do
     authorize_user(admin)
   end
 
-  after do
-    # Config is global state; a test that writes it must put it back or later
-    # examples inherit the change.
-    LaissCms::Admin::Settings.writable.each do |field|
-      LaissCms::Admin::Settings.write(field, field.default)
+  # Config is global state and these examples write it through the real
+  # controller. Restore the values that were actually there before the example
+  # rather than the catalogue defaults: `auto_logout_time` defaults to 30 in the
+  # catalogue but is 40 in the dummy app's config.yml, so writing the default
+  # back silently corrupted the boot value for every later example.
+  around do |example|
+    fields = LaissCms::Admin::Settings.writable
+    previous = fields.to_h { |field| [field.key, LaissCms::Admin::Settings.read(field)] }
+
+    begin
+      example.run
+    ensure
+      previous.each do |key, value|
+        field = fields.find { |candidate| candidate.key == key }
+        LaissCms::Admin::Settings.write(field, value, check_options: false) if field
+      end
+      LaissCms::Preference.where(scope: LaissCms::Preference::SETTINGS).delete_all
     end
-    LaissCms::Preference.where(scope: LaissCms::Preference::SETTINGS).delete_all
   end
 
   describe "GET /admin/settings" do

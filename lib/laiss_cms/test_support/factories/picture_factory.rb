@@ -34,7 +34,12 @@ FactoryBot.define do
       end
     end
 
-    name { "image" }
+    # Unique per picture. The name is what `Picture#url` uses as the filename in
+    # the variant URL, so a shared name gave every picture the same URL even when
+    # the underlying bytes differed — ActiveStorage's route then served a variant
+    # cached for a different blob, and the browser reused it. Examples that ran
+    # after another picture spec could get a 1x1 image where a 500x500 was meant.
+    sequence(:name) { |n| "image-#{n}" }
     upload_hash { Time.current.hash }
   end
 end

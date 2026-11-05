@@ -5,6 +5,21 @@ require "sprockets"
 
 RSpec.describe LaissCms::Engine do
   describe "laiss_cms.admin_stylesheets" do
+    # The initializer appends to the global Rails.application.config.assets.precompile,
+    # so without restoring that array the "sprockets is defined" example leaves the
+    # entry behind and the "sprockets is not defined" example fails whenever it runs
+    # second. Restoring the array keeps the result independent of example order.
+    around do |example|
+      precompile = Rails.application.config.assets.precompile
+      original = precompile.dup
+
+      begin
+        example.run
+      ensure
+        precompile.replace(original)
+      end
+    end
+
     let(:initializer) do
       LaissCms::Engine.initializers.detect do
         _1.name == "laiss_cms.admin_stylesheets"

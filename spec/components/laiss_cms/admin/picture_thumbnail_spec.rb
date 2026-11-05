@@ -7,7 +7,9 @@ RSpec.describe LaissCms::Admin::PictureThumbnail, type: :component do
     described_class.new(picture)
   end
 
-  let(:picture) { create(:laiss_cms_picture) }
+  # Pinned because the example below asserts the name attribute; the factory
+  # otherwise sequences names to keep variant URLs distinct between examples.
+  let(:picture) { create(:laiss_cms_picture, name: "image") }
 
   it "renders medium thumbnail" do
     expect(picture).to receive(:thumbnail_url).with(size: "160x120")

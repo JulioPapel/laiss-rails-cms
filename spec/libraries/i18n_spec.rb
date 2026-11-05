@@ -19,6 +19,27 @@ module LaissCms
   end
 
   describe I18n do
+    # @@available_locales is class-level state on the engine's I18n module, and
+    # examples in this file both read and write it. Without restoring it, the
+    # value leaked into whichever file ran next, and the failures moved with the
+    # random seed. Scoped to the whole `describe` rather than one context, because
+    # `.available_locales=` sets it too and had no cleanup.
+    around do |example|
+      klass = LaissCms::I18n
+      had = klass.class_variable_defined?(:@@available_locales)
+      previous = had ? klass.class_variable_get(:@@available_locales) : nil
+
+      begin
+        example.run
+      ensure
+        if had
+          klass.class_variable_set(:@@available_locales, previous)
+        elsif klass.class_variable_defined?(:@@available_locales)
+          klass.remove_class_variable(:@@available_locales)
+        end
+      end
+    end
+
     describe ".available_locales" do
       subject { I18n.available_locales }
       it { is_expected.to be_a Array }
@@ -34,13 +55,12 @@ module LaissCms
       context "when locales are already set in @@available_locales" do
         before { I18n.class_variable_set(:@@available_locales, [:kl, :jp]) }
         it { is_expected.to match_array([:kl, :jp]) }
-        after { I18n.class_variable_set(:@@available_locales, nil) }
       end
 
       context "when locales are present in other gems" do
         before do
           expect(::I18n).to receive(:load_path) do
-            ["/opt/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"]
+            ["/opt/gems/laiss_cms/config/locales/extra/laiss_cms.de.yml"]
           end
         end
 
@@ -54,7 +74,7 @@ module LaissCms
           expect(::I18n).to receive(:load_path) do
             [
               "/opt/gems/laiss-cms-devise/config/locales/laiss_cms.de.yml",
-              "/opt/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"
+              "/opt/gems/laiss_cms/config/locales/extra/laiss_cms.de.yml"
             ]
           end
         end
@@ -67,7 +87,7 @@ module LaissCms
       context "when locales have long iso format" do
         before do
           expect(::I18n).to receive(:load_path) do
-            ["/opt/gems/laiss_cms_i18n/config/locales/laiss_cms.zh-CN.yml"]
+            ["/opt/gems/laiss_cms/config/locales/extra/laiss_cms.zh-CN.yml"]
           end
         end
 
@@ -80,8 +100,8 @@ module LaissCms
         before do
           expect(::I18n).to receive(:load_path) do
             [
-              "/opt/gems/laiss_cms_i18n/config/locales/laiss_cms.zh-CN.yml",
-              "/opt/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"
+              "/opt/gems/laiss_cms/config/locales/extra/laiss_cms.zh-CN.yml",
+              "/opt/gems/laiss_cms/config/locales/extra/laiss_cms.de.yml"
             ]
           end
         end
