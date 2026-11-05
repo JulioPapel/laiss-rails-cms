@@ -1,0 +1,53 @@
+// Focus Bootstrap theme foundation.
+//
+// Derived from Focus Bootstrap (MIT, Copyright 2016-Present Themefisher).
+// See THIRD-PARTY-NOTICES.md for the full notice.
+//
+// SCOPE: this file is the *substrate* only — Bootstrap 4.3.1's SCSS, the theme's
+// design tokens, its reset, typography and layout shells. Nothing here references
+// the upstream theme's fonts, icon families, demo pages, charts or RTL/dark
+// variants; those were not copied.
+//
+// The theme's own SCSS uses the legacy `@import` syntax throughout. Sass deprecates
+// it, and each layer is kept as-is rather than mechanically rewritten to `@use`,
+// because rewriting 80 files of third-party SCSS is a large risk for no visual
+// gain. The deprecation warnings are suppressed for this directory in the build.
+
+@use "../laiss_cms/fonts" with ($font-path: "../../fonts/laiss_cms");
+
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot";
+@import "bootstrap/scss/type";
+@import "bootstrap/scss/images";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/tables";
+@import "bootstrap/scss/forms";
+@import "bootstrap/scss/buttons";
+@import "bootstrap/scss/transitions";
+@import "bootstrap/scss/dropdown";
+@import "bootstrap/scss/button-group";
+@import "bootstrap/scss/input-group";
+@import "bootstrap/scss/custom-forms";
+@import "bootstrap/scss/nav";
+@import "bootstrap/scss/navbar";
+@import "bootstrap/scss/card";
+@import "bootstrap/scss/breadcrumb";
+@import "bootstrap/scss/pagination";
+@import "bootstrap/scss/badge";
+@import "bootstrap/scss/alert";
+@import "bootstrap/scss/progress";
+@import "bootstrap/scss/list-group";
+@import "bootstrap/scss/close";
+@import "bootstrap/scss/modal";
+@import "bootstrap/scss/tooltip";
+@import "bootstrap/scss/popover";
+@import "bootstrap/scss/spinners";
+@import "bootstrap/scss/utilities";
+@import "bootstrap/scss/print";
+
+// Theme tokens and base layer.
+@import "theme/abstracts/abstracts";
+@import "theme/base/base";

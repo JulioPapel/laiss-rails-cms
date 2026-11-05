@@ -1,0 +1,22 @@
+// Typography and icon sources for the admin theme.
+//
+// The upstream theme loads Roboto from Google Fonts and six icon families
+// (simple-line, Font Awesome, Material Design Icons, Themify, Line Awesome,
+// Avasta) plus Helvetica Neue as a webfont. None of that ships here:
+//
+//   * Helvetica Neue is a commercial typeface with no redistribution licence.
+//   * Six icon families is five more than the one this project uses.
+//   * Roboto would be a second typeface beside the project's own Inter.
+//
+// Inter is the admin's typeface, self-hosted from the engine's own fonts
+// directory, so there is no third-party request and no licence question.
+// Bootstrap Icons (MIT) provides every icon; its licence is recorded in
+// THIRD-PARTY-NOTICES.md.
+
+$font-family-sans-serif: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+  Roboto, "Helvetica Neue", Arial, sans-serif !default;
+
+$font-family-base: $font-family-sans-serif;
+
+// Bootstrap Icons, vendored as an icon font by the asset build.
+@import "bootstrap-icons/font/bootstrap-icons";
