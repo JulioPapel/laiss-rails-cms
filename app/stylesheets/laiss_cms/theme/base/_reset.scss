@@ -72,6 +72,14 @@ p {
 #main-wrapper {
     opacity: 1;
     transition: all 0.25s ease-in;
+    // `height: 100%` on the admin's own #main_content resolves against this
+    // element. The upstream theme leaves it auto, which is fine for its demo
+    // pages but made #main_content collapse to its intrinsic height (152px
+    // instead of the 814px viewport) once the shell wrapped the admin — and the
+    // page preview iframe then overflowed its parent, so elements inside it could
+    // not be hovered or clicked. A definite height restores the percentage
+    // resolution the admin's layout assumes.
+    height: 100vh;
     // `overflow: hidden` in the upstream theme depends on its own fixed-height
     // scroll containers, which are driven by `data-sidebar-style` and friends on
     // <body>. This admin does not set those, so the wrapper clipped page content:

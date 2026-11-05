@@ -20,7 +20,7 @@ gates, which is worth more than the isolation benefit of doing forms early.
 |---|---|---|
 | 0 | Bootstrap + theme SCSS foundation | done |
 | 1a | Scoped CSS substrate (layout untouched) | done |
-| 1b | Shell: layout, sidebar, top bar | blocked on preview iframe |
+| 1b | Shell: layout, sidebar, top bar | done |
 | 2 | Forms: simple_form wrapper + builder | pending |
 | 3 | Settings screen | pending |
 | 4 | Styleguide screen | pending |
@@ -138,3 +138,53 @@ Step 1b: the preview iframe breakage. Hypothesis to test first — `#main_conten
 `height: 100%`, which resolves against a parent with a definite height; `#main-wrapper`
 may not provide one, changing the containing block. The probe measures geometry on
 both commits and diffs.
+
+---
+
+## Step 1b — shell layout, and the preview-iframe cause
+
+**Changed**
+
+- `#main-wrapper` now wraps the admin, with the theme's `nav-header`/sidebar/content
+  structure. `focus.css` is linked, so the substrate finally applies.
+- `#main-wrapper` gets `height: 100vh` in `_reset.scss`.
+
+**The iframe failure, measured rather than guessed**
+
+Step 1's layout broke two `page_editing_feature_spec` examples: elements inside the
+page-preview iframe could no longer be hovered or clicked. Three CSS hypotheses were
+tried and all were wrong, so the step was reverted (see 1a).
+
+The cause was found with one geometry probe comparing both states:
+
+| Element | Without shell | With shell | |
+|---|---|---|---|
+| `#main-wrapper` | absent | 196px | created, auto height |
+| `#main_content` | **814px** | **152px** | **−662px** |
+| iframe | 694px | 694px | unchanged |
+
+`#main_content` uses `height: 100%`. A percentage height only resolves against a
+parent with a **definite** height; `#main-wrapper` had none, so the percentage
+resolved to `auto` and the content area collapsed to its intrinsic height. The iframe
+kept its 694px, overflowed its parent by 542px, and the spec's hover coordinate landed
+outside the visible area.
+
+Fix: `height: 100vh` on `#main-wrapper`. `#main_content` returns to 814px and
+`page_editing_feature_spec` passes 38/38.
+
+**This is a theme rule that assumed it owned the viewport**, like `opacity` and
+`overflow` before it — the same family of defect, and the reason the layout step could
+not be verified by eye alone.
+
+**Verified**
+
+- 4410 core / 167 devise / 846 vitest — counts whole.
+- Geometry measured: `#main_content` 814px, matching pre-shell.
+- `page_editing_feature_spec` 38/38, the two previously failing examples included.
+
+**Knowingly wrong at this point**
+
+The interior of every screen still uses the old design: cards, tables, forms and
+buttons are Bootstrap-shaped underneath but styled by the old admin CSS. Steps 2–7
+convert each screen. The sidebar is the theme's container but still our navigation
+markup, which is converted with the screens.
