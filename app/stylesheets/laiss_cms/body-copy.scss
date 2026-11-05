@@ -1,0 +1,135 @@
+// Body copy — the public-side half of the editor contract.
+//
+// WHY THIS FILE EXISTS
+//
+// The admin's rich-text body field can emit exactly this set of elements
+// (declared in `valid_elements`, lib/laiss_cms/tinymce.rb):
+//
+//   p, br, strong/b, em/i, u, del/s, s, sub, sup, a[href|target|rel|title],
+//   ul, ol, li, blockquote, code, hr
+//
+// The engine previously shipped NO public-facing stylesheet for body copy: the
+// only non-admin sheet was `welcome.scss`, which styles the sign-in page and
+// uses white-on-accent colours. A host app therefore had to invent these rules,
+// and any element the editor could emit but the host had not styled published
+// as browser default — which is what happened to `code`, `li`, `blockquote` and
+// `hr` in the demo site.
+//
+// This file closes that gap from the engine side. It is opt-in: a host includes
+// it in their public layout. It deliberately defines ONLY the elements the
+// editor can produce, and nothing else, so it cannot collide with a host's own
+// typography beyond those tags.
+//
+// THE CONTRACT: if you add a tag to `valid_elements`, add a rule here in the
+// same commit. `docs/design/reference-spec.md` records the reasoning.
+//
+// Colours come from the Journal palette so a host that includes
+// `laiss_cms/journal-palette` gets themed body copy for free; the literal
+// fallbacks keep this file usable on its own.
+
+@use "journal-palette";
+
+.laiss-cms-body,
+.laiss-cms-element-body {
+  // --- block rhythm -------------------------------------------------------
+  p {
+    margin: 0 0 1.1em;
+    line-height: 1.65;
+  }
+
+  // --- inline semantics ---------------------------------------------------
+  // The browser renders these by default; stating them keeps the published page
+  // identical to the editor iframe, which has its own defaults.
+  strong,
+  b {
+    font-weight: 600;
+  }
+
+  em,
+  i {
+    font-style: italic;
+  }
+
+  u {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  del,
+  s {
+    text-decoration: line-through;
+    color: var(--journal-ink-4, #635c55);
+  }
+
+  sub,
+  sup {
+    font-size: 0.75em;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+
+  sup {
+    top: -0.5em;
+  }
+
+  sub {
+    bottom: -0.25em;
+  }
+
+  a {
+    color: var(--journal-ink-7, #120f0b);
+    text-decoration-color: var(--journal-ink-4, #635c55);
+    text-underline-offset: 0.15em;
+
+    &:hover {
+      text-decoration-color: currentcolor;
+    }
+  }
+
+  // --- lists --------------------------------------------------------------
+  ul,
+  ol {
+    margin: 0 0 1.1em;
+    padding-left: 1.4em;
+  }
+
+  li {
+    margin: 0 0 0.35em;
+    padding-left: 0.2em;
+  }
+
+  li::marker {
+    color: var(--journal-ink-4, #635c55);
+  }
+
+  // --- blockquote: a change of voice, marked with a rule not a box --------
+  blockquote {
+    margin: 1.5em 0;
+    padding-left: 1.1em;
+    border-left: 2px solid var(--journal-ink-2, #c2bdb7);
+    color: var(--journal-ink-5, #3d3730);
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // --- inline code --------------------------------------------------------
+  code {
+    font-family:
+      ui-monospace, "SF Mono", Menlo, "Bitstream Vera Sans Mono", monospace;
+    font-size: 0.92em;
+    padding: 0.1em 0.3em;
+    border-radius: 2px;
+    background-color: var(--journal-paper-3, #f2eee9);
+    color: var(--journal-ink-6, #231e19);
+  }
+
+  // --- the one separator the editor can insert ---------------------------
+  hr {
+    border: 0 none;
+    border-top: 1px solid var(--journal-ink-2, #c2bdb7);
+    margin: 2em 0;
+  }
+}
