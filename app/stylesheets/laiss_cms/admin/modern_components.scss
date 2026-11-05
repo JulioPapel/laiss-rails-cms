@@ -88,7 +88,7 @@ body {
 .empty-state,
 .resources-table-wrapper {
   background-color: var(--panel-background-color);
-  border: 1px solid var(--panel-border-color);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   // The soft lift: 2px of shadow, not a box.
   box-shadow: var(--elevation-card);
@@ -341,7 +341,7 @@ textarea,
   }
 
   &:hover:not(:disabled):not([readonly]) {
-    border-color: var(--grey-400, #a7aebd);
+    border-color: var(--border-strong-color);
   }
 
   &:focus,
@@ -634,11 +634,64 @@ laiss-cms-message,
 // ---------------------------------------------------------------------------
 #laiss_cms_dialog,
 .dialog,
-sl-dialog::part(panel) {
+sl-dialog::part(panel),
+dialog.laiss-cms-dialog-container {
   border-radius: var(--radius-md);
   border: 1px solid var(--panel-border-color);
   box-shadow: var(--elevation-3);
   overflow: hidden;
+}
+
+// The commit action of a dialog is its primary action.
+//
+// `f.submit ... class: "primary"` in the ERB is dropped by simple_form on the
+// way to the element (the rendered button came out with no class at all), so the
+// style is applied here rather than left to a class that never arrives. Dialogs
+// in this admin are create/edit forms; destructive confirmations use the
+// Turbo confirm path, not a dialog form.
+dialog.laiss-cms-dialog-container,
+#laiss_cms_dialog,
+.dialog {
+  form input[type="submit"],
+  form button[type="submit"] {
+    height: var(--control-height-md);
+    padding: 0 var(--spacing-5);
+    border: 1px solid var(--button-primary-border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--button-primary-bg-color);
+    color: var(--button-primary-text-color);
+    font-weight: var(--font-weight_semibold);
+    box-shadow: 0 1px 2px rgb(0 52 156 / 24%);
+
+    &:hover:not([disabled]) {
+      background-color: var(--button-primary-hover-bg-color);
+      border-color: var(--button-primary-hover-bg-color);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--button-focus-box-shadow);
+    }
+  }
+}
+
+// The dialog's own close control, sized to the control scale.
+.laiss-cms-dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  margin-left: auto;
+  border: 0 none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--icon-color);
+
+  &:hover {
+    background-color: var(--icon-button-hover-bg-color);
+    color: var(--text-color);
+  }
 }
 
 #laiss_cms_dialog header,
@@ -665,7 +718,7 @@ sl-dialog::part(panel) {
   overflow: hidden;
 
   &:hover {
-    border-color: var(--grey-300, #d2d7e2);
+    border-color: var(--border-strong-color);
     box-shadow: var(--elevation-card);
   }
 
@@ -778,8 +831,10 @@ sl-dialog::part(panel) {
     width: 40px;
     height: 22px;
     border-radius: var(--radius-pill);
-    border-color: var(--form-field-border-color);
-    background-color: var(--grey-200, #e4e7ee);
+    // A 1px border in the same blue as the checked fill measured 1:1 — the
+    // track had no edge at all once on. It uses the boundary tone instead.
+    border: 1px solid var(--border-color);
+    background-color: var(--grey-300);
   }
 
   &__thumb {
@@ -792,6 +847,11 @@ sl-dialog::part(panel) {
   &__input:checked + .settings-switch__track {
     background-color: var(--accent-color);
     border-color: var(--accent-color);
+  }
+
+  &__input:focus-visible + .settings-switch__track {
+    outline: var(--focus-ring-width) solid var(--focus-color);
+    outline-offset: var(--focus-ring-offset);
   }
 
   &__input:checked + .settings-switch__track .settings-switch__thumb {
@@ -853,9 +913,30 @@ nav.pagination {
 }
 
 // ---------------------------------------------------------------------------
-// The reference's density: horizontal space exceeds vertical, so a section
-// gets more breathing room at the sides than between its rows.
+// Narrow screens: the drawer's rows.
+//
+// The drawer opens by focusing the first row, and the Journal focus mixin drew a
+// 2px ring PLUS a 1px offset ring in the text colour — a double outline that read
+// as a second, thicker selection sitting above the real one. On a full-width
+// drawer row that is far too much. One ring, inset, is enough to say "focus is
+// here" without competing with the blue active pill.
 // ---------------------------------------------------------------------------
-.journal-section + .journal-section {
-  margin-top: var(--spacing-8);
+@media screen and (max-width: 999px) {
+  #left_menu {
+    #main_navi .main_navi_entry > a:focus-visible,
+    #main_navi .subnavi_tab > a:focus-visible,
+    #logout .main_navi_entry > a:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-color);
+      outline-offset: calc(-1 * var(--focus-ring-width));
+      box-shadow: none;
+      border-radius: var(--radius-sm);
+    }
+
+    // The first row is not the active row: do not let focus paint the active
+    // treatment onto it.
+    #main_navi .main_navi_entry:not(.active) > a:focus {
+      background-color: var(--main-menu-hover-bg-color);
+      color: var(--text-color);
+    }
+  }
 }

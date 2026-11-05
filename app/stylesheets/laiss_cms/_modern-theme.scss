@@ -55,12 +55,29 @@ $grey-700: #343b4a;
 $grey-800: #1f2431;
 $grey-900: #141824;
 
-// Semantic, for the states the admin actually shows.
+// A border tone, separate from the fill ramp above. WCAG 1.4.11 requires 3:1
+// for a boundary that carries meaning, and the audit measured the obvious
+// candidates well short of it:
+//
+//   #e4e7ee on white 1.24:1   #d2d7e2 on white 1.44:1   #a7aebd on white 2.23:1
+//   #7c8494 on white 3.76:1   on #f7f8fb 3.54:1         on #f1f3f8 3.39:1
+//
+// So drawn borders use $border-strong (#7c8494), which clears 3:1 on every
+// surface in the theme. The lighter greys remain for decorative fills.
+$border: #7c8494;
+$border-soft: #c3c9d6;
+
+// Semantic, for the states the admin actually shows. The -500 tones are the
+// fills; the -700 tones are the text, because a 500 on a 50 background measured
+// 3.86:1 (amber) and 3.91:1 (green) — below the 4.5:1 body minimum.
 $green-500: #0f8a5f;
+$green-700: #0a6b4a;
 $green-50: #e8f6f0;
 $amber-500: #b26a00;
+$amber-700: #8a5200;
 $amber-50: #fdf3e3;
 $red-500: #c0362c;
+$red-700: #9b2b23;
 $red-50: #fdecea;
 
 @mixin modern-theme {
@@ -126,12 +143,12 @@ $red-50: #fdecea;
   // =========================================================================
   --body-background-color: #{$grey-50};
   --panel-background-color: #ffffff;
-  --panel-border-color: #{$grey-200};
+  --panel-border-color: #{$border-soft};
   --sidebar-background-color: #ffffff;
   --header-background: #ffffff;
   --toolbar-bg-color: #ffffff;
-  --toolbar-border-bottom: 1px solid #{$grey-200};
-  --toolbar-spacer-color: #{$grey-200};
+  --toolbar-border-bottom: 1px solid #{$border-soft};
+  --toolbar-spacer-color: #{$border-soft};
 
   --background-color: #ffffff;
   --raised-background-color: #ffffff;
@@ -151,10 +168,10 @@ $red-50: #fdecea;
   // grey-200 on white is 1.32:1, so boundaries use grey-300 (2.1:1) for drawn
   // rules and grey-200 only for decorative separation inside a card.
   // =========================================================================
-  --border-color: #{$grey-200};
-  --border-inset-color: #{$grey-200};
-  --border-strong-color: #{$grey-300};
-  --table-border-color: #{$grey-200};
+  --border-color: #{$border};
+  --border-inset-color: #{$border-soft};
+  --border-strong-color: #{$border};
+  --table-border-color: #{$border};
 
   // =========================================================================
   // FOCUS + PRIMARY. Blue, per the reference. The ring is 3px at 25% so it reads
@@ -177,11 +194,11 @@ $red-50: #fdecea;
   // BUTTONS
   // =========================================================================
   --button-bg-color: #ffffff;
-  --button-border-color: #{$grey-300};
+  --button-border-color: #{$border};
   --button-text-color: #{$grey-800};
   --button-box-shadow: 0 1px 1px rgb(16 24 40 / 4%);
   --button-hover-bg-color: #{$grey-50};
-  --button-hover-border-color: #{$grey-300};
+  --button-hover-border-color: #{$grey-500};
   --button-focus-border-color: #{$blue-500};
   --button-focus-box-shadow: 0 0 0 3px rgb(45 70 185 / 22%);
 
@@ -195,7 +212,7 @@ $red-50: #fdecea;
   --button-disabled-color: #{$grey-500};   // 4.6:1 on grey-100
 
   --button-secondary-bg-color: #ffffff;
-  --button-secondary-border-color: #{$grey-300};
+  --button-secondary-border-color: #{$border};
   --button-secondary-text-color: #{$grey-800};
   --button-secondary-hover-bg-color: #{$grey-50};
   --button-secondary-hover-border-color: #{$grey-400};
@@ -216,13 +233,13 @@ $red-50: #fdecea;
   --main-menu-active-text-color: #{$blue-600};
   --main-menu-hover-bg-color: #{$grey-100};
   --main-menu-indicator-color: #fc8708;
-  --sidebar-border-color: #{$grey-200};
+  --sidebar-border-color: #{$border};
 
   // =========================================================================
   // FORMS
   // =========================================================================
   --form-field-background-color: #ffffff;
-  --form-field-border-color: #{$grey-300};
+  --form-field-border-color: #{$border};
   --form-field-box-shadow: 0 1px 1px rgb(16 24 40 / 4%);
   --form-field-text-color: #{$grey-900};
   --form-field-label-color: #{$grey-700};
@@ -251,15 +268,15 @@ $red-50: #fdecea;
 
   --notice-success-background-color: #{$green-50};
   --notice-success-border-color: #{$green-500};
-  --notice-success-text-color: #{$green-500};
+  --notice-success-text-color: #{$green-700};
 
   --notice-warning-background-color: #{$amber-50};
   --notice-warning-border-color: #{$amber-500};
-  --notice-warning-text-color: #{$amber-500};
+  --notice-warning-text-color: #{$amber-700};
 
   --notice-error-background-color: #{$red-50};
   --notice-error-border-color: #{$red-500};
-  --notice-error-text-color: #{$red-500};
+  --notice-error-text-color: #{$red-700};
 
   --hint-background-color: #{$grey-50};
   --hint-border-color: #{$grey-200};
@@ -270,7 +287,7 @@ $red-50: #fdecea;
   // ELEMENT EDITOR
   // =========================================================================
   --element-editor-background-color: #ffffff;
-  --element-editor-border-color: #{$grey-200};
+  --element-editor-border-color: #{$border-soft};
   --element-editor-dragged-background-color: #{$blue-50};
   --element-editor-dragged-border-color: #{$blue-400};
   --element-header-bg-color: #ffffff;
@@ -279,7 +296,7 @@ $red-50: #fdecea;
   --element-header-deprecated-bg-color: #{$grey-50};
   --element-deprecated-border-color: #{$grey-300};
   --element-toolbar-background-color: #{$grey-50};
-  --element-toolbar-border-color: #{$grey-200};
+  --element-toolbar-border-color: #{$border-soft};
   --element-dirty-border-color: #{$blue-400};
   --element-dirty-header-color: #{$blue-600};
 
@@ -317,7 +334,7 @@ $red-50: #fdecea;
   // MISC SURFACES the components already reference
   // =========================================================================
   --code-background-color: #{$grey-50};
-  --code-border-color: #{$grey-200};
+  --code-border-color: #{$border-soft};
   --picture-thumbnail-background-color: #{$grey-100};
   --picture-thumbnail-toolbar-bg-color: #ffffff;
   --thumbnail-background: #{$grey-100};
@@ -358,7 +375,7 @@ $red-50: #fdecea;
 
   --spinner-color: #{$grey-400};
   --file-upload-text-color: #{$grey-600};
-  --file-upload-failed-text-color: #{$red-500};
+  --file-upload-failed-text-color: #{$red-700};
   --sl-input-label-color: #{$grey-700};
 
   // Shoelace (the <sl-*> components) has its own ramp; point it at the blues so

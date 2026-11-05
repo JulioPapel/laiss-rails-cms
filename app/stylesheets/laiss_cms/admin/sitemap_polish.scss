@@ -30,7 +30,7 @@
 .sitemap_page {
   // A hairline between rows. The tree had no separation at all, so two adjacent
   // pages read as one block — the "hidden lines" complaint in its worst form.
-  border-bottom: 1px solid var(--border-inset-color);
+  border-bottom: 1px solid var(--table-border-color);
   margin: 0;
   // The hover fill is inset so it does not paint over the row rule.
   transition: background-color var(--journal-motion-fast)

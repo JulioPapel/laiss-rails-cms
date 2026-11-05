@@ -13,9 +13,9 @@ set -uo pipefail
 
 cd "$(dirname "$0")/../.." || exit 2
 
-BASELINE_EXAMPLES=4347
+BASELINE_EXAMPLES=4408
 BASELINE_DEVISE=167
-BASELINE_VITEST=830
+BASELINE_VITEST=851
 
 failures=0
 pass() { printf '  \033[32mPASS\033[0m  %s\n' "$1"; }

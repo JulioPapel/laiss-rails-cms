@@ -16,5 +16,5 @@ live here instead.
 | TinyMCE | MIT (community edition) | https://www.tiny.cloud |
 | Remix Icon | Apache 2.0 | https://remixicon.com |
 
-For the engine itself, see [`LICENSE`](LICENSE), which retains the upstream
-AlchemyCMS BSD-3-Clause notice as required.
+For the engine itself, see [`LICENSE`](LICENSE), which carries the full licence
+text including the retained upstream notice.

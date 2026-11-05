@@ -11,13 +11,13 @@ module LaissCms
 
         values.map do |value|
           label = case field.key
-                  when "admin_theme"
-                    LaissCms.t(value.capitalize, default: value.humanize)
-                  when "default_language.code"
-                    LaissCms::Language.find_by(language_code: value)&.name.presence || value
-                  else
-                    value.to_s.humanize
-                  end
+          when "admin_theme"
+            LaissCms.t(value.capitalize, default: value.humanize)
+          when "default_language.code"
+            LaissCms::Language.find_by(language_code: value)&.name.presence || value
+          else
+            value.to_s.humanize
+          end
           [label, value]
         end
       end

@@ -137,13 +137,15 @@ module LaissCms
         end
 
         it "writes an allowed select value" do
-          ok, _ = described_class.write(field("admin_theme"), "dark", config)
+          create(:laiss_cms_language, language_code: "en")
+          ok, _ = described_class.write(field("default_language.code"), "en", config)
           expect(ok).to be(true)
-          expect(config.admin_theme).to eq("dark")
+          expect(config.default_language.code).to eq("en")
         end
 
         it "rejects a value outside a select's options" do
-          ok, error = described_class.write(field("admin_theme"), "neon", config)
+          create(:laiss_cms_language, language_code: "en")
+          ok, error = described_class.write(field("default_language.code"), "zz", config)
           expect(ok).to be(false)
           expect(error).to be_present
         end

@@ -93,10 +93,17 @@ class Drawer extends HTMLElement {
     document.addEventListener("keydown", this.#onKeydown)
     this.#lockScroll()
 
-    // Focus the first focusable thing in the panel so keyboard users land
-    // inside the drawer rather than behind the backdrop.
+    // Focus the current page's entry if there is one, otherwise the first
+    // focusable thing. Focusing the first row meant a drawer opened on "Pages"
+    // put a focus ring around "Home", so two different rows looked selected at
+    // once. Landing on the row you are actually on is both less confusing and
+    // more useful: one keystroke from here is the rest of the section.
     const first = this.#focusable()[0]
-    if (first) first.focus()
+    const current =
+      this.#panel.querySelector(
+        "#main_navi .main_navi_entry.active > a, #main_navi .subnavi_tab.active > a"
+      ) || first
+    if (current) current.focus()
     else this.#panel.focus()
   }
 

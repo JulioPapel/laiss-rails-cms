@@ -68,10 +68,7 @@ class ThemeToggle extends HTMLElement {
       // The accessible name is the option itself; the icon is decoration.
       button.setAttribute("aria-label", option.label)
       button.setAttribute("title", option.label)
-      button.setAttribute(
-        "aria-checked",
-        String(option.value === this.current)
-      )
+      button.setAttribute("aria-checked", String(option.value === this.current))
       button.tabIndex = option.value === this.current ? 0 : -1
       button.innerHTML =
         `<svg class="theme-toggle__icon" aria-hidden="true"><use href="${sprite}#ri-${option.icon}-line"></use></svg>` +
@@ -102,7 +99,14 @@ class ThemeToggle extends HTMLElement {
   // Arrow keys cycle the group, which is the expected behaviour for a
   // radiogroup and lets the whole control be driven from one tab stop.
   #handleKeydown(event, value) {
-    const keys = ["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown", "Home", "End"]
+    const keys = [
+      "ArrowLeft",
+      "ArrowUp",
+      "ArrowRight",
+      "ArrowDown",
+      "Home",
+      "End"
+    ]
     if (!keys.includes(event.key)) return
 
     event.preventDefault()

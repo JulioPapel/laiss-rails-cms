@@ -29,7 +29,7 @@ module LaissCms
         LaissCms::Preference.set(
           LaissCms::Preference::THEME,
           "mode",
-          choice == ThemePreferenceHelper::SYSTEM ? nil : choice,
+          (choice == ThemePreferenceHelper::SYSTEM) ? nil : choice,
           owner: current_laiss_cms_user
         )
 

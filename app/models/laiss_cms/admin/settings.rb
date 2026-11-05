@@ -24,8 +24,7 @@ module LaissCms
     # LaissCms::Configurations::Main and is read somewhere in the engine.
     module Settings
       Field = Struct.new(
-        :key, :section, :type, :effects, :default, :min, :max, :options,
-        keyword_init: true
+        :key, :section, :type, :effects, :default, :min, :max, :options
       ) do
         def runtime? = effects == :runtime
         def restart? = effects == :restart
@@ -41,10 +40,10 @@ module LaissCms
           key: "default_language.code", section: :site, type: :select, effects: :runtime,
           default: "en"
         ),
-        Field.new(
-          key: "admin_theme", section: :appearance, type: :select, effects: :runtime,
-          default: "system", options: %w[system light dark]
-        ),
+        # The "default colour theme" field was removed with the theme toggle. A
+        # control that sets a preference nothing reads any more is worse than no
+        # control: it promises a choice the UI will not honour. The `admin_theme`
+        # config option itself is untouched, so a host can still pin a theme.
         Field.new(
           key: "items_per_page", section: :behaviour, type: :integer, effects: :runtime,
           default: 15, min: 1, max: 200
@@ -81,7 +80,7 @@ module LaissCms
         Field.new(key: "image_output_format", section: :read_only, type: :string, effects: :restart)
       ].freeze
 
-      SECTIONS = %i[site appearance uploads behaviour read_only].freeze
+      SECTIONS = %i[site uploads behaviour read_only].freeze
 
       class << self
         def fields_for(section)

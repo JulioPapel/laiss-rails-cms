@@ -49,7 +49,7 @@ RSpec.describe "Admin settings", type: :request do
       get laiss_cms.admin_settings_path
       html = Nokogiri::HTML(response.body)
 
-      read_only = LaissCms::Admin::Settings::FIELDS.select(&:restart?).first
+      read_only = LaissCms::Admin::Settings::FIELDS.find(&:restart?)
       id = "settings_#{read_only.key.tr(".", "_")}"
 
       expect(html.at_css("output##{id}")).to be_present
@@ -128,8 +128,10 @@ RSpec.describe "Admin settings", type: :request do
       ).to be_nil
     end
 
-    it "rejects an unknown theme" do
-      patch laiss_cms.admin_settings_path, params: {settings: {admin_theme: "neon"}}
+    it "rejects an unknown value for a select field" do
+      create(:laiss_cms_language, language_code: "en")
+      patch laiss_cms.admin_settings_path,
+        params: {settings: {"default_language.code": "zz"}}
       expect(response).to have_http_status(:unprocessable_entity)
     end
 
