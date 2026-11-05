@@ -115,6 +115,9 @@ body.passwords {
 
         input[type="checkbox"] {
           margin: 0 var(--spacing-0) 0 0;
+          // The login page has its own layout and does not load the admin base
+          // sheet, so native control colour has to be set here too.
+          accent-color: var(--journal-ink-6);
         }
       }
 

@@ -45,6 +45,10 @@ body {
   color: var(--text-color);
   font: var(--font-default);
   background-color: var(--body-background-color);
+  // Native checkboxes and radios default to the browser's blue accent, which
+  // would be the only coloured control in a monochrome admin. Tie them to the
+  // ink scale so they follow the theme.
+  accent-color: var(--journal-ink-6);
   height: 100%;
   cursor: default;
 
