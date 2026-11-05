@@ -17,7 +17,7 @@ describe("laiss-cms-icon", () => {
     const icon = renderComponent("laiss-cms-icon", html)
 
     expect(icon.innerHTML).toEqual(
-      '<svg class="icon"><use href="/assets/remixicon.symbol.svg#ri-image-line"></use></svg>'
+      '<svg class="laiss-icon"><use href="/assets/remixicon.symbol.svg#ri-image-line"></use></svg>'
     )
   })
 
@@ -29,7 +29,7 @@ describe("laiss-cms-icon", () => {
     const icon = renderComponent("laiss-cms-icon", html)
 
     expect(icon.innerHTML).toEqual(
-      '<svg class="icon"><use href="/assets/remixicon.symbol.svg#ri-image-fill"></use></svg>'
+      '<svg class="laiss-icon"><use href="/assets/remixicon.symbol.svg#ri-image-fill"></use></svg>'
     )
   })
 
@@ -41,7 +41,7 @@ describe("laiss-cms-icon", () => {
     const icon = renderComponent("laiss-cms-icon", html)
 
     expect(icon.innerHTML).toEqual(
-      '<svg class="icon"><use href="/assets/remixicon.symbol.svg#ri-image"></use></svg>'
+      '<svg class="laiss-icon"><use href="/assets/remixicon.symbol.svg#ri-image"></use></svg>'
     )
   })
 
@@ -53,7 +53,7 @@ describe("laiss-cms-icon", () => {
     const icon = renderComponent("laiss-cms-icon", html)
 
     expect(icon.innerHTML).toEqual(
-      '<svg class="icon icon--medium"><use href="/assets/remixicon.symbol.svg#ri-image-line"></use></svg>'
+      '<svg class="laiss-icon laiss-icon--medium"><use href="/assets/remixicon.symbol.svg#ri-image-line"></use></svg>'
     )
   })
 
@@ -64,7 +64,7 @@ describe("laiss-cms-icon", () => {
     const icon = renderComponent("laiss-cms-icon", html)
 
     expect(icon.innerHTML).toEqual(
-      '<svg class="icon"><use href="#ri-image-line"></use></svg>'
+      '<svg class="laiss-icon"><use href="#ri-image-line"></use></svg>'
     )
   })
 })

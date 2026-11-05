@@ -44,6 +44,16 @@ laiss-cms-icon {
   }
 }
 
+// `laiss-icon`, not `icon`.
+//
+// The Focus theme writes its own icons as `<i class="icon icon-…">` and has selectors
+// for them. Ours are SVG sprites carrying `class="icon"`, so the theme's rules landed
+// on our markup and produced the "ghost square" artefacts the owner reported. The
+// class is now a name the theme does not claim.
+//
+// `.icon` is kept as an alias only for the screens not yet converted. It goes when the
+// last of them does — it is listed in the migration log.
+.laiss-icon,
 .icon {
   fill: var(--icon-color, currentColor);
   width: var(--icon-size, var(--icon-size-md));
