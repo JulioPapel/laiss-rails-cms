@@ -1,4 +1,4 @@
-<%# Stat card, adopting the theme's .stat-widget-two structure verbatim.
+<%# Stat card, adopting the theme's .stat-widget-two structure.
     Source: theme/index.html —
 
       .col-lg-3.col-sm-6 > .card > .stat-widget-two.card-body
@@ -7,32 +7,34 @@
 
     Our data goes into .stat-text (the label) and .stat-digit (the count).
 
+    The column is NOT emitted here. This component renders inside the widget shell
+    (.widget > turbo-frame), where a .col-* has no .row flex parent and collapses to
+    content width. The caller owns the column — see admin/dashboard/_stats.html.erb.
+
     The theme's .progress bar is NOT rendered. It exists in the theme to show a
     proportion ("85% of budget spent"), and our widgets carry a count plus an optional
     infos line — there is no proportion to express. Rendering a bar at an invented
     width would be exactly the kind of fabrication this project avoids, so the element
     is omitted rather than faked. %>
-<div class="col-lg-3 col-sm-6">
-  <div class="card">
-    <div class="stat-widget-two card-body widget-body">
-      <div class="stat-content">
-        <div class="stat-text">
-          <% if link %>
-            <%= link_to title, link, data: {turbo_frame: "_top"} %>
-          <% else %>
-            <%= title %>
-          <% end %>
-        </div>
-        <div class="stat-digit count">
-          <% if icon %>
-            <laiss-cms-icon name="<%= icon %>"></laiss-cms-icon>
-          <% end %>
-          <%= number_with_delimiter(count) %>
-        </div>
+<div class="card">
+  <div class="stat-widget-two card-body widget-body">
+    <div class="stat-content">
+      <div class="stat-text">
+        <% if link %>
+          <%= link_to title, link, data: {turbo_frame: "_top"} %>
+        <% else %>
+          <%= title %>
+        <% end %>
       </div>
-      <% if infos %>
-        <div class="stat-text m-t-10 infos"><small><%= infos %></small></div>
-      <% end %>
+      <div class="stat-digit count">
+        <% if icon %>
+          <laiss-cms-icon name="<%= icon %>"></laiss-cms-icon>
+        <% end %>
+        <%= number_with_delimiter(count) %>
+      </div>
     </div>
+    <% if infos %>
+      <div class="stat-text m-t-10 infos"><small><%= infos %></small></div>
+    <% end %>
   </div>
 </div>

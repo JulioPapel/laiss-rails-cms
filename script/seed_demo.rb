@@ -48,7 +48,7 @@ root = FactoryBot.create(:laiss_cms_page, :language_root, :public, name: "Index"
 
 FactoryBot.create(:laiss_cms_page, :public, name: "About", urlname: "about",
   parent: root, language: language, title: "About the studio")
-create(:laiss_cms_page, :public, name: "Journal", urlname: "journal",
+FactoryBot.create(:laiss_cms_page, :public, name: "Journal", urlname: "journal",
   parent: root, language: language, title: "Field notes")
 FactoryBot.create(:laiss_cms_page, name: "Contact", urlname: "contact",
   page_layout: "contact", parent: root, language: language, title: "Get in touch")

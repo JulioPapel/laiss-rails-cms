@@ -22,7 +22,13 @@ cd "$(dirname "$0")/.." || exit 2
 # 4408 -> 4410. Two regression specs for the seeder's previously silent
 # behaviour: one for a missing db/seeds/laiss_cms/pages.yml, one for a file that
 # exists but declares no pages. Both were confirmed to fail against the old code.
-BASELINE_EXAMPLES=4410
+#
+# 4410 -> 4415. Five layout specs for the dashboard. It shipped rendering only its
+# greeting while every presence assertion passed: the stat columns had collapsed to
+# 34px and an unconstrained 900x900 logo pushed the widgets below the fold. The new
+# specs measure geometry and visible text instead of asserting that markup exists.
+# All five were confirmed to fail against the pre-fix files.
+BASELINE_EXAMPLES=4415
 BASELINE_DEVISE=167
 # Phase 10: 851 -> 846. The update checker was removed (it fetched
 # rubygems.org/api/v1/versions/laiss_cms.json, which 404s because the gem is never

@@ -1,13 +1,12 @@
-// Dashboard: page-level layout only.
+// Dashboard: page-level layout, the widget shell, and logo sizing.
 //
 // The 486 lines that used to live here styled the old grid of panels — .greeting,
-// .widget, .system-info and their children. Those are replaced by the theme's
-// .card / .stat-widget-two / .card-body structure, so all of it was deleted rather
-// than left dormant.
+// .widget and their children. Those are replaced by the theme's .card /
+// .stat-widget-two / .card-body structure, so all of it was deleted rather than left
+// dormant.
 //
-// What remains is the one thing that is still ours: #dashboard is the page's scroll
-// container. Every rule in this file is scoped to #dashboard, verified by grep, so
-// nothing outside the dashboard screen can depend on it.
+// Everything here is scoped to #dashboard and verified by grep, so nothing outside
+// the dashboard screen can depend on it.
 #dashboard {
   display: flex;
   flex-direction: column;
@@ -15,4 +14,105 @@
   width: 100%;
   min-height: 100%;
   position: relative;
+
+  // The widget shell wraps each widget in .widget > turbo-frame, and <turbo-frame> is
+  // an unknown element: with no display rule it is display: inline. An inline box
+  // cannot carry a flex child's height, so every widget's card collapsed and the
+  // columns sized to their content instead of the grid. The frame is a layout
+  // container here, not text, so it is block.
+  .widget > turbo-frame {
+    display: block;
+  }
+
+  // logo.svg declares width="900px" height="900px". Unconstrained it renders at its
+  // intrinsic 900x900, which made the system-info column 990px tall and pushed the
+  // stat widgets, the locked-pages list and the recent-pages list below the fold —
+  // the page read as a greeting and nothing else. The old .logo rule supplied the
+  // constraint and was deleted with the rest of the old dashboard styles, which is
+  // how this surfaced. The log's deletion evidence called `.logo` a substring false
+  // positive (it matched `logout`); that was wrong, the class is used in
+  // system_info.html.erb.
+  .system-info .logo svg {
+    display: block;
+    width: 120px;
+    height: 120px;
+    margin-inline: auto;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Usage widget (ElementUsage, PageUsage)
+  //
+  // These rules were deleted with the rest of the old dashboard styles. The evidence
+  // table in the log listed `.bar` as a "substring false positive" — it is not:
+  // usage_widget.html.erb emits .bar, .bar__public and .bar__draft. Without them the
+  // spans are display: inline at 0x0 and the table rows collapse into a ragged stack.
+  // The same deletion took the label/value column widths, so the four cells had no
+  // proportions either.
+  //
+  // The bar is a proportion, and unlike the stat card's .progress it IS one we have:
+  // each row's count against the highest row, split into published and draft. Nothing
+  // here is invented — the widths come from the data.
+  // ---------------------------------------------------------------------------
+  .usage-stats {
+    td.usage-stats--label {
+      width: 30%;
+    }
+
+    td.usage-stats--bar {
+      width: 50%;
+      padding: var(--spacing-2);
+
+      .bar {
+        display: inline-flex;
+        height: var(--spacing-2);
+        border-radius: var(--border-radius_medium);
+        min-width: 1px;
+        overflow: hidden;
+
+        .bar__public,
+        .bar__draft {
+          height: 100%;
+          background-color: oklch(65% 0.15 var(--bar-hue, 0));
+        }
+
+        .bar__draft {
+          opacity: 0.35;
+        }
+      }
+    }
+
+    td.usage-stats--value {
+      width: 10%;
+      font-variant-numeric: tabular-nums;
+      text-align: end;
+      white-space: nowrap;
+    }
+  }
+
+  // Element icons are injected as raw SVG (ElementDefinition#icon_file reads the file
+  // and marks it html_safe), so they carry no width or height of their own. At their
+  // intrinsic size a 48-unit artwork becomes a 406x406 block inside a table cell and
+  // stretches every row to ~425px. Anything with an inline SVG and no size rule needs
+  // one; this box is what supplies it here.
+  .label-with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--icon-gap, var(--spacing-2));
+
+    > laiss-cms-icon,
+    > svg {
+      flex: none;
+      width: var(--icon-size, var(--icon-size-md));
+      height: var(--icon-size, var(--icon-size-md));
+    }
+  }
+
+  .usage-stats .label-with-icon {
+    align-items: start;
+
+    > laiss-cms-icon,
+    > svg {
+      margin-block-start: 0.3em;
+    }
+  }
 }

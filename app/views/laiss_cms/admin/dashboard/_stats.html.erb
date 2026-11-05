@@ -1,10 +1,19 @@
 <%# Stat cards, in the theme's own row arrangement.
-    Source: theme/index.html — .row > .col-lg-3.col-sm-6 per stat.
-    Each StatWidget emits its own .col-lg-3.col-sm-6, so this is only the row. %>
+    Source: theme/index.html — .row > .col-lg-3.col-sm-6 > .card per stat.
+    Each StatWidget renders only the .card; the column lives here, as it does for the
+    secondary widgets in _widgets.html.erb.
+
+    This wrapper is load-bearing for layout, not decoration. Bootstrap columns take
+    their width from flex-basis against the .row, and only a direct child of the row
+    gets it. When the column was emitted inside the widget shell instead, it sat under
+    .widget > turbo-frame, where flex-basis had no flex parent to act on: the columns
+    collapsed to their content width and the four stats rendered as 34px slivers. %>
 <% if LaissCms.config.dashboard.stats.any? %>
   <div class="row">
     <% LaissCms.config.dashboard.stats.each do |stat, args| %>
-      <%= render stat.new(**args) %>
+      <div class="col-lg-3 col-sm-6">
+        <%= render stat.new(**args) %>
+      </div>
     <% end %>
   </div>
 <% end %>
