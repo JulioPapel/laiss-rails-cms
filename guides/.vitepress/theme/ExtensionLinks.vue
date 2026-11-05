@@ -1,85 +1,16 @@
 <script setup>
-import { ref, computed, onMounted } from "vue"
-import { CURRENT_VERSION } from "../versions.js"
-
 const props = defineProps({
   gem: String,
   github: String,
 })
 
-const alchemyRequirements = ref(null)
-const rubygemsUrl = `https://rubygems.org/gems/${props.gem}`
-const gemBadgeUrl = `https://img.shields.io/gem/v/${props.gem}?label=gem`
-
-function versionSupport(requirements) {
-  const parts = requirements.split(",").map((s) => s.trim())
-  let upperBound = null
-  for (const part of parts) {
-    const match = part.match(/^<\s*(\d+(\.\d+)?)/)
-    if (match) {
-      upperBound = parseFloat(match[1])
-      break
-    }
-  }
-  if (upperBound === null || upperBound > CURRENT_VERSION) return "current"
-  if (upperBound > CURRENT_VERSION - 1) return "legacy"
-  return "unsupported"
-}
-
-const alchemyBadgeUrl = computed(() => {
-  if (!alchemyRequirements.value) return null
-  const support = versionSupport(alchemyRequirements.value)
-  const color =
-    support === "current" ? "2ea44f" : support === "legacy" ? "orange" : "red"
-  let message = alchemyRequirements.value
-  if (support === "current") {
-    const minMatch = alchemyRequirements.value.match(/>=?\s*(\d+(\.\d+)?)/)
-    if (minMatch) message = ">= " + minMatch[1]
-  } else {
-    const maxMatch = alchemyRequirements.value.match(/<\s*(\d+(\.\d+)?)/)
-    if (maxMatch) message = "< " + maxMatch[1]
-  }
-  const params = new URLSearchParams({
-    label: "laiss_cms",
-    message,
-    color,
-  })
-  return `https://img.shields.io/static/v1?${params}`
-})
-
-onMounted(async () => {
-  try {
-    const res = await fetch(
-      `https://rubygems.org/api/v1/gems/${props.gem}.json`
-    )
-    if (res.ok) {
-      const data = await res.json()
-      const alchemyDep = data.dependencies.runtime.find(
-        (dep) => dep.name === "laiss_cms"
-      )
-      if (alchemyDep) {
-        alchemyRequirements.value = alchemyDep.requirements
-      }
-    }
-  } catch {
-    // silently fail
-  }
-})
+// Gems in this project are never published, so there is no rubygems.org entry
+// to query and no version-support badge to render. The component links to the
+// source in this repository instead.
 </script>
 
 <template>
   <div class="extension-info">
-    <div class="extension-badges">
-      <a :href="rubygemsUrl" target="_blank" rel="noopener noreferrer">
-        <img :src="gemBadgeUrl" alt="Gem version" loading="lazy" />
-      </a>
-      <img
-        v-if="alchemyBadgeUrl"
-        :src="alchemyBadgeUrl"
-        alt="LaissCms version"
-        loading="lazy"
-      />
-    </div>
     <div class="extension-links">
       <a :href="github" target="_blank" rel="noopener noreferrer">
         <svg

@@ -1,0 +1,222 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Regression tests for the leak scan.
+#
+# These exist because the previous verifier *masked* upstream domains before
+# scanning and therefore reported PASS while 25 files still carried the upstream
+# name. A guard nobody has watched fail is not known to work, so each case here
+# plants a known leak and asserts the scan catches it.
+#
+# Runs entirely against throwaway fixtures in a temp dir — it never touches the
+# repository. Exits non-zero on any failed case.
+require "fileutils"
+require "open3"
+require "tmpdir"
+
+LEAK_SCAN = File.expand_path("leak_scan", __dir__)
+
+# Minimal harness so this needs no test framework.
+class Harness
+  def initialize = (@passed = 0
+                    @failed = [])
+
+  def check(name)
+    yield
+    @passed += 1
+    puts "  ok    #{name}"
+  rescue => e
+    @failed << [name, e]
+    puts "  FAIL  #{name}"
+    puts "        #{e.message}"
+  end
+
+  def expect(cond, msg) = (raise msg unless cond)
+
+  def expect_equal(actual, expected, note = nil)
+    return if actual == expected
+    raise "#{note && "#{note}: "}expected #{expected.inspect}, got #{actual.inspect}"
+  end
+
+  def report
+    puts
+    if @failed.empty?
+      puts "PASS — #{@passed} assertion(s)"
+      0
+    else
+      puts "FAIL — #{@failed.size} of #{@passed + @failed.size} assertion(s) failed"
+      1
+    end
+  end
+end
+
+# Build a throwaway git repo containing the given files, run leak_scan inside
+# it, and return [exit_status, stdout].
+def scan_fixture(files, opts = {})
+  Dir.mktmpdir("leakscan") do |dir|
+    FileUtils.mkdir_p(File.join(dir, "script/rebrand"))
+    FileUtils.cp(LEAK_SCAN, File.join(dir, "script/rebrand/leak_scan"))
+
+    files.each do |path, content|
+      absolute = File.join(dir, path)
+      FileUtils.mkdir_p(File.dirname(absolute))
+      File.binwrite(absolute, content)
+    end
+
+    Open3.capture2e("git", "-C", dir, "init", "-q")
+    Open3.capture2e("git", "-C", dir, "add", "-A")
+    args = ["ruby", File.join(dir, "script/rebrand/leak_scan")]
+    args << "--quiet" if opts.fetch(:quiet, true)
+    out, status = Open3.capture2e(*args)
+    [status.exitstatus, out]
+  end
+end
+
+t = Harness.new
+
+puts "clean tree"
+
+t.check("passes with no upstream name anywhere") do
+  code, out = scan_fixture({
+    "README.md" => "laiss-rails-cms\n",
+    "app/models/thing.rb" => "module LaissCms\nend\n"
+  })
+  t.expect_equal(code, 0, "clean tree should pass")
+  t.expect(out.include?("PASS"), "expected PASS verdict, got: #{out}")
+end
+
+t.check("passes when the upstream name appears only in the three LICENSE files") do
+  code, = scan_fixture({
+    "LICENSE" => "Copyright Blish GmbH\n",
+    "i18n/LICENSE" => "Copyright Thomas von Deyen (alchemy mention)\n",
+    "devise/LICENSE" => "Copyright magic labs GmbH\n",
+    "README.md" => "clean\n"
+  })
+  t.expect_equal(code, 0, "licence files are exempt")
+end
+
+puts
+puts "leaks are caught"
+
+# The exact failure mode that shipped: an upstream *domain* is a leak, and the
+# old verifier masked it before scanning.
+t.check("catches a masked/allowlisted upstream domain in normal source") do
+  code, out = scan_fixture(
+    "app/views/help.html.erb" => %(<a href="https://guides.alchemy-cms.com">guides</a>\n)
+  )
+  t.expect_equal(code, 1, "an upstream domain must fail the scan")
+  t.expect(out.include?("FAIL"), "expected FAIL verdict, got: #{out}")
+end
+
+t.check("catches a bare upstream domain with no path") do
+  code, = scan_fixture("config/x.rb" => %(url = "https://alchemy-cms.com"\n))
+  t.expect_equal(code, 1)
+end
+
+t.check("catches the name in a YAML locale KEY, not just a value") do
+  code, = scan_fixture("config/locales/en.yml" => "en:\n  alchemy:\n    x: y\n")
+  t.expect_equal(code, 1, "keys are leaks too")
+end
+
+t.check("catches a lowercase identifier") do
+  code, = scan_fixture("app/x.rb" => "def alchemy_config; end\n")
+  t.expect_equal(code, 1)
+end
+
+t.check("catches a SCREAMING_CASE env var") do
+  code, = scan_fixture("app/y.rb" => %(ENV.fetch("ALCHEMY_STORAGE_ADAPTER")\n))
+  t.expect_equal(code, 1)
+end
+
+puts
+puts "coverage the old verifier lacked"
+
+t.check("scans files in hidden directories (e.g. .vitepress)") do
+  # This is a real leak that both `rg` (without -uu) and the old verifier
+  # missed: `guides/.vitepress/theme/ExtensionLinks.vue` held 12 references.
+  code, = scan_fixture({
+    "guides/.vitepress/theme/Thing.vue" => "const alchemyRequirements = ref(null)\n"
+  })
+  t.expect_equal(code, 1, "hidden directories must be scanned")
+end
+
+t.check("scans build output that is committed") do
+  code, = scan_fixture("app/assets/builds/theme.css" => "/* alchemy */\n")
+  t.expect_equal(code, 1, "committed build output must be scanned")
+end
+
+t.check("scans minified assets") do
+  code, = scan_fixture("vendor/javascript/lib.min.js" => "var a=1;//alchemy\n")
+  t.expect_equal(code, 1, "minified files must be scanned")
+end
+
+t.check("scans source maps") do
+  code, = scan_fixture("app/assets/builds/x.js.map" => %({"sources":["alchemy.js"]}\n))
+  t.expect_equal(code, 1, "source maps must be scanned")
+end
+
+t.check("scans binary files for embedded strings") do
+  # A binary blob carrying the name is still shipped and still a leak.
+  binary = "\x89PNG\r\n\x1a\n".b + "alchemy".b + "\x00\x01\x02".b
+  code, = scan_fixture("app/assets/images/logo.png" => binary)
+  t.expect_equal(code, 1, "binary files must be scanned")
+end
+
+t.check("catches uppercase-only casing") do
+  code, = scan_fixture("app/z.rb" => "ALCHEMY = 1\n")
+  t.expect_equal(code, 1, "case-insensitive match required")
+end
+
+puts
+puts "exemptions are narrow"
+
+t.check("a fourth file named like a licence is NOT exempt") do
+  code, = scan_fixture({
+    "LICENSE" => "Blish GmbH\n",
+    "i18n/LICENSE" => "Thomas von Deyen\n",
+    "devise/LICENSE" => "magic labs GmbH\n",
+    "LICENSE.md" => "alchemy\n"
+  })
+  t.expect_equal(code, 1, "LICENSE.md is not in the allowlist")
+end
+
+t.check("a file in a subdirectory named LICENSE is not exempt") do
+  code, = scan_fixture({
+    "LICENSE" => "Blish GmbH\n",
+    "i18n/LICENSE" => "Thomas von Deyen\n",
+    "devise/LICENSE" => "magic labs GmbH\n",
+    "app/LICENSE" => "alchemy\n"
+  })
+  t.expect_equal(code, 1)
+end
+
+t.check("the tooling directory is exempt (it holds the name as data)") do
+  code, = scan_fixture({
+    "script/rebrand/mapping.yml" => "from: Alchemy\n",
+    "README.md" => "clean\n"
+  })
+  t.expect_equal(code, 0, "script/rebrand holds the name as data")
+end
+
+t.check("but a leak outside the tooling dir still fails even when tooling is exempt") do
+  code, = scan_fixture({
+    "script/rebrand/mapping.yml" => "from: Alchemy\n",
+    "app/leak.rb" => "Alchemy\n"
+  })
+  t.expect_equal(code, 1)
+end
+
+puts
+puts "reporting"
+
+t.check("reports every offending file and the count") do
+  code, out = scan_fixture(
+    {"a.rb" => "alchemy\n", "b/c.rb" => "Alchemy\n"}, quiet: false
+  )
+  t.expect_equal(code, 1)
+  t.expect(out.include?("a.rb"), "should name a.rb")
+  t.expect(out.include?("b/c.rb"), "should name b/c.rb")
+  t.expect(out.include?("2 occurrence"), "should count occurrences, got: #{out}")
+end
+
+exit(t.report)

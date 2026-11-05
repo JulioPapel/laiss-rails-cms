@@ -116,11 +116,30 @@ run_rebrand() {
   else
     fail "self_test"
   fi
+
   if ruby script/rebrand/verify > /tmp/rebrand-verify.log 2>&1; then
     pass "verify"
   else
-    # Mid-rebrand a non-zero verify is expected; report without failing the run.
-    printf '  \033[33mNOTE\033[0m  verify reports outstanding tokens (expected until Phase 1+ lands)\n'
+    # The rebrand is complete, so this is a hard failure now, not a note.
+    fail "verify"
+    tail -10 /tmp/rebrand-verify.log
+  fi
+
+  # Raw-byte scan of every tracked file. Separate from verify on purpose: verify
+  # works on in-scope text and used to mask upstream domains, which let it pass
+  # while 25 files still held the upstream name.
+  if ruby script/rebrand/leak_scan > /tmp/rebrand-leak.log 2>&1; then
+    pass "leak_scan"
+  else
+    fail "leak_scan"
+    tail -20 /tmp/rebrand-leak.log
+  fi
+
+  if ruby script/rebrand/leak_scan_test > /tmp/rebrand-leak-test.log 2>&1; then
+    pass "leak_scan_test"
+  else
+    fail "leak_scan_test"
+    tail -10 /tmp/rebrand-leak-test.log
   fi
 }
 
