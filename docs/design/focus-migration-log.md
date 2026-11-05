@@ -1008,3 +1008,159 @@ because nothing is broken, only unstyled.
 
 Anything similar in another scoped stylesheet needs the same `:where()` treatment. Grep for
 `* {` inside any scoped block before adding a new one.
+
+---
+
+# THE METHOD WAS WRONG: Phase 1 restores the original admin
+
+**Status: the theme migration is stopped and reversed.** This entry is the record of why,
+what was restored, and what was kept. The "new UI" is now a CSS-only uplift applied on top
+of the original admin, and it has not started.
+
+## The correction
+
+The owner's instruction, in his words: *"get the original theme it had for AlchemyCMS put it
+back and then change it to look at the one I gave you without losing any of the original
+elements or components, it's just a UI lifting. Now a new UI."*
+
+The method up to this point was the opposite: markup was rewritten to match the Focus theme
+page by page, components were replaced, Bootstrap was adopted, views were edited. That
+produced a design that lost original elements — the dashboard, for one, ended up with four
+Bootstrap stat cards and none of its original `.widget-body > .name + .count + .infos`
+structure. Every entry above that says "converted from theme page X" describes work that
+this commit reverses.
+
+**A UI lift changes how the existing interface looks. It does not change the interface.**
+
+## Two redesign campaigns, not one — which is why the restore point matters
+
+The history is not a single redesign. There were two, and restoring to the wrong boundary
+would have kept half the problem:
+
+| Commit | What it did | Markup touched |
+|---|---|---|
+| `c25c598b2` **Apply the Laiss Labs palette, Inter, Laiss marks** | brand colours + font over the ORIGINAL admin | 1 file, 3 lines (menubar) |
+| `51bd2078e` Phase 7: journal theme | first real restyle | 3 view files |
+| `0b733654f` **Rework the admin into a single modern light theme** | **+3,229 lines** — the big structural rewrite | 38 files |
+| `de55d662c`…`8e4df05ad` | Focus/Bootstrap adoption (the work reversed here) | many |
+
+**Restore point: `c25c598b2`.** It is the last commit where the admin still had its original
+AlchemyCMS structure and markup, with the Laiss palette applied — the owner's identity
+without the redesign. Going back further (`439731dbd`, stock Alchemy blue) would have undone
+branding work he asked for.
+
+## What was restored, and the evidence it is identical
+
+Restored verbatim from `c25c598b2`:
+
+| Area | Files | Verification |
+|---|---|---|
+| `app/stylesheets/**` | 68 | **68/68 byte-identical** |
+| `app/assets/builds/**` | 18 | `admin.css` **byte-identical** — the restored SCSS compiles to exactly the original output |
+| `app/views` + `app/components` | 22 | **20/22 byte-identical**; the 2 differences are the deliberate outbound-call removals below |
+| `app/javascript/.../icon.js` | 1 | emits `class="icon"` again (the theme had renamed it `laiss-icon` for its own benefit) |
+| icon sprite | 1 | 112 original symbols |
+| `config/initializers/simple_form.rb` | 1 | `b.use :error, wrap_with: {tag: :small, class: :error}` — the theme had switched this to Bootstrap's `.invalid-feedback`, which changes the validation markup of **71 `f.input` call sites** |
+| `package.json` | 1 | Bootstrap 4.3.1 and bootstrap-icons removed entirely |
+
+Deleted: the whole `app/stylesheets/laiss_cms/theme/` tree, `focus.scss`, `_modern-theme.scss`,
+`_journal-palette.scss`, `body-copy.scss`, the nine `*_polish.scss` files,
+`modern_components.scss`, `responsive.scss`, `theme_toggle.*`, `drawer.js`, and Bootstrap from
+`THIRD-PARTY-NOTICES.md` (three sections: Focus Bootstrap, Bootstrap, Bootstrap Icons).
+
+## Deliberately NOT restored: two outbound-call widgets
+
+Both make network requests, and this project's policy is no outbound connections:
+
+- **`NewsReader`** — fetched `https://www.alchemy-cms.com/news` on every dashboard load.
+- **`UpdateCheck`** — fetched `rubygems.org/api/v1/versions/laiss_cms.json`, which 404s
+  because this gem is never published.
+
+These are the only two places the restored markup differs from `c25c598b2`, each replaced
+by a comment explaining why at the render site. Nothing else was dropped.
+
+## Kept, but NOT restored: features that did not exist at the restore point
+
+Restoring the tree wholesale would have deleted working features — the same mistake in the
+other direction. These are kept as they are and will be restyled to match the restored
+original in the uplift:
+
+- **Settings** — `app/views/laiss_cms/admin/settings/show.html.erb` (0 view files at `c25c598b2`)
+- **Events** — no views at `c25c598b2`
+- **Auth screens** — `user_sessions/new`, `user_sessions/_logo`, `passwords/new`,
+  `passwords/edit`, plus `devise.scss` and `devise/login.scss`
+- **Users** — `users/{index,edit,new,signup,confirm_password}.html.erb`,
+  `users/{_fields,_resource_table,_confirm_password_notice}.html.erb`
+- **Notifications** — 12 mailer templates
+- **`devise/shared/_error_messages.html.erb`**
+
+`devise.scss` had to be re-added to `package.json`'s build:css pointing at
+`app/stylesheets/laiss_cms/devise.scss`, because the original entry referenced the
+`devise/` gem directory that no longer exists.
+
+## Verification
+
+**Suite:** 4,399 examples, 0 failures — the ORIGINAL suite's own count, green against the
+original markup. All gates pass (core, devise, standardrb, eslint, prettier, herb-lint, doc
+links, screenshot sizes, build, vitest 823, artifacts, scratch app).
+
+Theme-era specs deleted, because they test a design that no longer exists and are absent
+from `c25c598b2`: `cascade_reset`, `dashboard_layout`, `pages_index_layout`,
+`viewport_screenshots`, `sidebar_collapse`, `theme_toggle.spec.js`. Specs the theme had
+edited for Bootstrap selectors are reverted with it: `builder_spec`,
+`page_permitted_roles_select_spec`, `languages_features_spec`, `page_creation_feature_spec`,
+`ingredients/edit_spec`, `icon.spec.js`.
+
+**Per-screen inventory, 1440, all `scrollWidth == innerWidth` (no horizontal overflow):**
+
+| Screen | elements | innerText |
+|---|---|---|
+| dashboard | 552 | 1,146 |
+| pages list | 519 | 603 |
+| pages tree | 320 | 179 |
+| page new | 47 | 47 |
+| library (pictures) | 53 | 253 |
+| library (attachments) | 51 | 250 |
+| menus (`/admin/nodes`) | 28 | 248 |
+| languages | 66 | 190 |
+| sites | 58 | 164 |
+| tags | 11 | 62 |
+| settings (kept feature) | 132 | 1,515 |
+| events (kept feature) | 126 | 84 |
+| styleguide | 629 | 1,525 |
+| help | 58 | 368 |
+
+Reference screenshots: `media/restore/*-1440.png`, every file confirmed 1440×857 by
+`script/check_screenshots`.
+
+**Not reachable in this fork, before or after the restore:** `/admin/users`. It falls
+through to the public Pages controller (`LaissCms::Page not found`), because the Users module
+is not mounted as an admin route in this build. That is pre-existing and unrelated to this
+change; the views exist and are kept.
+
+## The empty-state alert was never broken
+
+Repeatedly reported as "the icon overlaps the text", including by image readings of the
+screenshot. Measured on the restored original:
+
+```
+laiss-cms-message  display:block padding:8px 16px 8px 32px
+icon               position:absolute left:8px  x=211..227
+text               starts x=235
+GAP = 8px
+```
+
+Confirmed by an ASCII pixel map of the alert region: icon glyph ends at column ~26, text
+begins at column ~33. **No overlap.** The original reserves a 32px left padding for an
+absolutely-positioned icon, which is a correct and conventional technique.
+
+The defect existed only in the theme version, where I had deleted that padding and then
+"fixed" the icon with flex — a bug I introduced and then reported as a pre-existing fault.
+The original was right.
+
+## The rule this established
+
+**Look at the original before changing it.** Most of the defects chased in this migration —
+the ghost squares, the 900px logo, the 0×0 bars, the collapsed columns — were consequences
+of replacing working markup with theme markup, not faults in the admin. A CSS lift would
+have avoided all of them, and the visual result would have been the same.
