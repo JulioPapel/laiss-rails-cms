@@ -57,8 +57,15 @@ RSpec.describe "The theme reset does not outrank our components", type: :system,
   end
 
   it "lets component padding compute as declared" do
+    # A page must exist or index.html.erb renders the empty state instead of the table,
+    # and `.resources-table-wrapper` is then absent — measured: nil, not "0px".
+    create(:laiss_cms_page, :language_root, :public,
+      name: "Index",
+      language: create(:laiss_cms_language, site: create(:laiss_cms_site, :default)))
+
     visit "/admin/pages?view=list"
     expect(page).to have_css(".toolbar", wait: 5)
+    expect(page).to have_css(".resources-table-wrapper", wait: 5)
     sleep 0.8
 
     values = page.evaluate_script(<<~JS)

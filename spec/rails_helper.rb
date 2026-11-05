@@ -106,6 +106,15 @@ RSpec.configure do |config|
     screen_size = example.metadata[:screen_size] || [1280, 800]
     driven_by(:selenium, using: :headless_firefox, screen_size: screen_size) do |capabilities|
       capabilities.add_preference("intl.accept_languages", "en-GB")
+      # Pin the browser binary explicitly. Selenium Manager downloads Firefox into
+      # ~/.cache/selenium/firefox/<version>/ and resolves it on a cold start, but after
+      # a Chrome session has run in the same process it fails to find it and every
+      # subsequent js spec dies with "unable to find binary in default location".
+      # Measured: this spec passes alone and fails when it follows any Chrome-driven
+      # spec, which is exactly how a suite quietly stops testing what it claims to.
+      if (binary = LaissCms::TestSupport.forefox_binary)
+        capabilities.binary = binary
+      end
     end
   end
 end

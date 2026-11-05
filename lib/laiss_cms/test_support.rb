@@ -9,3 +9,4 @@ module LaissCms
 end
 
 require_relative "test_support/viewport_screenshots"
+require_relative "test_support/firefox_binary"

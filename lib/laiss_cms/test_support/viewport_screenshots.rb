@@ -51,6 +51,13 @@ module LaissCms
           end
         end
 
+        # A Chrome driver leaks its session into the next example, which breaks any
+        # later spec that expects the suite's default Firefox driver — measured: the
+        # whole dashboard layout spec failed with "unable to find binary" after this
+        # spec ran. Capybara memoises the session, so it has to be cleared before the
+        # new driver is installed. `driven_by` alone does not do it.
+        Capybara.reset_sessions! if defined?(Capybara)
+
         driven_by(name)
       end
 
