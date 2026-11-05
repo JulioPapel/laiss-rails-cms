@@ -39,57 +39,58 @@ watching four CI jobs run for the first time.
 | 20 | No absolute local paths shipped | **VERIFIED** | `script/audit`: zero matches |
 | 21 | No coverage artifacts committed | **VERIFIED** | 33 removed; `script/audit` confirms zero tracked |
 | 22 | Docs links, images and anchors resolve | **VERIFIED** | `script/check_doc_links`: 173 refs across 42 documents |
-| 23 | CI calls `script/gates` — one implementation | **VERIFIED** | `script/audit`; jobs: javascript, ruby, scratch |
-| 24 | Every action ref in the workflows resolves | **VERIFIED** | Queried GitHub for each: three `@v4` tags, and `ruby/setup-ruby@v1` is a branch (valid, mutable) |
+| 23 | No GitHub Actions workflows | **VERIFIED** | `.github/workflows/` is empty; `script/audit` confirms |
+| 24 | Parked workflows are documented and inert | **VERIFIED** | Three files in `ci-disabled/` with a README; GitHub does not read that path |
 | 25 | Gate script is portable to a GNU runner | **VERIFIED** (statically) | No `realpath`/`stat`/`xargs`/GNU-only flags; `sed -i.bak` is the portable form; `mktemp -d` POSIX |
 | 26 | Site builds from the CMS repo | **VERIFIED** | Built locally against the tag: 36 pages, 0 link errors |
 | 27 | Site install instructions match the packaging | **VERIFIED** | Built `_site/index.html`: one Gemfile line plus optional devise |
-| 28 | Dispatch payload matches the site's handler | **VERIFIED** (simulated POST) | `event_type` matches both site workflows; `cms_ref` is what both read; JSON parsed for all four triggers |
-| 29 | Release workflow would create the Release | **SIMULATED** | `gh` argv checked with a stub; idempotent branch and `--generate-notes` fallback both verified. Never executed |
-| 30 | **CI has ever run a job** | **UNVERIFIED** | Every job fails before a runner is assigned. Proved by: billing cleared and one green run |
-| 31 | **A GitHub Release exists** | **UNVERIFIED — does not exist** | 0 releases; API create returns 401. Proved by: re-running the failed release workflow |
-| 32 | **The site auto-rebuilds on dispatch** | **UNVERIFIED** | Never fired. Proved by: `SITE_DISPATCH_TOKEN` set, a runner, and one dispatch |
+| 28 | Deployment path is Coolify pulling the repo | **VERIFIED** | No dispatch exists; recorded in `ci-disabled/README.md` and `docs/site-sync.md` |
+| 29 | A release is a tag plus a local gate run | **VERIFIED** | `script/gates` green at the tagged commit; the tag is the distribution |
+| 30 | CI has ever run a job | **NOT APPLICABLE** | The project does not use GitHub Actions. Not a gap; a decision |
+| 31 | A GitHub Release exists | **NOT APPLICABLE** | No release automation. Consumers install from git at the tag |
+| 32 | The site rebuilds without a dispatch | **NOT APPLICABLE** | No dispatch; Coolify pulls the site repo and builds it there |
 | 33 | **Ruby 3.4 / Rails 7.2 passes** | **PARTIAL** | 4298 non-JS examples, 0 failures. The 112 JS failures were a missing browser, not Rails 7.2 — the same specs failed identically in the main checkout with the same broken PATH |
 | 34 | **Ruby 3.1 / Rails 7.2 passes** | **WITHDRAWN** | 3.1 is not installable here. The requirement was narrowed to `>= 3.4` rather than leave an untestable promise |
-| 35 | **Dependabot will not open new PRs** | **UNVERIFIED** | Config deleted; only GitHub can confirm. Proved by: watching the PR list |
-| 36 | **The 7 open Dependabot PRs are red only from the lock** | **UNVERIFIED** | Their jobs never started; the annotation says billing, which is all the evidence there is |
+| 35 | Dependabot does not open new PRs | **NOT APPLICABLE** | Config removed from the repository |
+| 36 | Seven open Dependabot PRs remain | **OPEN ITEM** | Cannot be evaluated without Actions. Owner decision to close or leave |
 | 37 | The 424 inherited upstream tags are harmless | **JUDGEMENT** | They exist publicly. Nothing depends on them. Owner decision |
 
 ---
 
 ## What is load-bearing and what is not
 
-**Trustworthy:** rows 1–27. These were established by running something, mostly from
+**Trustworthy:** rows 1–29. These were established by running something, usually from
 a cold clone at a published tag, not by reading code.
 
-**Depends entirely on GitHub:** rows 30–32, 35–36. One dependency, not many. Clearing
-the billing lock and watching one green run converts most of them to verified or to a
-concrete bug.
+**Not applicable, by decision:** rows 30–32, 35–36. The project does not use GitHub
+Actions. These are not gaps waiting to close; they describe infrastructure that was
+deliberately switched off after an account was billed for Actions minutes elsewhere.
 
 **Deliberately withdrawn:** row 34. The gemspec no longer claims 3.1.
 
-**Not mine to decide:** row 37, and whether a project whose CI has never run should
-be published at all.
+**Not mine to decide:** row 37, and whether a project whose verification is entirely
+local should be published at all.
 
-## Why the CI gap matters more than it looks
+## Verification is local, and that is the design
 
-Two defects were found by executing `ci.yml`'s steps rather than reading them, both of
-which would have failed on the very first run:
+**This project does not use GitHub Actions.** `script/gates` run locally is the
+verification, not a rehearsal for a server-side check. There is no build on the other
+end to catch what a local run misses.
 
-- The devise spec job could not pass. It ran rspec from the repository root, which
-  loaded the core spec helper and left the integration inactive. `script/gates` passed
-  because it goes through `bin/rspec`, which changes directory.
-- The `counts` job hardcoded floors of 4419/851 against real counts of 4410/846.
+That has a cost worth naming: **a contributor who does not run `script/gates` gets no
+warning from anywhere.** There is no status check, no badge, no red mark on a pull
+request. The gate is the whole enforcement.
 
-Had billing not been locked, **two earlier releases would have shipped with red CI.** The
-lock did not cause the broken workflow; it hid it. That is the argument for not
-publishing on local evidence alone, however thorough the local evidence is.
+It is also why two real defects were found by *executing* the old workflow steps
+locally rather than reading them — an authentication-spec job that could not pass from
+the repository root, and a count floor that had gone stale. Both would have failed on
+the first server-side run. There is no such run any more, so the local gate has to be
+run honestly and its failures taken seriously.
 
 ## To publish
 
-1. Clear the billing lock.
-2. Let CI run to completion on `main`. It will be the first run ever; expect it to
-   find something.
-3. Re-run the failed "Release" workflow — it creates the Release from
-   `docs/releases/v0.1.0.beta6.md` with no new tag needed.
-4. Confirm the site rebuild fires from the dispatch.
+1. `script/gates` green at the commit you intend to tag.
+2. `script/audit` for the mechanical facts.
+3. Tag it, push the tag. The tag is the distribution.
+4. Redeploy the documentation site in Coolify if the docs changed — nothing here
+   triggers that.

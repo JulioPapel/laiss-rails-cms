@@ -234,9 +234,16 @@ bin/kamal deploy -d production
 
 Each destination gets its own containers and proxy configuration on the target server. Secrets can also be scoped per destination using `.kamal/secrets.staging` and `.kamal/secrets.production`.
 
-## CI/CD
+## Deploying automatically
 
-You can trigger Kamal deploys from GitHub Actions or any CI system. A minimal workflow:
+This project itself deploys with **Coolify**, which pulls the repository and runs the
+deploy — see `ci-disabled/README.md`. For your own application built on it, use
+whatever fits your infrastructure; Kamal works from any CI system or from a cron job
+on the deploy host.
+
+If you do want a GitHub Actions workflow for *your* application, a minimal one looks
+like this (note that this is your repository's choice, not a laiss-rails-cms
+requirement — this project does not use GitHub Actions):
 
 ~~~yaml
 # .github/workflows/deploy.yml

@@ -16,7 +16,7 @@ Not "it looks right."
 | [`CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 text, standard. | 2026-11-05 |
 | [`docs/versioning.md`](versioning.md) | `LaissCms::VERSION` is the only source; gemspec and dashboard read from it; `gem build` succeeded and reported version `0.1.0.beta6`. | 2026-11-05 |
 | [`docs/release-readiness.md`](release-readiness.md) | Every claim this project makes, marked VERIFIED with how, or UNVERIFIED with what would prove it. Regenerate the mechanical rows with `script/audit`. | 2026-11-05 |
-| [`docs/site-sync.md`](site-sync.md) | Workflow file and its secret name checked against `.github/workflows/notify-site.yml`. **The dispatch itself is unverified: Actions does not run on this repo.** | 2026-11-05 |
+| [`docs/site-sync.md`](site-sync.md) | Rewritten: it documented a GitHub Actions dispatch that has been withdrawn. Now describes the Coolify deploy path and states plainly that a docs change is published by redeploying the site. | 2026-11-05 |
 | [`docs/design/reference-spec.md`](design/reference-spec.md) | Measurements taken with PIL from the supplied reference set; the method is stated in the file. | 2026-11-05 |
 | [`guides/getting_started.md`](../guides/getting_started.md) | Every command executed end to end. Claims about the seeder, the first-user role and the collapse toggle each checked against behaviour. | 2026-11-05 |
 | [`guides/extensions.md`](../guides/extensions.md) | What ships is verified against the gemspecs. | 2026-11-05 |

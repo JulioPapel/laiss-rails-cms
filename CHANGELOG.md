@@ -31,6 +31,13 @@ from the repository, and their per-release notes with them.
   part of the removed tooling. It is now a review obligation documented in
   `CONTRIBUTING.md`, with the search to run. Stated here rather than dropped quietly.
 
+- **GitHub Actions is disabled.** Every workflow moved to `ci-disabled/` at the
+  repository root, where GitHub does not read them, after the account was billed for
+  Actions minutes on a different repository and became locked. Verification is
+  `script/gates` run locally; deployment is Coolify pulling the repository. A release
+  is a tag at a commit where the gates passed. `ci-disabled/README.md` explains what
+  each parked file did and that none of them ever ran successfully.
+
 ## 0.1.0.beta5 — corrective
 
 - **Minimum Ruby raised to 3.4** (was a claimed 3.1). 3.1 was never run, and ransack

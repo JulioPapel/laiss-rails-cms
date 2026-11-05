@@ -134,28 +134,40 @@ else
   row "doc links, images and anchors resolve" "FAIL" "see /tmp/audit-docs.log"
 fi
 
-# --- Entry-point convergence ----------------------------------------------
+# --- GitHub Actions: deliberately not used --------------------------------
+#
+# These rows used to read UNVERIFIED, which was perpetually red and therefore
+# meaningless: they were describing infrastructure the project had decided not to
+# have. "Not applicable" is the truthful status. It is not a gap waiting to be
+# closed; it is a decision.
 
-if grep -q 'script/gates' .github/workflows/ci.yml 2>/dev/null; then
-  jobs=$(python3 -c "
-import yaml
-d = yaml.safe_load(open('.github/workflows/ci.yml'))
-print(','.join(sorted(d['jobs'])))
-" 2>/dev/null || echo "?")
-  row "CI calls script/gates (one implementation)" "VERIFIED" "jobs: $jobs"
+if [ -d .github/workflows ] && [ -n "$(ls -A .github/workflows 2>/dev/null)" ]; then
+  row "no GitHub Actions workflows" "FAIL" ".github/workflows/ is not empty — see ci-disabled/README.md"
 else
-  row "CI calls script/gates (one implementation)" "FAIL" "ci.yml runs the suites directly"
+  row "no GitHub Actions workflows" "VERIFIED" ".github/workflows/ is empty"
 fi
 
-# --- Things that need a runner -------------------------------------------
+if [ -d ci-disabled ] && [ -f ci-disabled/README.md ]; then
+  parked=$(ls -1 ci-disabled/*.yml 2>/dev/null | wc -l | tr -d ' ')
+  row "parked workflows documented" "VERIFIED" "$parked file(s) in ci-disabled/ with a README"
+else
+  row "parked workflows documented" "NOTE" "no ci-disabled/README.md"
+fi
 
-row "CI has ever run a job" "UNVERIFIED" "needs billing cleared; no job has started"
-row "GitHub Release exists" "UNVERIFIED" "needs auth; API returns 401"
-row "site auto-rebuild fires on dispatch" "UNVERIFIED" "needs SITE_DISPATCH_TOKEN + a runner"
+row "CI has ever run a job" "NOT APPLICABLE" "the project does not use GitHub Actions"
+row "site auto-rebuild fires on a dispatch" "NOT APPLICABLE" "no dispatch; Coolify pulls the repo"
+row "GitHub Release automation" "NOT APPLICABLE" "no workflow; a Release is created by hand if wanted"
+
+# Deployability is a real claim that no longer depends on Actions.
+if [ -f ci-disabled/README.md ] && grep -qi 'coolify' ci-disabled/README.md; then
+  row "deployment path recorded" "VERIFIED" "Coolify pulls the repository; no Actions involved"
+else
+  row "deployment path recorded" "NOTE" "see ci-disabled/README.md"
+fi
 
 echo
 echo "Not checked here (needs script/gates): suites, lint, build, vitest, scratch app."
-echo "Not checkable here: anything requiring GitHub Actions to actually run."
+echo "Verification is local by design: there is no server-side check to wait for."
 
 if [ "$FAILS" -gt 0 ]; then
   echo

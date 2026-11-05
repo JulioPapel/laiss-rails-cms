@@ -79,28 +79,38 @@ pnpm exec vitest --run            # components, ~851 tests
 `bin/rspec` runs each library from its own directory with its own bundle. Use it
 when you want both suites together.
 
-### Verify a checkout with one command
+### Verification is local
+
+**This project does not use GitHub Actions.** There is no server-side check. Running
+`script/gates` on your machine is not a convenience before the real check — it is the
+check.
 
 ```bash
 script/gates
 ```
 
-That runs all twelve gates in order and prints a pass/fail table with the counts.
-It is the same logic CI runs, so a green run here means the code is sound even if
-GitHub Actions is unavailable. Use it before opening a pull request and before
-trusting a tag.
+That runs every gate in order and prints a pass/fail table with the counts. **Run it
+before opening a pull request, and before creating a tag.** A release is not verified
+until that run is green at the commit being tagged.
 
 It also takes a subset: `script/gates ruby`, `script/gates js`,
 `script/gates scratch`.
 
+`script/audit` prints the release-readiness table with live evidence and takes about
+a second; it checks the mechanical facts (version, tag, licences, doc links) that do
+not need the suites.
+
+Deployment is unaffected by any of this: the documentation site is deployed by
+**Coolify**, which pulls this repository directly.
+
 ### The counts matter
 
-CI asserts the example counts **do not drop**. A broken `require` makes RSpec load
-fewer files, still exit 0, and still print "0 failures" — so without a floor the
-suite can rot while CI stays green.
+`script/gates` asserts the example counts **do not drop**. A broken `require` makes
+RSpec load fewer files, still exit 0, and still print "0 failures" — so without a
+floor the suite can rot while everything stays green.
 
-If you add specs, raise the floor in `.github/workflows/ci.yml` (`MIN_CORE`,
-`MIN_DEVISE`, `MIN_VITEST`). Never lower it.
+If you add specs, raise the floor in `script/gates` (`BASELINE_EXAMPLES`,
+`BASELINE_DEVISE`, `BASELINE_VITEST`). Never lower it.
 
 ## Linting
 
