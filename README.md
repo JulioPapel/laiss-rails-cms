@@ -10,7 +10,7 @@ in what a writer types — so an author cannot break the structure of a page.
 > This is **not published to RubyGems** and never will be. Install it from git at
 > a tag. There is no gem on rubygems.org and no support contract.
 
-Current version: **0.1.0.beta4**. See [docs/versioning.md](docs/versioning.md) —
+Current version: **0.1.0.beta5**. See [docs/versioning.md](docs/versioning.md) —
 this project has its own version sequence, deliberately unrelated to any other
 CMS's numbering.
 
@@ -70,7 +70,7 @@ git install needs no Node toolchain.
 ```ruby
 gem "laiss_cms",
   git: "git@github.com:JulioPapel/laiss-rails-cms.git",
-  tag: "v0.1.0.beta4"
+  tag: "v0.1.0.beta5"
 
 # Optional: Devise-based authentication.
 # The integration ships inside laiss_cms; only the devise gem is separate, and it

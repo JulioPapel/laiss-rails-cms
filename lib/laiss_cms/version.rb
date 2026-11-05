@@ -3,7 +3,7 @@
 module LaissCms
   extend self
 
-  VERSION = "0.1.0.beta4"
+  VERSION = "0.1.0.beta5"
 
   def version
     VERSION

@@ -34,6 +34,28 @@ concurrency:
 permissions:
   contents: read
 
+# ACTION REFS
+#
+# Every `uses:` names an exact released tag, not a moving major (`@v4`) or a
+# branch (`setup-ruby@v1` was a branch — the repo has no v1 tag, only v1.x.y).
+# A moving ref means CI changes without a commit, which is the wrong default for
+# anything that runs on every push:
+#
+#   actions/checkout       v4.2.2
+#   actions/setup-node     v4.4.0
+#   pnpm/action-setup      v4.2.0
+#   ruby/setup-ruby        v1.336.0
+#
+# NOT SHA-PINNED, deliberately. A commit SHA is the strongest pin, but it also
+# freezes the action against security fixes: a published CVE in checkout or
+# setup-ruby would not reach this repository until someone bumped 40 hex
+# characters by hand, and Dependabot's ability to do it automatically depends on
+# the ref being a tag it can reason about. Exact tags get most of the benefit —
+# no silent change — while staying updatable.
+#
+# The owner may prefer full SHAs for supply-chain assurance. If so, replace each
+# tag above with its commit SHA in every workflow; nothing else needs to change.
+
 env:
   # Keep this aligned with the pinned development version in .ruby-version.
   BUNDLE_JOBS: 4
@@ -70,15 +92,15 @@ jobs:
           - ruby: "4.0.6"
             rails: "8.1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@v1.336.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
 
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v4.4.0
         with:
           node-version: 24
           cache: pnpm
@@ -116,15 +138,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@v1.336.0
         with:
           ruby-version: 4.0.6
           bundler-cache: true
 
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v4.4.0
         with:
           node-version: 24
           cache: pnpm
@@ -153,9 +175,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@v1.336.0
         with:
           ruby-version: 4.0.6
           bundler-cache: true
@@ -178,9 +200,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@v1.336.0
         with:
           ruby-version: 4.0.6
           bundler-cache: true

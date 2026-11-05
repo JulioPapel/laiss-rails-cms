@@ -8,6 +8,25 @@ CMS engine; that derivation is recorded in `LICENSE` and nowhere else.
 
 ## Unreleased
 
+## 0.1.0.beta5 — corrective
+
+- **Minimum Ruby raised to 3.4** (was a claimed 3.1). 3.1 was never run, and ransack
+  6.x / view_component 4.x both require 3.2+, so the old claim only held by silently
+  downgrading them. Ruby 3.4.12 and 4.0.6 are now the tested versions; the 3.4/7.2
+  matrix leg was run before being added.
+- **The guides could not be built.** The VitePress theme still imported three
+  advertising components deleted during the rebrand, so `guides:build` failed with
+  "Could not resolve ./SideBarAd.vue". Three cross-tree links also failed the
+  dead-link check. Both fixed; the build produces 29 pages.
+- **`script/gates` diagnoses a missing tool.** Without pnpm it printed five bare FAILs
+  and no cause. It now checks prerequisites first and says what to install.
+- **`script/gates` warns on a Ruby/.ruby-version mismatch**, which makes Selenium fail
+  with "unable to find browser binary" and reads as a broken suite.
+- **`notify-site` runs outside a runner.** Its steps aborted on an unset
+  `$GITHUB_OUTPUT`, so the workflow could not be exercised locally.
+- **Action refs pinned to released tags.** `ruby/setup-ruby@v1` was a branch, not a
+  tag. The SHA-pinning trade-off is documented in `ci.yml` for the owner.
+
 ## 0.1.0.beta4 — corrective
 
 Both defects found by executing `ci.yml`'s steps rather than reading them. Neither

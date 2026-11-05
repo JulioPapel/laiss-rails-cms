@@ -360,7 +360,22 @@ export default defineConfig({
     },
   },
   lastUpdated: true,
-  ignoreDeadLinks: "localhostLinks",
+  // Three links in the guides are real but cannot resolve inside the VitePress
+  // source root, and the build refused to run because of them:
+  //
+  //   ../CONTRIBUTING, ../README   files at the repository root; VitePress only
+  //                                resolves within guides/, so it cannot see them.
+  //                                The published site resolves them.
+  //   http://localhost:3000/admin  an example URL, not a page. Note that
+  //                                "localhostLinks" does NOT cover this — it only
+  //                                matches links starting "//localhost".
+  //
+  // A predicate is used rather than a list so the intent is legible.
+  ignoreDeadLinks: [
+    (link) =>
+      /(^|\/)\.\.\/(CONTRIBUTING|README)/.test(link) ||
+      link.includes("localhost:3000"),
+  ],
   vite: {
     plugins: [llmstxtPlugin({ ignore: ["README.md"] })],
   },
