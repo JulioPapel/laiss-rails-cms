@@ -1,4 +1,4 @@
-require "rails_helper"
+require_relative "../rails_helper"
 
 describe LaissCms::BaseController do
   describe "#store_user_request_time" do

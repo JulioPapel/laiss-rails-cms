@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "rails_helper"
+require_relative "../../rails_helper"
 
 describe LaissCms::Admin::UserSessionsController do
   routes { LaissCms::Engine.routes }

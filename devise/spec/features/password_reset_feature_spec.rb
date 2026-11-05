@@ -1,4 +1,4 @@
-require "rails_helper"
+require_relative "../rails_helper"
 
 describe "Password reset feature." do
   let(:user) { create(:laiss_cms_admin_user) }

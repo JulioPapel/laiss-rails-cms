@@ -1,4 +1,4 @@
-require "rails_helper"
+require_relative "../../rails_helper"
 
 RSpec.describe LaissCms::Admin::UsersController, type: :request do
   before do

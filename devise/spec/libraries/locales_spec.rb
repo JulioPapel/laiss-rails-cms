@@ -1,4 +1,4 @@
-require "rails_helper"
+require_relative "../rails_helper"
 
 RSpec.describe "LaissCms::Devise locales" do
   # These translations are folded into laiss_cms: laiss_cms_users.* holds the

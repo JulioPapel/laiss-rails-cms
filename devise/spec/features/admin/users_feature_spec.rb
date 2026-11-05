@@ -1,4 +1,4 @@
-require "rails_helper"
+require_relative "../../rails_helper"
 
 RSpec.describe "Admin users feature." do
   shared_examples "allowing to set users language" do

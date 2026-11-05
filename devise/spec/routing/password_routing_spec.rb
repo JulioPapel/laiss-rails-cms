@@ -1,4 +1,4 @@
-require "rails_helper"
+require_relative "../rails_helper"
 
 describe "Password Routing" do
   routes { LaissCms::Engine.routes }

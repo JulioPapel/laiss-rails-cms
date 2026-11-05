@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "rails_helper"
+require_relative "../rails_helper"
 
 RSpec.describe "Content Security Policy" do
   # Without a user the login page redirects into the signup form, and we want

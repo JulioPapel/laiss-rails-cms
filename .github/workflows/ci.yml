@@ -201,11 +201,26 @@ jobs:
       - name: Spec counts must not drop
         env:
           RAILS_ENV: test
-          MIN_CORE: 4419
-          MIN_DEVISE: 167
-          MIN_VITEST: 851
         run: |
           set -euo pipefail
+
+          # Read from script/rebrand/gates rather than repeating the numbers here.
+          # These floors were hardcoded at 4419/851 and had gone stale after specs
+          # were deliberately removed, so this job would have failed on every run
+          # even when the suite was healthy. One source, or they drift again.
+          MIN_CORE=$(sed -n 's/^BASELINE_EXAMPLES=//p' script/rebrand/gates)
+          MIN_DEVISE=$(sed -n 's/^BASELINE_DEVISE=//p' script/rebrand/gates)
+          MIN_VITEST=$(sed -n 's/^BASELINE_VITEST=//p' script/rebrand/gates)
+
+          for pair in "core:$MIN_CORE" "devise:$MIN_DEVISE" "vitest:$MIN_VITEST"; do
+            name="${pair%%:*}"
+            value="${pair#*:}"
+            if [ -z "$value" ]; then
+              echo "::error::Could not read the $name baseline from script/rebrand/gates."
+              exit 1
+            fi
+          done
+          echo "floors: core=$MIN_CORE devise=$MIN_DEVISE vitest=$MIN_VITEST"
 
           core_out=$(bundle exec rspec spec --format progress 2>&1 || true)
           core=$(echo "$core_out" | grep -oE '[0-9]+ examples' | tail -1 | grep -oE '[0-9]+' || echo 0)

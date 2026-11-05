@@ -1,4 +1,4 @@
-require "rails_helper"
+require_relative "../rails_helper"
 
 RSpec.describe LaissCms do
   describe ".devise_modules" do
