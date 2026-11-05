@@ -13,11 +13,15 @@ What actually ships in this repository:
 
 | Gem | What it is |
 | --- | --- |
-| `laiss_cms` | The engine |
-| `laiss-cms-devise` (`devise/`) | Devise-based authentication, optional |
+| `laiss_cms` | The engine, including all translations and the authentication code |
+| `devise` | Optional third-party gem the authentication integration activates |
 
-All three are consumed from git at a tag. See the
-[installation section of the README](../README#installation).
+There is one gem to install, consumed from git at a tag. Authentication ships
+inside `laiss_cms` but is opt-in: add `require "laiss_cms/devise"` to
+`config/application.rb`. Without it the engine has no user model and no sign-in
+routes, which is what you want when the host app brings its own.
+
+See the [installation section of the README](../README#installation).
 
 ## Extending it yourself
 
@@ -43,7 +47,7 @@ entry and permissions: [Creating modules](how_to_create_modules) and
 roles. Register your ability class with `LaissCms.config.abilities.add`.
 See [Permissions](../CONTRIBUTING.md) for the naming contract.
 
-**Authentication** — bring your own, or use `laiss-cms-devise`:
+**Authentication** — bring your own, or use the bundled integration:
 [Custom authentication](how_to_add_custom_authentication).
 
 ## A note on installable gems

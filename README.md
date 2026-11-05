@@ -72,21 +72,25 @@ gem "laiss_cms",
   git: "git@github.com:JulioPapel/laiss-rails-cms.git",
   tag: "v0.1.0.beta1"
 
-# Optional: translations beyond English
-gem "laiss_cms_i18n",
-  git: "git@github.com:JulioPapel/laiss-rails-cms.git",
-  tag: "v0.1.0.beta1",
-  glob: "i18n/*.gemspec",
-  require: false
-
-# Optional: Devise-based authentication
-gem "laiss-cms-devise",
-  git: "git@github.com:JulioPapel/laiss-rails-cms.git",
-  tag: "v0.1.0.beta1",
-  glob: "devise/*.gemspec",
-  require: false
+# Optional: Devise-based authentication.
+# The integration ships inside laiss_cms; only the devise gem is separate, and it
+# stays optional. Skip this pair if the host app brings its own sign-in.
 gem "devise", "~> 4.9"
 ```
+
+There is one gem. The translations for every supported locale and the devise
+integration are both part of `laiss_cms`.
+
+Authentication is opt-in: add it to `config/application.rb` after the engine is
+required.
+
+```ruby
+require "laiss_cms"
+require "laiss_cms/devise"   # only if using the bundled sign-in
+```
+
+Without that line there is no `LaissCms::User`, no sign-in routes and no admin
+user screen — and the rest of the CMS works normally.
 
 Then run these **in this order**:
 

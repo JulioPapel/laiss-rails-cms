@@ -201,7 +201,7 @@ Show a searchable checkbox in the page form. Useful with search plugins like lai
 ### auto_logout_time
 `Integer` (Default: `30`)
 
-Minutes of inactivity before the admin session expires. Used by laiss-cms-devise to configure Devise's `:timeoutable` module. Disabled in development.
+Minutes of inactivity before the admin session expires. Used by the bundled devise integration to configure Devise's `:timeoutable` module. Disabled in development.
 
 ### items_per_page
 `Integer` (Default: `15`)

@@ -377,8 +377,8 @@ This runs automated upgrade tasks. Read the output carefully for manual steps.
 - **Lib**: `lib/laiss_cms/` (core engine code)
 - **Config**: `config/laiss_cms/` (YAML definitions)
 - **Generators**: `lib/generators/laiss_cms/`
-- **Translations**: `i18n/` (the `laiss_cms_i18n` gem, versioned together with `laiss_cms`; see `i18n/CLAUDE.md`)
-- **Authentication**: `devise/` (the `laiss-cms-devise` gem, versioned together with `laiss_cms`; it shares the root bundle and `spec/dummy`, which only loads it for the devise specs, so `bin/rspec` runs them separately from inside `devise/`)
+- **Translations**: `config/locales/` and `config/locales/extra/`, inside the engine. No separate gem.
+- **Authentication**: `lib/laiss_cms/devise.rb` plus `lib/laiss_cms/devise_app/` and `lib/laiss_cms/devise_support/`, inside the engine. The `devise` gem stays optional; the integration activates on `require "laiss_cms/devise"`. Its code is NOT under `app/`, because Rails eager loads that tree and a host app without devise would fail to boot. Its specs still live in `devise/spec/` and run in their own process, so `bin/rspec` keeps running them separately from inside `devise/`.
 
 ## Resources
 

@@ -18,19 +18,19 @@ Update the version constraint in your `Gemfile` and run bundler.
 +gem 'laiss_cms', '~> 8.1'
 ~~~
 
-If you use laiss-cms-devise for authentication, update it as well. The major and minor versions of `laiss_cms` and `laiss-cms-devise` match.
+Authentication now ships inside `laiss_cms`, so there is no second gem to keep in step. Bump `laiss_cms` and run `bin/rails g laiss_cms:devise:install` again if the integration's initializer template changed.
 
 ~~~ diff
 -gem 'laiss_cms', '~> 8.0'
 +gem 'laiss_cms', '~> 8.1'
--gem 'laiss-cms-devise', '~> 8.0'
-+gem 'laiss-cms-devise', '~> 8.1'
+-gem 'laiss_cms', '~> 8.0'
++gem 'laiss_cms', '~> 8.1'
 ~~~
 
 Then run bundler.
 
 ~~~ bash
-bundle update laiss_cms laiss-cms-devise
+bundle update laiss_cms
 ~~~
 
 ## Run the Upgrade Task
@@ -43,7 +43,7 @@ bin/rails laiss_cms:upgrade
 
 Follow the on-screen instructions. The task will inform you about changes and any manual steps required.
 
-If you have `laiss-cms-devise` installed, re-run its install generator to pick up any changes.
+If you use the bundled devise integration, re-run its install generator to pick up any changes.
 
 ~~~ bash
 bin/rails g laiss_cms:devise:install

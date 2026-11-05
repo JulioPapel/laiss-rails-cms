@@ -37,7 +37,7 @@ elsewhere in the page may still be wrong.
 | [`guides/ingredients.md`](../guides/ingredients.md) | Ingredient types match `app/models/laiss_cms/ingredients/`. |
 | [`guides/pages.md`](../guides/pages.md) | Pages hold no content directly; tree behaviour comes from `awesome_nested_set` per the gemspec. |
 | [`guides/menus.md`](../guides/menus.md) | Menus are modelled as nodes (`LaissCms::Node`), separate from the page tree. |
-| [`guides/i18n.md`](../guides/i18n.md) | The install snippet was **wrong** (bare `gem "laiss_cms_i18n"`, which is not on RubyGems) and was corrected to the git form. |
+| [`guides/i18n.md`](../guides/i18n.md) | Said to install a separate `laiss_cms_i18n` gem. All locales now ship inside `laiss_cms`, so the install snippet was replaced with a note that there is nothing to install. |
 | [`guides/seeder.md`](../guides/seeder.md) | The seeder skips page seeding when `LaissCms::Page.exists?` — proven by running it twice. |
 
 ## NOT verified

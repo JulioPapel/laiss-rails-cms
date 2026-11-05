@@ -39,12 +39,8 @@ gem "laiss_cms",
   git: "git@github.com:JulioPapel/laiss-rails-cms.git",
   tag: "v0.1.0.beta1"
 
-# optional: authentication
-gem "laiss-cms-devise",
-  git: "git@github.com:JulioPapel/laiss-rails-cms.git",
-  tag: "v0.1.0.beta1",
-  glob: "devise/*.gemspec",
-  require: false
+# optional: authentication. The integration ships inside laiss_cms; only the
+# devise gem is separate, and leaving it out is a supported setup.
 gem "devise", "~> 4.9"
 ```
 
@@ -57,7 +53,7 @@ bundle install
 ```bash
 bin/rails active_storage:install        # 1
 bin/rails laiss_cms:install             # 2
-bin/rails g laiss_cms:devise:install    # 3, only with laiss-cms-devise
+bin/rails g laiss_cms:devise:install    # 3, only if using the bundled sign-in
 bin/rails db:migrate                    # 4
 bin/rails db:seed                       # 5
 ```
@@ -69,15 +65,18 @@ Steps **1** and **5** are easy to miss and both fail quietly:
 | `active_storage:install` | The engine boots, but every image upload fails: there are no ActiveStorage tables. |
 | `db:seed` | The installer appends `LaissCms::Seeder.seed!` to `db/seeds.rb` but does **not** run it. Without it there is no site, no language and no root page — and because a page needs a parent, the **New page** button produces nothing. |
 
-## 4. Load the engine
+## 4. Opt in to authentication
 
-The gem's name and its require path differ (`laiss-cms-devise` vs
-`lib/laiss_cms/devise.rb`), so Bundler does not always load it. Add this to
-`config/application.rb`:
+The authentication code ships inside `laiss_cms` but does nothing until you ask
+for it, so that an app with its own sign-in is unaffected. Add this to
+`config/application.rb`, after `require "laiss_cms"`:
 
 ```ruby
 require "laiss_cms/devise"
 ```
+
+Without it there is no `LaissCms::User`, no `/admin/login` route and no admin user
+screen. The rest of the CMS works normally.
 
 If the admin raises `NoCurrentUserFoundError`, that line is what is missing.
 

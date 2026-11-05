@@ -66,7 +66,7 @@ LaissCms comes with these admin modules:
 - **[Sites](sites)** — multi-site support
 - **[Library](library)** — picture and attachment management
 - **[Tags](tags)** — tagging for pictures, attachments, and pages
-- **Users** — user management (with laiss-cms-devise)
+- **Users** — user management (with the bundled devise integration)
 
 ::: tip
 You can extend the admin with your own [custom modules](how_to_create_modules). See [Extensions](extensions) for a full list of available add-ons.
