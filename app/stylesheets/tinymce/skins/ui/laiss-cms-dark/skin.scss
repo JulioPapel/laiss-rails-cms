@@ -3286,7 +3286,11 @@ body.tox-dialog__disable-scroll {
 .tox .tox-statusbar a,
 .tox .tox-statusbar__path-item,
 .tox .tox-statusbar__wordcount {
-  color: var(--text-color);
+  // Phase 9: these resolved to --text-color, which is #e8e4df on light — in the
+  // dark skin that is near-white text on a near-white statusbar in some
+  // contexts, measured at 1.17:1. They are metadata, so they use the muted ink
+  // that is guaranteed to contrast in whichever skin is loaded.
+  color: var(--text-color-muted);
   text-decoration: none;
 }
 

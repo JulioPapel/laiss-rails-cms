@@ -115,15 +115,27 @@
 
 // Inside the drawer the control is full width and sits with the other
 // footer actions, so it does not look pasted into a corner.
+//
+// Hidden above the desktop breakpoint: at that width the sidebar is always
+// visible AND the top bar shows the same control, so rendering both put two
+// identical theme switchers on screen at once. The drawer copy exists for the
+// phone, where the sidebar is off-canvas and the top bar's copy can scroll out
+// of reach.
 #left_menu .theme-toggle {
-  display: flex;
-  width: 100%;
-  margin-top: var(--spacing-2);
-  border-color: var(--border-color);
+  display: none;
+}
 
-  .theme-toggle__option {
-    flex: 1 1 auto;
-    height: var(--journal-touch-target);
+@media screen and (max-width: 999px) {
+  #left_menu .theme-toggle {
+    display: flex;
+    width: 100%;
+    margin-top: var(--spacing-2);
+    border-color: var(--border-color);
+
+    .theme-toggle__option {
+      flex: 1 1 auto;
+      height: var(--journal-touch-target);
+    }
   }
 }
 

@@ -59,6 +59,10 @@ RSpec.describe "Admin theme preference", type: :request do
     end
   end
 
+  # The rendering side of the preference. It is intentionally inert now: the
+  # layout no longer writes `data-theme`, because the product ships one theme.
+  # These examples pin that down so a stale preference row or a host config
+  # value cannot quietly reintroduce a second theme on screen.
   describe "rendering the choice" do
     def theme_attribute
       Nokogiri::HTML(response.body).at_css("html")["data-theme"]
@@ -69,73 +73,52 @@ RSpec.describe "Admin theme preference", type: :request do
       expect(theme_attribute).to be_nil
     end
 
-    it "renders the saved dark choice on the next request" do
+    it "renders no data-theme even after a saved dark choice" do
       patch laiss_cms.admin_theme_path, params: {theme: "dark"}
       get laiss_cms.admin_dashboard_path
 
-      expect(theme_attribute).to eq("dark")
+      expect(theme_attribute).to be_nil
     end
 
-    it "renders the saved light choice on the next request" do
-      patch laiss_cms.admin_theme_path, params: {theme: "light"}
+    it "renders no data-theme even when the host pins admin_theme" do
+      allow(LaissCms.config).to receive(:admin_theme).and_return("dark")
       get laiss_cms.admin_dashboard_path
 
-      expect(theme_attribute).to eq("light")
-    end
-
-    it "survives a new session, because the choice is on the user not the browser" do
-      patch laiss_cms.admin_theme_path, params: {theme: "dark"}
-      reset!
-
-      get laiss_cms.admin_dashboard_path
-      expect(theme_attribute).to eq("dark")
-    end
-
-    it "still honours the host's admin_theme config when the user has no choice" do
-      allow(LaissCms.config).to receive(:admin_theme).and_return("light")
-      get laiss_cms.admin_dashboard_path
-
-      expect(theme_attribute).to eq("light")
-    end
-
-    it "lets the user's choice win over the host's config" do
-      allow(LaissCms.config).to receive(:admin_theme).and_return("light")
-      patch laiss_cms.admin_theme_path, params: {theme: "dark"}
-      get laiss_cms.admin_dashboard_path
-
-      expect(theme_attribute).to eq("dark")
+      expect(theme_attribute).to be_nil
     end
   end
 
-  describe "the control itself" do
-    it "is rendered in the top bar" do
+  # The product ships a single theme, so there is no control to switch. These
+  # examples assert the absence, because silently rendering a toggle that cannot
+  # change anything would be worse than not rendering one: it would tell the user
+  # a preference exists when it does not.
+  #
+  # The preference model and the theme endpoint are still tested above — they
+  # remain in the engine so dark mode can be restored by putting the toggle back.
+  describe "the single-theme UI" do
+    it "does not render a theme toggle in the top bar" do
       get laiss_cms.admin_dashboard_path
-      expect(Nokogiri::HTML(response.body).css("#user_info laiss-cms-theme-toggle")).to be_present
+      expect(Nokogiri::HTML(response.body).css("#user_info laiss-cms-theme-toggle")).to be_empty
     end
 
-    it "is rendered in the drawer" do
+    it "does not render a theme toggle in the drawer" do
       get laiss_cms.admin_dashboard_path
-      expect(Nokogiri::HTML(response.body).css("#left_menu laiss-cms-theme-toggle")).to be_present
+      expect(Nokogiri::HTML(response.body).css("#left_menu laiss-cms-theme-toggle")).to be_empty
     end
 
-    it "has an accessible name" do
+    it "renders no data-theme attribute by default" do
       get laiss_cms.admin_dashboard_path
-      toggle = Nokogiri::HTML(response.body).at_css("laiss-cms-theme-toggle")
-      expect(toggle["label"]).to be_present
+      expect(Nokogiri::HTML(response.body).at_css("html")["data-theme"]).to be_nil
     end
 
-    it "reports the saved choice to the control" do
-      patch laiss_cms.admin_theme_path, params: {theme: "dark"}
+    it "does not let a stale saved dark preference change the rendering" do
+      # A row left behind by an earlier build must not resurrect dark mode.
+      LaissCms::Preference.set(
+        LaissCms::Preference::THEME, "mode", "dark", owner: user
+      )
       get laiss_cms.admin_dashboard_path
 
-      toggle = Nokogiri::HTML(response.body).at_css("#user_info laiss-cms-theme-toggle")
-      expect(toggle["current"]).to eq("dark")
-    end
-
-    it "reports system when there is no saved choice" do
-      get laiss_cms.admin_dashboard_path
-      toggle = Nokogiri::HTML(response.body).at_css("#user_info laiss-cms-theme-toggle")
-      expect(toggle["current"]).to eq("system")
+      expect(Nokogiri::HTML(response.body).at_css("html")["data-theme"]).to be_nil
     end
   end
 end

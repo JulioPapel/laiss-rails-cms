@@ -1,14 +1,11 @@
 <!DOCTYPE html>
-<%# data-theme pins the theme. It is resolved on the SERVER (see
-    LaissCms::Admin::ThemePreference) from, in order: the user's saved choice,
-    the host's `admin_theme` config, then nothing at all. When it is nil the CSS
-    media queries in theme.scss follow the operating system.
-
-    Resolving on the server is what prevents a flash of the wrong theme: the
-    attribute is present in the first HTML byte, before any stylesheet or script
-    runs. A client-side script that set the attribute after load would paint the
-    OS theme first and then correct itself. %>
-<html lang="<%= ::I18n.locale %>" class="no-js"<% if laiss_cms_theme %> data-theme="<%= laiss_cms_theme %>"<% end %>>
+<%# No data-theme attribute is rendered.
+    The product ships a single theme (see theme.scss), so there is nothing to
+    pin and nothing to flash. The light/dark preference machinery is still in the
+    engine — LaissCms::Admin::ThemePreferenceHelper and the theme endpoint — so a
+    host that wants to offer the choice again can, but the default rendering is
+    deliberately one theme. %>
+<html lang="<%= ::I18n.locale %>" class="no-js">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

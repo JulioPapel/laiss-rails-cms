@@ -1,0 +1,165 @@
+@use "../mixins";
+
+// ===========================================================================
+// Sitemap / page tree polish — Phase 9.
+//
+// The pages index is not a table, it is a tree of rows, and it had three
+// contrast and rhythm defects that the automated audit flagged:
+//
+//   * `div.sitemap_url` — background #fefdfc on #f8f4f1, and in dark
+//     #120f0b on #231e19: the URL chip was a 1.06–1.08:1 shape, i.e. invisible.
+//     It now separates with a rule, like every other surface.
+//   * `div.page_infos` — a `border-left` in the BODY colour, which by
+//     definition cannot contrast with the page. It is gone; the row's own rule
+//     does the separation.
+//   * `header "Currently locked pages"` — an #e9e4de rule on #fefdfc, the same
+//     defect in the lock bar.
+//
+// Additive, like the other polish layers.
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// Row rhythm. `--sitemap-line-height` was 32px, which is the md control step;
+// the rows now use the lg step so a row can hold a 32px icon button with air
+// around it, and every row is exactly that height.
+// ---------------------------------------------------------------------------
+:root {
+  --sitemap-line-height: var(--control-height-lg);
+}
+
+.sitemap_page {
+  // A hairline between rows. The tree had no separation at all, so two adjacent
+  // pages read as one block — the "hidden lines" complaint in its worst form.
+  border-bottom: 1px solid var(--border-inset-color);
+  margin: 0;
+  // The hover fill is inset so it does not paint over the row rule.
+  transition: background-color var(--journal-motion-fast)
+    var(--journal-motion-easing);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:hover {
+    border-radius: 0;
+  }
+
+  &.highlight {
+    // Selection is a left rule plus a tint, not a full inversion: a full
+    // inversion in a tree hid the drag handle and the status icons.
+    box-shadow: inset 3px 0 0 var(--text-color);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The URL chip. It is metadata about the page, so it separates by rule.
+// ---------------------------------------------------------------------------
+.sitemap_url {
+  background-color: transparent;
+  border: 1px solid var(--border-inset-color);
+  border-radius: var(--radius-sm);
+  margin: 0 var(--spacing-1);
+  height: calc(var(--sitemap-line-height) - 12px);
+  line-height: calc(var(--sitemap-line-height) - 14px);
+  color: var(--text-color-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+// ---------------------------------------------------------------------------
+// Status block. No border-left in the body colour — that was a 1.03:1 shape.
+// ---------------------------------------------------------------------------
+.page_infos {
+  border-left: 1px solid var(--border-inset-color);
+  background-color: transparent;
+  border-radius: 0;
+  gap: var(--spacing-1);
+
+  .page_status {
+    display: inline-flex;
+    align-items: center;
+    height: calc(var(--sitemap-line-height) - 16px);
+    padding: 0 var(--spacing-1);
+    border: 1px solid var(--border-inset-color);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    line-height: 1;
+    letter-spacing: var(--journal-letter-spacing-wide);
+    text-transform: uppercase;
+    color: var(--text-color-muted);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Inactive pages: dimmed, but not below the readability floor. `color:
+// #656565` was a literal grey that failed in both themes; it is now the muted
+// ink token, which is measured at >= 4.5:1 on every surface it sits on.
+// ---------------------------------------------------------------------------
+.sitemap_sitename .sitemap_pagename_link.inactive,
+.nodes_tree .nodes_tree-left_images + * .inactive {
+  color: var(--text-color-muted);
+}
+
+// ---------------------------------------------------------------------------
+// Row tools: one control size, always visible on touch.
+// ---------------------------------------------------------------------------
+.sitemap_right_tools {
+  gap: var(--spacing-0);
+
+  .sitemap_tool {
+    width: var(--control-height-md);
+    height: var(--control-height-md);
+    border-radius: var(--radius-sm);
+
+    &:hover:not(.disabled) {
+      background-color: var(--icon-button-hover-bg-color);
+    }
+  }
+}
+
+@media (hover: none) {
+  .sitemap_right_tools .sitemap_tool {
+    opacity: 1;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The lock bar in the header ("Currently locked pages").
+//
+// Its rule was in --journal-paper-4 on light (1.24:1 against the header) and
+// --journal-ink-5 on dark (1.16:1). Both now use the shared border token.
+// ---------------------------------------------------------------------------
+#locked_pages {
+  border-bottom: 0 none;
+
+  label,
+  header {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight_semibold);
+    letter-spacing: var(--journal-letter-spacing-wide);
+    text-transform: uppercase;
+    color: var(--text-color-muted);
+    line-height: var(--header-height);
+    height: var(--header-height);
+  }
+}
+
+.locked_page {
+  border-right: 1px solid var(--border-color);
+  height: var(--header-height);
+}
+
+// ---------------------------------------------------------------------------
+// Narrow screens: the tree keeps its row height but drops the URL chip, which
+// has nowhere to live at 375px.
+// ---------------------------------------------------------------------------
+@media screen and (max-width: 767px) {
+  .sitemap_page {
+    min-height: var(--journal-touch-target);
+  }
+
+  .sitemap_right_tools .sitemap_tool {
+    width: var(--journal-touch-target);
+    height: var(--journal-touch-target);
+  }
+}

@@ -117,6 +117,61 @@
   --border-default: var(--border-width_small) var(--border-style)
     var(--border-color);
 
+  // ---------------------------------------------------------------------------
+  // THE SCALES. Added in Phase 9.
+  //
+  // The complaint was inconsistency, and the measurement agreed: the admin had
+  // 31px buttons, 30px icon buttons, 29px toolbar separators, 27px headers and
+  // 26/15px icon-button steps — five different control heights for one visual
+  // rank. These tokens name the steps so a new rule picks one instead of
+  // inventing one. Names are ADDED; every older token above still resolves.
+  //
+  // Control heights. One step per rank, nothing between.
+  //   sm  24px  dense rows, inline chips, small actions inside a table row
+  //   md  32px  the default: buttons, inputs, selects, toolbar controls
+  //   lg  40px  the primary action of a view, and touch-first surfaces
+  // 44px itself is the touch MINIMUM (--journal-touch-target), applied as a
+  // hit-area floor on touch devices rather than as a control height.
+  // ---------------------------------------------------------------------------
+  --control-height-sm: 24px;
+  --control-height-md: 32px;
+  --control-height-lg: 40px;
+
+  // Radius. Only two, plus a pill for things that are genuinely round-ended.
+  // Anything using a raw px radius is an outlier and should use one of these.
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-pill: 999px;
+
+  // Elevation. The journal separates with rules, not shadows, so there are
+  // exactly three steps and each has one job:
+  //   1  menus, dropdowns, popovers   (a surface floating over content)
+  //   2  dialogs, the drawer          (a surface that takes over)
+  //   3  never — reserved             (no third job exists)
+  // Any shadow not from this list is an outlier.
+  --elevation-1: 0 2px 8px rgb(0 0 0 / 12%);
+  --elevation-2: 0 8px 32px rgb(0 0 0 / 18%);
+
+  // Type scale. The admin is a dense tool, so the steps are close together and
+  // each has a named role rather than an arbitrary size.
+  //   xs   10px  metadata, counters, badges
+  //   sm   11px  secondary labels, table headers
+  //   md   12px  body — the base the whole admin is built on
+  //   lg   14px  section headings
+  //   xl   18px  page titles
+  //   2xl  24px  the one number that anchors a dashboard widget
+  --text-xs: 10px;
+  --text-sm: 11px;
+  --text-md: 12px;
+  --text-lg: 14px;
+  --text-xl: 18px;
+  --text-2xl: 24px;
+
+  // Line heights, paired with the sizes above: dense for body, looser for prose.
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+
   /* Transitions */
   --transition-duration: 250ms;
   --transition-easing: linear;
@@ -129,7 +184,10 @@
     var(--button-border-color);
   --button-font-size: var(--font-size_medium);
   --button-font-weight: var(--font-weight_bold);
-  --button-height: 31px;
+  // Phase 9: 31px was a value with no siblings (icon buttons were 30, toolbar
+  // separators 29). 32px is the md step of --control-height-*, so buttons,
+  // inputs and selects now share one baseline instead of three near-misses.
+  --button-height: var(--control-height-md);
   --button-line-height: var(--form-field-line-height);
   --button-margin: var(--form-field-margin);
   --button-padding: var(--spacing-1) var(--spacing-5);
@@ -164,16 +222,21 @@
   --form-field-line-height: 1.25;
 
   /* Header */
-  --header-height: 29px;
+  // Phase 9: 29px was a one-off. The header and the toolbar now share the md
+  // control step, so the top chrome has two heights rather than four.
+  --header-height: var(--control-height-md);
   --header-border-bottom: var(--border-default);
 
   /* Icon Button */
-  --icon-button-height: 30px;
-  --icon-button-width: 30px;
-  --icon-button-medium-height: 26px;
-  --icon-button-medium-width: 26px;
-  --icon-button-small-height: 15px;
-  --icon-button-small-width: 15px;
+  // Phase 9: five heights (30/26/15 and two ad-hoc ones) collapsed onto the
+  // same md/sm steps the buttons use, so an icon button and a text button on
+  // the same row line up instead of differing by a pixel.
+  --icon-button-height: var(--control-height-md);
+  --icon-button-width: var(--control-height-md);
+  --icon-button-medium-height: var(--control-height-sm);
+  --icon-button-medium-width: var(--control-height-sm);
+  --icon-button-small-height: 18px;
+  --icon-button-small-width: 18px;
 
   /* Icons */
   --icon-size-xs: 0.75rem;

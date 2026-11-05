@@ -2,6 +2,9 @@
 // admin.css is emitted into app/assets/builds/laiss_cms/, so the fonts are two
 // levels up. See _fonts.scss for why these URLs must stay relative.
 @use "fonts" with ($font-path: ".");
+// The Modern theme's tokens are needed as a mixin at the END of this bundle too
+// (see the note at the bottom), so they are declared here as a dependency.
+@use "modern-theme" as modern;
 @use "admin/archive";
 @use "admin/attachments";
 @use "admin/base";
@@ -50,4 +53,37 @@
 @use "admin/typography";
 @use "admin/upload";
 @use "cropper.min";
+// Phase 9 polish layers. Loaded LAST so they can refine the sheets above
+// without any of those needing to be rewritten — additive, per the guard rail
+// that the existing elements and their templates stay intact.
+@use "admin/element_editor_polish";
+@use "admin/tables_polish";
+@use "admin/sitemap_polish";
+@use "admin/navigation_polish";
+@use "admin/chrome_polish";
+// The Modern theme's component layer: the new grammar (white cards on a tinted
+// page, blue primary, 8/12px radii). Additive; no element is rewritten.
+@use "admin/modern_components";
 @use "admin/responsive";
+
+// ===========================================================================
+// The Modern theme's TOKENS, re-asserted at the very end of the bundle.
+//
+// Two separate reasons, both measured rather than guessed:
+//
+//  1. LOAD ORDER. `theme.css` and `admin.css` are separate stylesheets and the
+//     browser applies them in that order.
+//
+//  2. SPECIFICITY. `_custom-properties.scss` sets the OLD values on `:root` in
+//     admin.css. `:root` is a pseudo-class (0,1,0) and beats a bare `html`
+//     selector (0,0,1) no matter which file comes later. That is why the
+//     colours changed but the radii did not: --radius-sm read 2px in the
+//     browser while theme.css said 8px.
+//
+// Matching `:root` here gives the modern values equal specificity, and being
+// declared last makes them win.
+// ===========================================================================
+:root,
+html {
+  @include modern.modern-theme;
+}

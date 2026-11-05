@@ -1,0 +1,239 @@
+@use "../mixins";
+
+// ===========================================================================
+// Tables and lists — Phase 9.
+//
+// Additive, like the element-editor pass. Three measured problems:
+//
+//   1. ROWS WERE NOT ONE ROW. `border-spacing: 0 var(--spacing-1)` put a 4px
+//      gap between rows, so a zebra stripe stopped at every gap and hover read
+//      as a floating band rather than a highlighted row. Rows are now
+//      contiguous with a hairline between them.
+//
+//   2. NO STICKY HEADER. On a long index the column labels scrolled away, so
+//      by row twenty the reader had to remember which column was which.
+//
+//   3. NO CONSISTENT HEIGHT OR BASELINE. Cells used `line-height: 22px` with
+//      `vertical-align: top`, so a row with an icon button was taller than one
+//      without and the text sat at different heights. Rows are now one height,
+//      centre-aligned, with the first column left and numeric columns right.
+//
+// The zebra survives dark mode because it is built from the paper/ink scales
+// rather than literal greys — see --table-row-odd-background-color.
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// Row structure.
+// ---------------------------------------------------------------------------
+.list {
+  // Contiguous rows: the stripe and the hover fill are row-wide again.
+  border-spacing: 0;
+  border-collapse: collapse;
+
+  th,
+  td {
+    // One row height for every row, so an icon button in one cell does not
+    // stretch its row past its neighbours.
+    height: var(--control-height-lg);
+    padding: 0 var(--spacing-3);
+    vertical-align: middle;
+    line-height: var(--leading-snug);
+    border-right: 0 none;
+    // A hairline under each row. --table-border-color is legible in both
+    // themes (ink-2 on paper, ink-4 on ink) — this is the "hidden lines" fix
+    // applied to tables specifically.
+    border-bottom: 1px solid var(--table-border-color);
+  }
+
+  // The last row does not need a rule: the table has ended.
+  tbody tr:last-child td,
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  // Columns separate by alignment and spacing, not by vertical rules. Twelve
+  // vertical hairlines plus zebra plus a header rule was three separators for
+  // one job.
+  td + td,
+  th + th {
+    border-left: 0 none;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Header: sticky, quiet, and unmistakably a header.
+// ---------------------------------------------------------------------------
+.list thead th,
+.list th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: var(--control-height-md);
+  padding: var(--spacing-2) var(--spacing-3);
+  background-color: var(--panel-background-color);
+  // The rule below the header is the one separator that has to win, so it uses
+  // the stronger text-muted tone rather than the row hairline.
+  border-bottom: 1px solid var(--text-color-muted);
+  color: var(--text-color-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight_semibold);
+  letter-spacing: var(--journal-letter-spacing-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-align: left;
+  vertical-align: middle;
+}
+
+// Sortable headers get a pointer and a hover, so the affordance is visible
+// before the click.
+.list th .sort_link,
+.list th a.sort_link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  color: inherit;
+
+  &:hover {
+    color: var(--text-color);
+    text-decoration: none;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Zebra and hover.
+//
+// Odd rows only: striping every other row from the first would put the
+// background on row one, which fights the header rule.
+// ---------------------------------------------------------------------------
+.list tr.odd td {
+  background-color: var(--table-row-odd-background-color);
+}
+
+.list tr.even td {
+  background-color: var(--table-row-even-background-color);
+}
+
+.list tbody tr:hover td,
+.list tr:hover td {
+  background-color: var(--table-row-hover-color);
+}
+
+// The hover fill must not paint over the sticky header when the pointer is at
+// the top of the table.
+.list thead tr:hover th,
+.list th:hover {
+  background-color: var(--panel-background-color);
+}
+
+// ---------------------------------------------------------------------------
+// Alignment: first column left (the name, which the eye scans), numeric and
+// boolean columns centred, actions right.
+// ---------------------------------------------------------------------------
+.list {
+  td:first-child,
+  th:first-child {
+    padding-left: var(--spacing-4);
+  }
+
+  td:last-child,
+  th:last-child {
+    padding-right: var(--spacing-4);
+  }
+
+  td.right,
+  th.right,
+  td.count,
+  th.count {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  td.center,
+  th.center,
+  td.boolean,
+  th.boolean,
+  td.locale,
+  th.locale {
+    text-align: center;
+  }
+
+  // Action cells stay narrow, and their buttons keep the row height.
+  .tools {
+    width: 1%;
+    white-space: nowrap;
+    padding: var(--spacing-1) var(--spacing-2);
+    text-align: right;
+
+    .icon_button,
+    a.button {
+      // 32px in a 40px row leaves 4px above and below, so the hover fill does
+      // not touch the row rules.
+      width: var(--control-height-md);
+      height: var(--control-height-md);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Wide tables scroll inside their own region; the rest of the page does not.
+// The fade on the right edge tells the reader there is more, which a bare
+// overflow does not.
+// ---------------------------------------------------------------------------
+.resources-table-wrapper {
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  // The sticky header needs this container to be the scroll context.
+  overflow-y: visible;
+}
+
+// ---------------------------------------------------------------------------
+// The scroll region needs a ceiling, or the page scrolls and the header cannot
+// stick. 70vh keeps the table the dominant object without hiding the toolbar.
+// ---------------------------------------------------------------------------
+.list-scroll {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+// ---------------------------------------------------------------------------
+// Empty and filtered states already have a component; this only makes the
+// message legible against both surfaces.
+// ---------------------------------------------------------------------------
+.list tbody tr td.empty,
+.list td.empty {
+  padding: var(--spacing-8) var(--spacing-4);
+  color: var(--text-color-muted);
+  text-align: center;
+  font-size: var(--text-md);
+}
+
+// ---------------------------------------------------------------------------
+// Narrow screens. Below 768px the table is too dense to be read, so the
+// horizontal scroll is expected and the header stays stuck to the top of it.
+// ---------------------------------------------------------------------------
+@media screen and (max-width: 767px) {
+  .list {
+    th,
+    td {
+      padding-left: var(--spacing-3);
+      padding-right: var(--spacing-3);
+
+      &:first-child {
+        padding-left: var(--spacing-3);
+      }
+
+      &:last-child {
+        padding-right: var(--spacing-3);
+      }
+    }
+  }
+
+  .list thead th {
+    // Sticky positioning inside a horizontally scrolling container on a phone
+    // fights the browser's own scroll handling, so the header pins only
+    // vertically.
+    position: sticky;
+    top: 0;
+  }
+}

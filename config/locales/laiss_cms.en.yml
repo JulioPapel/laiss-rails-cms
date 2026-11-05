@@ -787,6 +787,11 @@ en:
     "Theme could not be saved. Please try again.": "Theme could not be saved. Please try again."
 
     # Settings screen
+    #
+    # Field label and hint keys are derived from the config key by replacing
+    # dots with underscores (`uploader.upload_limit` -> `uploader_upload_limit`),
+    # so the catalogue in LaissCms::Admin::Settings and this file cannot drift
+    # apart by hand. A spec asserts every declared field has a label.
     settings:
       title: "Settings"
       description: "Defaults for this LaissCms installation. Changes are saved immediately for anything marked as applied at runtime."
@@ -800,24 +805,34 @@ en:
         behaviour: "Behaviour"
         read_only: "Read-only"
       fields:
-        site_name: "Site name"
-        site_name_hint: "Shown in the admin title and the default site record."
-        default_locale: "Default language"
-        default_locale_hint: "Language new pages are authored in."
-        theme_default: "Default colour theme"
-        theme_default_hint: "What a user sees before choosing their own. Users can override this from the top bar."
+        default_site_name: "Site name"
+        default_site_name_hint: "Shown in the admin title and used for the default site record."
+        default_language_code: "Default language"
+        default_language_code_hint: "Language new pages are authored in."
+        admin_theme: "Default colour theme"
+        admin_theme_hint: "What a user sees before choosing their own. Users can override this from the top bar."
         items_per_page: "Rows per page"
         items_per_page_hint: "How many records the admin lists per page."
-        upload_limit: "Files per upload"
-        upload_limit_hint: "Maximum number of files accepted in a single upload."
-        file_size_limit: "File size limit (MB)"
-        file_size_limit_hint: "Largest single file the uploader accepts."
+        uploader_upload_limit: "Files per upload"
+        uploader_upload_limit_hint: "Maximum number of files accepted in a single upload."
+        uploader_file_size_limit: "File size limit (MB)"
+        uploader_file_size_limit_hint: "Largest single file the uploader accepts."
         cache_pages: "Cache pages"
         cache_pages_hint: "Serve cached copies of published pages."
         show_page_searchable_checkbox: "Show the searchable checkbox"
         show_page_searchable_checkbox_hint: "Adds a per-page search indexing toggle to the page editor."
         auto_logout_time: "Auto logout (minutes)"
         auto_logout_time_hint: "Idle time before an author is signed out. Production only."
+        default_language_name: "Language name"
+        default_language_name_hint: "Name of the language created on first boot."
+        default_language_page_layout: "Language page layout"
+        default_language_page_layout_hint: "Page layout used for the language's index page."
+        default_site_host: "Default site host"
+        default_site_host_hint: "Host the initial site record is created for."
+        storage_adapter: "Storage adapter"
+        storage_adapter_hint: "Resolved while the application boots."
+        image_output_format: "Image output format"
+        image_output_format_hint: "Applied by the image processing pipeline at boot."
       read_only_hint: "These come from config/laiss_cms/*.yml and the environment. Change them there and restart."
       none: "Not configured"
       errors:

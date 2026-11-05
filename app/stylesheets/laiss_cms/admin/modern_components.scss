@@ -1,0 +1,861 @@
+@use "../mixins";
+@use "../variables" as vars;
+
+// ===========================================================================
+// Modern theme — component layer.
+//
+// The token file (_modern-theme.scss) changes colours, radii and type. That is
+// not enough on its own: several components hardcode their own shape
+// (border-radius: var(--border-radius_medium) is fine, but `border: 1px solid`
+// plus `box-shadow: none` is a decision the tokens cannot reverse).
+//
+// This file is the structural half. It is additive and loaded after every other
+// sheet, so it refines rather than rewrites — the ~56 custom elements and their
+// ERB templates are untouched.
+//
+// The grammar, taken from the reference the owner supplied:
+//
+//   page      tinted grey, generous inset
+//   surface   white card, 12px radius, soft shadow, no visible border
+//   control   36px tall, 8px radius, 1px border, white
+//   primary   solid blue, white label, one per view
+//   active    soft blue pill + 2px orange bar on the leading edge
+// ===========================================================================
+
+body {
+  background-color: var(--body-background-color);
+  color: var(--text-color);
+  // 13px body with a 1.5 leading: the reference's density at desktop distance.
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ---------------------------------------------------------------------------
+// THE SHELL
+// ---------------------------------------------------------------------------
+#left_menu {
+  background-color: var(--main-menu-bg-color);
+  border-right: 1px solid var(--sidebar-border-color);
+  // No shadow: the border is the edge. A shadow here read as a floating panel.
+  box-shadow: none;
+}
+
+#top_menu {
+  background-color: var(--header-background);
+  border-bottom: 1px solid var(--sidebar-border-color);
+  // A hairline shadow below the fixed top band separates it from scrolling
+  // content without drawing a second rule.
+  box-shadow: 0 1px 0 rgb(16 24 40 / 3%);
+}
+
+#header {
+  background-color: transparent;
+  border-bottom: 0 none;
+  height: var(--header-height);
+}
+
+.toolbar {
+  background-color: transparent;
+  border-bottom: 0 none;
+  padding: var(--spacing-3) var(--spacing-6);
+  gap: var(--spacing-3);
+}
+
+#main_content {
+  // The page is the tinted field; every panel on it is a white card. This is
+  // what makes the whole screen read as layered rather than flat.
+  background-color: var(--body-background-color);
+  padding: var(--spacing-6);
+  padding-left: calc(var(--main-menu-width) + var(--spacing-6));
+  padding-top: calc(var(--top-menu-height) + var(--spacing-2));
+}
+
+// ---------------------------------------------------------------------------
+// CARDS. The one container change that carries most of the new look.
+//
+// Applied to the surfaces that genuinely ARE parallel items — dashboard
+// widgets, the panels on an index — not to everything. A card around a table of
+// rows would make the rows look like separate objects.
+// ---------------------------------------------------------------------------
+.panel,
+.dashboard-widget,
+#dashboard .widget,
+#laiss_cms_elements_window,
+.element-editor,
+.settings-section,
+.empty-state,
+.resources-table-wrapper {
+  background-color: var(--panel-background-color);
+  border: 1px solid var(--panel-border-color);
+  border-radius: var(--radius-md);
+  // The soft lift: 2px of shadow, not a box.
+  box-shadow: var(--elevation-card);
+}
+
+// Inside a card, a section divider is a rule, not another box.
+.settings-section {
+  padding: var(--spacing-6);
+  border-top: 1px solid var(--panel-border-color);
+
+  & + & {
+    margin-top: var(--spacing-5);
+  }
+
+  &:first-of-type {
+    border-top: 0 none;
+  }
+}
+
+.resources-table-wrapper {
+  overflow: hidden;
+}
+
+// ---------------------------------------------------------------------------
+// TYPOGRAPHY
+//
+// One page title, then section headings that are clearly smaller. Tight tracking
+// on the large sizes, normal on the body — the reference does this and it is
+// most of why its headings look considered rather than merely bold.
+// ---------------------------------------------------------------------------
+h1,
+.page-title,
+#main_content > h1 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight_semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.02em;
+  color: var(--text-color);
+  margin: 0 0 var(--spacing-1);
+}
+
+h2 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight_semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: -0.01em;
+  color: var(--text-color);
+}
+
+h3 {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight_semibold);
+  line-height: var(--leading-snug);
+  color: var(--text-color);
+}
+
+// Metadata: the small quiet line under a title. Uppercase + tracking is how the
+// reference labels things without adding weight.
+.label,
+.meta,
+.metadata {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight_semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-color-muted);
+}
+
+a {
+  color: var(--text-link-color);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// BUTTONS
+//
+// 36px, 8px radius, one blue primary per view. The reference's primary is a
+// solid fill with a white label and nothing else competing with it.
+// ---------------------------------------------------------------------------
+button,
+input[type="submit"],
+a.button,
+laiss-cms-uploader .button {
+  height: var(--control-height-md);
+  padding: 0 var(--spacing-4);
+  border: 1px solid var(--button-border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--button-bg-color);
+  color: var(--button-text-color);
+  box-shadow: var(--button-box-shadow);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight_semibold);
+  line-height: 1;
+  transition:
+    background-color var(--journal-motion-fast) var(--journal-motion-easing),
+    border-color var(--journal-motion-fast) var(--journal-motion-easing),
+    box-shadow var(--journal-motion-fast) var(--journal-motion-easing);
+
+  &:hover:not([disabled]):not(.disabled) {
+    background-color: var(--button-hover-bg-color);
+    border-color: var(--button-hover-border-color);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--button-focus-border-color);
+    box-shadow: var(--button-focus-box-shadow);
+  }
+
+  &[disabled],
+  &.disabled {
+    background-color: var(--button-disabled-bg-color);
+    border-color: var(--button-disabled-border-color);
+    color: var(--button-disabled-color);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  &.primary {
+    background-color: var(--button-primary-bg-color);
+    border-color: var(--button-primary-border-color);
+    color: var(--button-primary-text-color);
+    // The one element on the page allowed a coloured shadow.
+    box-shadow: 0 1px 2px rgb(0 52 156 / 24%);
+
+    &:hover:not([disabled]):not(.disabled) {
+      background-color: var(--button-primary-hover-bg-color);
+      border-color: var(--button-primary-hover-bg-color);
+    }
+
+    &:active:not([disabled]):not(.disabled) {
+      background-color: var(--button-primary-hover-bg-color);
+      box-shadow: none;
+    }
+  }
+
+  &.secondary {
+    background-color: var(--button-secondary-bg-color);
+    border-color: var(--button-secondary-border-color);
+    color: var(--button-secondary-text-color);
+
+    &:hover:not([disabled]):not(.disabled) {
+      background-color: var(--button-secondary-hover-bg-color);
+      border-color: var(--button-secondary-hover-border-color);
+    }
+  }
+
+  &.ghost,
+  &.tertiary {
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--button-ghost-text-color);
+
+    &:hover:not([disabled]):not(.disabled) {
+      background-color: var(--icon-button-hover-bg-color);
+      color: var(--button-ghost-hover-color);
+    }
+  }
+
+  &.danger {
+    background-color: #ffffff;
+    border-color: var(--notice-error-border-color);
+    color: var(--notice-error-text-color);
+
+    &:hover:not([disabled]):not(.disabled) {
+      background-color: var(--notice-error-background-color);
+    }
+  }
+
+  &.small {
+    height: var(--control-height-sm);
+    padding: 0 var(--spacing-3);
+    font-size: var(--text-sm);
+  }
+
+  &.with_icon laiss-cms-icon,
+  &.with_icon .icon {
+    width: var(--icon-size-sm);
+    height: var(--icon-size-sm);
+  }
+}
+
+.icon_button {
+  width: var(--control-height-md);
+  height: var(--control-height-md);
+  border-radius: var(--radius-sm);
+  color: var(--icon-color);
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+
+  &:hover:not([disabled]):not(.disabled) {
+    background-color: var(--icon-button-hover-bg-color);
+    border-color: transparent;
+    color: var(--text-color);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--button-focus-box-shadow);
+    border-color: var(--button-focus-border-color);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// FORMS
+//
+// 36px controls that line up with the buttons beside them. The focus state is a
+// blue ring at 22% rather than the previous hard outline.
+// ---------------------------------------------------------------------------
+input[type="text"],
+input[type="email"],
+input[type="url"],
+input[type="password"],
+input[type="search"],
+input[type="number"],
+input[type="tel"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+select,
+textarea,
+.form-control,
+.string input,
+.text textarea {
+  height: var(--control-height-md);
+  padding: 0 var(--spacing-3);
+  border: 1px solid var(--form-field-border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--form-field-background-color);
+  color: var(--form-field-text-color);
+  box-shadow: var(--form-field-box-shadow);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  transition:
+    border-color var(--journal-motion-fast) var(--journal-motion-easing),
+    box-shadow var(--journal-motion-fast) var(--journal-motion-easing);
+
+  &::placeholder {
+    color: var(--placeholder-color);
+    opacity: 1;
+  }
+
+  &:hover:not(:disabled):not([readonly]) {
+    border-color: var(--grey-400, #a7aebd);
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: var(--button-focus-border-color);
+    box-shadow: var(--button-focus-box-shadow);
+  }
+
+  &:disabled,
+  &[readonly] {
+    background-color: var(--form-field-disabled-bg-color);
+    color: var(--form-field-disabled-text-color);
+    box-shadow: none;
+  }
+}
+
+textarea {
+  height: auto;
+  min-height: calc(var(--control-height-md) * 3);
+  padding: var(--spacing-2) var(--spacing-3);
+  resize: vertical;
+}
+
+select {
+  // The arrow, drawn in the text colour so it follows the theme.
+  padding-right: var(--spacing-8);
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236f7787' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--spacing-2) center;
+}
+
+label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight_semibold);
+  color: var(--form-field-label-color);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
+// ---------------------------------------------------------------------------
+// THE SIDEBAR
+//
+// The reference's most recognisable element: a white column, dark text, and the
+// current section marked with a soft blue pill plus a short orange bar. This is
+// the change that stops the admin looking like a terminal.
+// ---------------------------------------------------------------------------
+#main_navi {
+  padding: var(--spacing-3) var(--spacing-2);
+
+  .main_navi_entry {
+    margin-bottom: 2px;
+
+    > a {
+      min-height: 40px;
+      margin: 0;
+      padding: 0 var(--spacing-3);
+      border-radius: var(--radius-sm);
+      color: var(--main-menu-text-color);
+      font-size: var(--text-md);
+      font-weight: var(--font-weight_normal);
+      // Room for the orange indicator, which is drawn outside the pill.
+      position: relative;
+
+      laiss-cms-icon,
+      .icon,
+      svg {
+        color: var(--main-menu-icon-color);
+        transition: color var(--journal-motion-fast) var(--journal-motion-easing);
+      }
+    }
+
+    &:hover > a {
+      background-color: var(--main-menu-hover-bg-color);
+      color: var(--text-color);
+
+      laiss-cms-icon,
+      .icon,
+      svg {
+        color: var(--text-color);
+      }
+    }
+
+    &.active > a {
+      background-color: var(--main-menu-active-bg-color);
+      color: var(--main-menu-active-text-color);
+      font-weight: var(--font-weight_semibold);
+      // The indicator replaces the Journal's inset rule.
+      box-shadow: none;
+
+      laiss-cms-icon,
+      .icon,
+      svg {
+        color: var(--main-menu-active-text-color);
+      }
+
+      // Orange bar on the leading edge: the "you are here" signal, and the only
+      // place orange appears in the chrome.
+      &::before {
+        content: "";
+        position: absolute;
+        left: calc(-1 * var(--spacing-2));
+        top: 50%;
+        width: 3px;
+        height: 20px;
+        margin-top: -10px;
+        border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+        background-color: var(--main-menu-indicator-color);
+      }
+    }
+
+    label {
+      font-size: var(--text-md);
+      font-weight: inherit;
+      color: inherit;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+  }
+
+  .sub_navigation {
+    padding-left: var(--spacing-4);
+  }
+
+  .subnavi_tab {
+    padding-left: 0;
+
+    > a {
+      min-height: 34px;
+      margin: 1px 0;
+      padding: 0 var(--spacing-3);
+      border-radius: var(--radius-sm);
+      color: var(--main-menu-text-color);
+      font-size: var(--text-md);
+
+      &:hover {
+        background-color: var(--main-menu-hover-bg-color);
+        color: var(--text-color);
+      }
+    }
+
+    &.active > a {
+      background-color: transparent;
+      color: var(--main-menu-active-text-color);
+      font-weight: var(--font-weight_semibold);
+      box-shadow: none;
+    }
+  }
+}
+
+// The parent of the current page keeps its pill and its bar; the sub-item is
+// blue text. Two pills stacked read as two selections.
+#main_navi .main_navi_entry.active:has(.subnavi_tab.active) > a {
+  background-color: var(--main-menu-active-bg-color);
+  color: var(--main-menu-active-text-color);
+  box-shadow: none;
+}
+
+#logout {
+  padding: var(--spacing-2);
+  border-top: 1px solid var(--sidebar-border-color);
+
+  .main_navi_entry > a {
+    min-height: 40px;
+    padding: 0 var(--spacing-3);
+    border-radius: var(--radius-sm);
+    color: var(--text-color-muted);
+
+    &:hover {
+      background-color: var(--main-menu-hover-bg-color);
+      color: var(--text-color);
+    }
+  }
+}
+
+// Header controls: same shape as everything else in the row.
+#user_info {
+  gap: var(--spacing-1);
+  padding-right: var(--spacing-3);
+
+  a,
+  .user,
+  laiss-cms-current-user-name {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    height: 34px;
+    padding: 0 var(--spacing-2);
+    border-radius: var(--radius-pill);
+    color: var(--text-color);
+    font-size: var(--text-md);
+    font-weight: var(--font-weight_semibold);
+
+    &:hover {
+      background-color: var(--icon-button-hover-bg-color);
+      text-decoration: none;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// TABLES
+//
+// No vertical rules, a tinted header, one hairline between rows. The reference
+// uses separation by whitespace and a single rule, not a spreadsheet grid.
+// ---------------------------------------------------------------------------
+.list {
+  border-collapse: separate;
+  border-spacing: 0;
+
+  thead th,
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    height: 44px;
+    padding: 0 var(--spacing-4);
+    background-color: var(--table-header-background-color);
+    border-bottom: 1px solid var(--table-border-color);
+    color: var(--table-header-text-color);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight_semibold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: left;
+
+    &:first-child {
+      border-top-left-radius: var(--radius-md);
+    }
+
+    &:last-child {
+      border-top-right-radius: var(--radius-md);
+    }
+  }
+
+  td {
+    height: 56px;
+    padding: 0 var(--spacing-4);
+    border-bottom: 1px solid var(--table-border-color);
+    border-right: 0 none;
+    vertical-align: middle;
+    font-size: var(--text-md);
+    color: var(--text-color);
+  }
+
+  tr:last-child td {
+    border-bottom: 0 none;
+  }
+
+  tr.even td {
+    background-color: var(--table-row-even-background-color);
+  }
+
+  tr.odd td {
+    background-color: var(--table-row-odd-background-color);
+  }
+
+  tbody tr:hover td {
+    background-color: var(--table-row-hover-color);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// FEEDBACK
+// ---------------------------------------------------------------------------
+laiss-cms-message,
+.notice,
+.flash {
+  border-radius: var(--radius-sm);
+  border-width: 1px;
+  border-left-width: 3px;
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+}
+
+#flash_notices laiss-cms-message {
+  border-radius: var(--radius-sm);
+  box-shadow: var(--elevation-2);
+}
+
+// ---------------------------------------------------------------------------
+// DIALOGS
+// ---------------------------------------------------------------------------
+#laiss_cms_dialog,
+.dialog,
+sl-dialog::part(panel) {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--panel-border-color);
+  box-shadow: var(--elevation-3);
+  overflow: hidden;
+}
+
+#laiss_cms_dialog header,
+.dialog header,
+.dialog-header {
+  height: 56px;
+  padding: 0 var(--spacing-6);
+  border-bottom: 1px solid var(--panel-border-color);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight_semibold);
+}
+
+// ---------------------------------------------------------------------------
+// ELEMENT EDITOR
+//
+// The workspace: each element is a white card with a tinted header, so a page
+// of five elements reads as five cards rather than one long form.
+// ---------------------------------------------------------------------------
+.element-editor {
+  border: 1px solid var(--panel-border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-1);
+  margin-bottom: var(--spacing-3);
+  overflow: hidden;
+
+  &:hover {
+    border-color: var(--grey-300, #d2d7e2);
+    box-shadow: var(--elevation-card);
+  }
+
+  &:focus-within {
+    border-color: var(--button-focus-border-color);
+    box-shadow: var(--button-focus-box-shadow);
+  }
+}
+
+.element-header {
+  min-height: 48px;
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--element-header-bg-color);
+  border-bottom: 1px solid var(--panel-border-color);
+  border-radius: 0;
+
+  &:hover {
+    background-color: var(--element-header-active-bg-color);
+  }
+}
+
+.element-title {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight_semibold);
+  letter-spacing: -0.01em;
+  color: var(--text-color);
+}
+
+.element-toolbar {
+  height: 40px;
+  padding: 0 var(--spacing-3);
+  background-color: var(--element-toolbar-background-color);
+  border-bottom: 1px solid var(--panel-border-color);
+  gap: var(--spacing-1);
+
+  .icon_button {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// SETTINGS
+//
+// The screen this project added, styled in the new grammar: a white card with
+// ruled rows, a pill for each row's effect, and a footer action bar.
+// ---------------------------------------------------------------------------
+.settings-page__title {
+  font-size: var(--text-xl);
+  letter-spacing: -0.02em;
+}
+
+.settings-page__lede {
+  font-size: var(--text-md);
+  color: var(--text-color-muted);
+  max-width: 60ch;
+}
+
+.settings-field {
+  padding: var(--spacing-4) 0;
+  border-bottom: 1px solid var(--border-inset-color);
+
+  &:last-child {
+    border-bottom: 0 none;
+  }
+}
+
+.settings-field__label {
+  font-size: var(--text-md);
+  font-weight: var(--font-weight_semibold);
+  color: var(--form-field-label-color);
+}
+
+.settings-field__hint {
+  font-size: var(--text-sm);
+  color: var(--text-color-muted);
+  line-height: var(--leading-normal);
+}
+
+.settings-input {
+  height: var(--control-height-md);
+  max-width: 24rem;
+  border-radius: var(--radius-sm);
+  border-color: var(--form-field-border-color);
+  font-size: var(--text-md);
+}
+
+.settings-badge {
+  border-radius: var(--radius-pill);
+  padding: 2px var(--spacing-3);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight_semibold);
+  letter-spacing: 0.02em;
+
+  &--runtime {
+    border: 1px solid var(--notice-success-border-color);
+    background-color: var(--notice-success-background-color);
+    color: var(--notice-success-text-color);
+  }
+
+  &--restart {
+    border: 1px solid var(--notice-warning-border-color);
+    background-color: var(--notice-warning-background-color);
+    color: var(--notice-warning-text-color);
+  }
+}
+
+.settings-switch {
+  &__track {
+    width: 40px;
+    height: 22px;
+    border-radius: var(--radius-pill);
+    border-color: var(--form-field-border-color);
+    background-color: var(--grey-200, #e4e7ee);
+  }
+
+  &__thumb {
+    width: 16px;
+    height: 16px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 2px rgb(16 24 40 / 20%);
+  }
+
+  &__input:checked + .settings-switch__track {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+  }
+
+  &__input:checked + .settings-switch__track .settings-switch__thumb {
+    transform: translateX(18px);
+    background-color: #ffffff;
+  }
+}
+
+.settings-form__actions {
+  border-top: 1px solid var(--panel-border-color);
+  background-color: var(--panel-background-color);
+  // Stays reachable on a long settings page without a floating bar.
+  position: sticky;
+  bottom: 0;
+  padding: var(--spacing-3) var(--spacing-6);
+  margin: var(--spacing-5) calc(-1 * var(--spacing-6))
+    calc(-1 * var(--spacing-6));
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+// ---------------------------------------------------------------------------
+// DASHBOARD
+// ---------------------------------------------------------------------------
+#dashboard {
+  .widget,
+  .dashboard-widget {
+    background-color: var(--panel-background-color);
+    border: 1px solid var(--panel-border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--elevation-card);
+    padding: var(--spacing-5);
+  }
+
+  h2,
+  h3 {
+    letter-spacing: -0.01em;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PAGINATION
+// ---------------------------------------------------------------------------
+.pagination,
+nav.pagination {
+  a,
+  span {
+    min-width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+  }
+
+  .current,
+  .active {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--accent-contrast-color);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The reference's density: horizontal space exceeds vertical, so a section
+// gets more breathing room at the sides than between its rows.
+// ---------------------------------------------------------------------------
+.journal-section + .journal-section {
+  margin-top: var(--spacing-8);
+}

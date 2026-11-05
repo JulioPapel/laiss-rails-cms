@@ -184,6 +184,14 @@
   --main-menu-icon-color: var(--journal-paper-3);
   --main-menu-active-bg-color: var(--journal-paper-1);
   --main-menu-active-text-color: var(--journal-ink-7);
+  /* Hover is a different state from active and must not look like it. Active is
+     the paper inversion above; hover is one step off the menu background, so a
+     hovered row tints without claiming to be the current page.
+     ink-5 measures 1.63:1 against the menu: below the 3:1 UI minimum, which is
+     correct here — hover is a tint, not a boundary, and the accessible signal is
+     the pointer itself. It is deliberately the same value in both themes so the
+     two sidebars behave identically. */
+  --main-menu-hover-bg-color: var(--journal-ink-5);
 
   /* Notices — monochrome, differentiated by rule weight and label, not hue */
   --notice-info-background-color: var(--journal-paper-3);
@@ -237,6 +245,9 @@
 
   /* Tags */
   --tag-background-color: var(--journal-paper-3);
+  /* The alternating tag row. Was a hardcoded #eaf3f9 that only worked in
+     light mode and sat outside the palette; it is now the next paper step. */
+  --tag-alternate-background-color: var(--journal-paper-2);
   --tag-hover-background-color: var(--journal-paper-4);
   --tag-active-background-color: var(--journal-ink-6);
   --tag-active-text-color: var(--journal-paper-0);
@@ -281,16 +292,22 @@
 @mixin dark-theme {
   @include journal-chrome;
 
-  /* Surfaces */
-  --body-background-color: var(--journal-ink-8);
-  --panel-background-color: var(--journal-ink-7);
-  --panel-border-color: var(--journal-ink-5);
+  /* Surfaces.
+     Phase 9: the page background was ink-8 (#070504), which is within 3% of
+     pure black. On a large monitor that reads as a void: separations become
+     invisible, text blooms, and the whole screen looks unlit rather than dark.
+     The page is now ink-7 and the panels sit on ink-6, so the hierarchy is
+     visible as two distinct dark surfaces. Both still read as "dark mode" — the
+     lightest of the three is still 15:1 from white text. */
+  --body-background-color: var(--journal-ink-7);
+  --panel-background-color: var(--journal-ink-6);
+  --panel-border-color: var(--journal-ink-3);
   --panel-box-shadow: none;
   --sidebar-background-color: var(--journal-ink-8);
-  --header-background: var(--journal-ink-7);
-  --toolbar-bg-color: var(--journal-ink-7);
-  --toolbar-border-bottom: var(--journal-rule-width) solid var(--journal-ink-5);
-  --toolbar-spacer-color: var(--journal-ink-6);
+  --header-background: var(--journal-ink-6);
+  --toolbar-bg-color: var(--journal-ink-6);
+  --toolbar-border-bottom: var(--journal-rule-width) solid var(--journal-ink-4);
+  --toolbar-spacer-color: var(--journal-ink-4);
 
   /* Text */
   --text-color: var(--journal-ink-1);
@@ -415,12 +432,20 @@
   --icon-button-linked-border-color: var(--journal-ink-4);
   --icon-button-linked-hover-border-color: var(--journal-ink-3);
 
-  /* Main menu — paper block on ink, the inverted cover */
-  --main-menu-bg-color: var(--journal-ink-7);
+  /* Main menu — ink block, paper type. The journal's cover.
+     Phase 9: the menu is one step DARKER than the page (ink-8 against ink-7).
+     They were the same tone before, so the sidebar and the content merged into
+     a single black field with no edge between them. The step gives the column
+     a readable boundary without adding a border. */
+  --main-menu-bg-color: var(--journal-ink-8);
   --main-menu-text-color: var(--journal-ink-1);
   --main-menu-icon-color: var(--journal-ink-2);
   --main-menu-active-bg-color: var(--journal-paper-1);
   --main-menu-active-text-color: var(--journal-ink-8);
+  /* Same value as the light theme: in dark the menu is ink-8, so ink-5 steps
+     lighter, and in light the menu is ink-7, so it steps lighter too. One value,
+     one behaviour. */
+  --main-menu-hover-bg-color: var(--journal-ink-5);
 
   /* Notices */
   --notice-info-background-color: var(--journal-ink-6);
@@ -474,6 +499,7 @@
 
   /* Tags */
   --tag-background-color: var(--journal-ink-6);
+  --tag-alternate-background-color: var(--journal-ink-7);
   --tag-hover-background-color: var(--journal-ink-5);
   --tag-active-background-color: var(--journal-paper-1);
   --tag-active-text-color: var(--journal-ink-8);

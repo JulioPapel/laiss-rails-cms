@@ -1,30 +1,32 @@
-@use "themes";
+@use "themes" as journal;
+@use "modern-theme";
 
-// Theme selection.
+// Theme entry point.
 //
-// Default: follow the operating system. That behaviour is unchanged.
+// THE PRODUCT SHIPS ONE THEME. The Modern (light) theme is the default and the
+// only one reachable from the UI: the top-bar light/dark toggle is gone. It
+// applies unconditionally, so there is no media query, no `prefers-color-scheme`
+// dependency and no possible flash of the wrong theme.
 //
-// Explicit override: set `data-theme="dark"` or `data-theme="light"` on <html>
-// to force one regardless of the OS. This is useful for hosts that expose a
-// theme switch, and it is how the theme is exercised in tests, since a headless
-// browser cannot emulate prefers-color-scheme. The attribute rules come last so
-// they win over the media queries without any !important.
-@media (prefers-color-scheme: dark) {
-  html {
-    @include themes.dark-theme;
-  }
+// The Journal light/dark themes in `_themes.scss` still compile and are still
+// reachable by setting `data-theme` explicitly, because dark mode was a stated
+// requirement earlier in the project: removing the capability is a one-line
+// change, re-adding it is not. Nothing in the admin sets that attribute any
+// more. To bring the choice back, restore the toggle partial and map it to the
+// attribute values below.
+// `:root,` as well as `html`: `_custom-properties.scss` declares its defaults on
+// `:root`, which is a pseudo-class and outranks a bare type selector. Matching
+// it here keeps the modern values from being silently beaten on the admin pages.
+:root,
+html {
+  @include modern-theme.modern-theme;
 }
 
-@media (prefers-color-scheme: light) {
-  html {
-    @include themes.light-theme;
-  }
+// Host escape hatches, deliberately not linked from any UI.
+html[data-theme="journal-light"] {
+  @include journal.light-theme;
 }
 
-html[data-theme="dark"] {
-  @include themes.dark-theme;
-}
-
-html[data-theme="light"] {
-  @include themes.light-theme;
+html[data-theme="journal-dark"] {
+  @include journal.dark-theme;
 }

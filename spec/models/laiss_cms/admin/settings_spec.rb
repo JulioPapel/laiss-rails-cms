@@ -42,6 +42,34 @@ module LaissCms
         it "has read-only fields for the values it cannot change" do
           expect(described_class::FIELDS.count(&:restart?)).to be > 0
         end
+
+        # A missing translation renders the key itself in the UI, which is what
+        # happened when the catalogue and the locale file drifted apart. This
+        # asserts the screen is actually readable rather than just rendering.
+        it "has a human label for every field" do
+          described_class::FIELDS.each do |field|
+            key = "settings.fields.#{field.key.tr(".", "_")}"
+            label = ::I18n.t(key, scope: "laiss_cms", default: nil)
+            expect(label).to be_present, "missing label #{key}"
+            expect(label).not_to include("translation missing")
+          end
+        end
+
+        it "has a hint for every field" do
+          described_class::FIELDS.each do |field|
+            key = "settings.fields.#{field.key.tr(".", "_")}_hint"
+            hint = ::I18n.t(key, scope: "laiss_cms", default: nil)
+            expect(hint).to be_present, "missing hint #{key}"
+          end
+        end
+
+        it "has a title for every section" do
+          described_class::SECTIONS.each do |section|
+            key = "settings.sections.#{section}"
+            title = ::I18n.t(key, scope: "laiss_cms", default: nil)
+            expect(title).to be_present, "missing section title #{key}"
+          end
+        end
       end
 
       describe ".read" do

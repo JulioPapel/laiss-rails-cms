@@ -743,7 +743,7 @@ laiss-cms-publish-element-button {
   z-index: 0;
   width: 100%;
   padding: var(--spacing-1);
-  background-color: var(--picture-thumbnail-toolbar-bg-color, #fff);
+  background-color: var(--picture-thumbnail-toolbar-bg-color, var(--panel-background-color));
   border-bottom-left-radius: var(--border-radius_medium);
   border-bottom-right-radius: var(--border-radius_medium);
 

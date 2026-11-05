@@ -1,0 +1,442 @@
+@use "../mixins";
+
+// ===========================================================================
+// Element editor polish — Phase 9.
+//
+// The element editor is the main workspace, so it gets the most attention.
+// This file is deliberately ADDITIVE: it does not rewrite `elements.scss`, it
+// refines it, so the ~56 custom elements and their ERB templates keep working
+// untouched.
+//
+// Three problems it addresses, all visible in the before screenshots:
+//
+//   1. NO HIERARCHY. A header, a toolbar and a form all sat on the same
+//      background tone, so the eye had no entry point. The header now carries
+//      the element name at a readable weight and size, on a distinguishable
+//      surface, with the drag affordance living IN it rather than floating
+//      beside it.
+//
+//   2. THE DRAG TARGET WAS INVISIBLE. The grab handle was a 16px icon that only
+//      appeared on hover — on a touch device it never appeared at all. It is
+//      now always present at low contrast and strengthens on hover/drag, at the
+//      sm control size so it is a real target.
+//
+//   3. THE FORM WAS NOT ON A GRID. Labels, inputs and hints had different
+//      leadings and no shared column, so rows did not line up. The ingredient
+//      rows now sit on one baseline grid: label column, control column, hint
+//      underneath the control.
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// The card.
+// ---------------------------------------------------------------------------
+.element-editor {
+  // One radius everywhere on the card, including the header's top corners, so
+  // the header cannot float free of the body it belongs to.
+  overflow: hidden;
+  border-color: var(--border-color);
+  background-color: var(--element-editor-background-color);
+
+  // A card is a container, so it separates by rule and spacing rather than by
+  // a drop shadow. The only state that gets elevation is the one the user is
+  // actually manipulating (being dragged), because then it is genuinely lifted.
+  & + & {
+    margin-top: 0;
+  }
+
+  &:hover {
+    border-color: var(--text-color-muted);
+  }
+
+  // The element being dragged is lifted, which is the one honest use of
+  // elevation inside the editor.
+  &.is-dragged,
+  &.sortable-ghost {
+    border-color: var(--element-editor-dragged-border-color);
+    box-shadow: var(--elevation-1);
+  }
+
+  // Focus-within: the card currently being edited reads as active without
+  // stealing the focus ring from the control that has focus.
+  &:focus-within {
+    border-color: var(--text-color);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The header: the card's entry point.
+// ---------------------------------------------------------------------------
+.element-header {
+  gap: var(--spacing-2);
+  // Comfortable padding — the old --spacing-2 all round made the header the
+  // same weight as the toolbar below it.
+  padding: var(--spacing-2) var(--spacing-3);
+  min-height: var(--control-height-lg);
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color var(--journal-motion-fast) var(--journal-motion-easing),
+    border-color var(--journal-motion-fast) var(--journal-motion-easing);
+
+  .expanded > & {
+    border-bottom-color: var(--border-color);
+  }
+
+  &:hover {
+    background-color: var(--element-header-active-bg-color);
+  }
+}
+
+.element-title {
+  // The element's name is the card's identity: readable weight, one step up
+  // from body, and it never truncates to nothing.
+  font-size: var(--text-md);
+  font-weight: var(--font-weight_semibold);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--journal-letter-spacing-tight);
+  color: var(--text-color);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// The element's type, when shown next to its title, is metadata — quieter than
+// the title but still legible.
+.element-header .element-name,
+.element-header .preview_text_element_name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight_normal);
+  line-height: var(--leading-snug);
+  color: var(--text-color-muted);
+  letter-spacing: var(--journal-letter-spacing-wide);
+  text-transform: uppercase;
+}
+
+// ---------------------------------------------------------------------------
+// Drag affordance, always visible.
+// ---------------------------------------------------------------------------
+.element-handle {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--text-color-muted);
+  // Always rendered, at low contrast: a drag target that only exists on hover
+  // is unreachable by touch and undiscoverable by anyone else.
+  opacity: 0.55;
+  transition: opacity var(--journal-motion-fast) var(--journal-motion-easing);
+
+  .element-header:hover &,
+  .element-editor:focus-within & {
+    opacity: 1;
+  }
+
+  &.draggable:hover {
+    background-color: var(--icon-button-hover-bg-color);
+    color: var(--text-color);
+  }
+
+  // The element type icon was swapped for the grab icon on hover, which meant
+  // the icon changed identity under the pointer. Both stay put now: the type
+  // icon identifies the card, the handle indicates draggability.
+  .handle-icon,
+  .element-icon {
+    width: var(--icon-size-sm);
+    height: var(--icon-size-sm);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Toolbar.
+// ---------------------------------------------------------------------------
+.element-toolbar {
+  // 37px was an outlier between the md (32) and lg (40) control steps and it
+  // made the icon buttons inside it float. It now matches what it contains.
+  height: var(--control-height-md);
+  padding: 0 var(--spacing-2);
+  gap: var(--spacing-1);
+  border-color: var(--border-color);
+  align-items: center;
+
+  .icon_button {
+    // Fits the 32px row: a 32px button in a 32px bar with no padding left the
+    // hover fill touching both edges.
+    width: 26px;
+    height: 26px;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// The form: one baseline grid.
+//
+// Three columns — label, control, status — with the hint under the control.
+// The label column is fixed so labels align down the card; the control column
+// takes the rest. Inputs, selects and textareas share a height and a leading,
+// so a row of mixed controls has one baseline instead of three.
+// ---------------------------------------------------------------------------
+.element-editor .ingredient,
+.element-editor .form_field,
+.element-editor .ingredient_group {
+  padding: 0 var(--spacing-3);
+}
+
+.element-editor {
+  .form_field,
+  .ingredient {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--spacing-1) var(--spacing-3);
+    padding-top: var(--spacing-2);
+    padding-bottom: var(--spacing-2);
+    border-bottom: 1px solid var(--border-inset-color);
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    > label,
+    > .label {
+      flex: 0 0 32%;
+      max-width: 32%;
+      padding-top: calc(
+        (var(--control-height-md) - var(--leading-normal) * 1em) / 2
+      );
+      font-size: var(--text-md);
+      font-weight: var(--font-weight_semibold);
+      line-height: var(--leading-normal);
+      color: var(--form-field-label-color);
+      // Labels are not controls.
+      cursor: default;
+    }
+
+    .input,
+    .select,
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    // Hints sit under the control they describe, not under the label.
+    .hint,
+    .inline-hints,
+    p.hint {
+      flex: 1 1 100%;
+      margin: var(--spacing-0) 0 0 calc(32% + var(--spacing-3));
+      font-size: var(--text-sm);
+      line-height: var(--leading-normal);
+      color: var(--text-color-muted);
+    }
+  }
+
+  // Checkboxes are their own row shape: the box is the control and the label
+  // sits beside it, so the label column does not apply.
+  .form_field.boolean,
+  .form_field.check_boxes {
+    > label {
+      flex: 1 1 auto;
+      max-width: none;
+      padding-top: 0;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      min-height: var(--journal-touch-target);
+    }
+
+    input[type="checkbox"] {
+      flex: 0 0 auto;
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--text-color);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Inputs: one considered control, not a browser default.
+// ---------------------------------------------------------------------------
+.element-editor {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="url"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  select,
+  textarea {
+    height: var(--control-height-md);
+    padding: 0 var(--spacing-2);
+    border: 1px solid var(--form-field-border-color);
+    border-radius: var(--radius-sm);
+    background-color: var(--form-field-background-color);
+    color: var(--form-field-text-color);
+    font-family: var(--font-sans);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+    transition:
+      border-color var(--journal-motion-fast) var(--journal-motion-easing),
+      box-shadow var(--journal-motion-fast) var(--journal-motion-easing);
+
+    &::placeholder {
+      // Placeholders are hints, so they must clear the text minimum rather than
+      // disappearing into the field.
+      color: var(--text-color-muted);
+      opacity: 1;
+    }
+
+    &:hover:not(:disabled):not([readonly]) {
+      border-color: var(--text-color-muted);
+    }
+
+    &:focus-visible {
+      @include mixins.default-focus-style;
+    }
+
+    &:disabled,
+    &[readonly] {
+      background-color: var(--form-field-disabled-bg-color);
+      color: var(--form-field-disabled-text-color);
+      cursor: not-allowed;
+    }
+
+    // Invalid: a heavier rule rather than a new hue, matching the notice
+    // convention. The message below the field carries the actual reason.
+    &[aria-invalid="true"],
+    &.is-invalid {
+      border-color: var(--text-color);
+      box-shadow: inset 0 0 0 1px var(--text-color);
+    }
+  }
+
+  textarea {
+    height: auto;
+    min-height: calc(var(--control-height-md) * 2.5);
+    padding: var(--spacing-2);
+    resize: vertical;
+  }
+
+  select {
+    // Room for the native arrow, so the last character is never clipped.
+    padding-right: var(--spacing-6);
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, currentcolor 50%),
+      linear-gradient(135deg, currentcolor 50%, transparent 50%);
+    background-position:
+      calc(100% - 14px) calc(50% + 1px),
+      calc(100% - 9px) calc(50% + 1px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Add / remove controls.
+//
+// These are the buttons that make the editor usable, and they were rendering as
+// unstyled links with no hit area. They are now control-height buttons with an
+// obvious label, and remove is visually distinct from add.
+// ---------------------------------------------------------------------------
+.element-editor {
+  .add-ingredient,
+  .remove-ingredient,
+  .add_element,
+  .remove_element {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-1);
+    min-height: var(--control-height-md);
+    padding: 0 var(--spacing-2);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-color-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight_normal);
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background-color var(--journal-motion-fast) var(--journal-motion-easing),
+      color var(--journal-motion-fast) var(--journal-motion-easing);
+
+    &:hover {
+      background-color: var(--icon-button-hover-bg-color);
+      color: var(--text-color);
+    }
+
+    &:focus-visible {
+      @include mixins.default-focus-style;
+    }
+  }
+
+  .remove-ingredient,
+  .remove_element {
+    &:hover {
+      border-color: var(--border-color);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Empty element: the card says what to do next rather than showing a blank box.
+// ---------------------------------------------------------------------------
+.element-editor .element-ingredients:empty::after,
+.element-editor .element-body:empty::after {
+  content: attr(data-empty-message);
+  display: block;
+  padding: var(--spacing-4) var(--spacing-3);
+  color: var(--text-color-muted);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  text-align: center;
+}
+
+// ---------------------------------------------------------------------------
+// Narrow screens: the three-column form collapses to stacked rows, because a
+// 32% label column on a 375px screen leaves an unusable control.
+// ---------------------------------------------------------------------------
+@media screen and (max-width: 767px) {
+  .element-editor {
+    .form_field,
+    .ingredient {
+      display: block;
+      padding-top: var(--spacing-3);
+      padding-bottom: var(--spacing-3);
+
+      > label,
+      > .label {
+        display: block;
+        max-width: none;
+        padding-top: 0;
+        margin-bottom: var(--spacing-1);
+      }
+
+      .hint,
+      .inline-hints,
+      p.hint {
+        margin-left: 0;
+        margin-top: var(--spacing-1);
+      }
+    }
+
+    // Touch targets on the nested add/remove controls.
+    .add-ingredient,
+    .remove-ingredient,
+    .add_element,
+    .remove_element {
+      min-height: var(--journal-touch-target);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .element-editor,
+  .element-header,
+  .element-handle {
+    transition: none;
+  }
+}

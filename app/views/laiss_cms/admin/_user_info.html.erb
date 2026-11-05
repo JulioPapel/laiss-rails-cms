@@ -1,8 +1,10 @@
 <div id="user_info">
   <%= render LaissCms::Admin::CurrentUserName.new(user: current_laiss_cms_user) %>
-  <%# The theme control sits with the other per-user controls: it is a personal
-      preference, exactly like timezone and language, not a site-wide setting. %>
-  <%= render "laiss_cms/admin/theme_toggle", current: laiss_cms_theme_choice %>
+  <%# The light/dark control was here. The product now ships a single theme, so
+      a toggle that cannot change anything would be a lie. The element and its
+      controller are still in the tree (`laiss-cms-theme-toggle`) and the
+      preference model still stores a choice; re-enabling the control is
+      restoring this one render call. %>
   <%= render LaissCms::Admin::TimezoneSelect.new %>
   <%= render LaissCms::Admin::LocaleSelect.new %>
 </div>

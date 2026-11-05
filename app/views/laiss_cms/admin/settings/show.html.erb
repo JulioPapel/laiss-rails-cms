@@ -40,7 +40,7 @@
 
             <div class="settings-field<%= " settings-field--read-only" if read_only %>">
               <div class="settings-field__label">
-                <%= label_tag id, LaissCms.t("settings.fields.#{field.key.tr('.', '_')}", default: field.key.humanize) %>
+                <%= label_tag id, LaissCms.t("settings.fields.#{field.key.tr(".", "_")}") %>
               </div>
 
               <div class="settings-field__control">
@@ -71,7 +71,7 @@
                 <% end %>
 
                 <p class="settings-field__hint">
-                  <%= LaissCms.t("settings.fields.#{field.key.tr('.', '_')}_hint", default: "") %>
+                  <%= LaissCms.t("settings.fields.#{field.key.tr(".", "_")}_hint") %>
                 </p>
               </div>
 
