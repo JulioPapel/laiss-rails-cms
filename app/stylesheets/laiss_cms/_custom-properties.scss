@@ -1,19 +1,54 @@
+// Laiss Labs brand tokens.
+//
+// AUTHORITATIVE values are the six colours taken directly from the Logo 2026
+// masters (Mark.svg / Logo.svg and their variants):
+//
+//   accent  #FC8708   orange path in the mark
+//   deep    #00349C   stroke of the mark's line art
+//   ink     #1A1A1A   wordmark fill
+//   paper   #FAFAFA   body fill of the mark
+//   white   #FFFFFF
+//   black   #000000
+//
+// Everything else here is DERIVED: generated in OKLCH by holding the brand hue
+// (deep = 262.15, accent = 56.40) and varying lightness, per the workspace
+// design reference ("derive shades from one hue", "neutrals carry a trace of the
+// brand"). Derived values are marked `[derived]` and may be adjusted without
+// contradicting the brand masters; the six above may not.
+//
+// Regenerate with: script/brand/palette.rb
 :root {
-  /* Dark Colors */
-  --a-lightest-grey: hsl(200deg, 5%, 90%);
-  --a-lighter-grey: hsl(200deg, 5%, 70%);
-  --a-light-grey: hsl(200deg, 5%, 35%);
-  --a-grey: hsl(200deg, 5%, 22.5%);
-  --a-dark-grey: hsl(200deg, 5%, 17.5%);
-  --a-darker-grey: hsl(200deg, 5%, 15%);
-  --a-darkest-grey: hsl(200deg, 5%, 12.5%);
+  /* Authortitative brand colours */
+  --color-brand-accent: #fc8708;        /* [auth] accent */
+  --color-brand-deep: #00349c;          /* [auth] deep */
+  --color-brand-ink: #1a1a1a;           /* [auth] ink */
+  --color-brand-paper: #fafafa;         /* [auth] paper */
+  --color-white: #ffffff;               /* [auth] white */
+  --color-black: #000000;               /* [auth] black */
 
-  /* Light Colors */
-  --color-blue_very_light: hsl(203deg, 32%, 97%);
-  --color-blue_light: hsl(203deg, 32%, 85%);
-  --color-blue_medium: hsl(212deg, 52%, 36%);
-  --color-blue_dark: hsl(212deg, 52%, 26%);
+  /* Dark chrome. [derived] brand-tinted neutrals (hue 262, C .008). */
+  --a-lightest-grey: #dbdee3;
+  --a-lighter-grey: #9c9ea3;
+  --a-light-grey: #4d5054;
+  --a-grey: #2c2e32;
+  --a-dark-grey: #1e2024;
+  --a-darker-grey: #171a1d;
+  --a-darkest-grey: #101215;
 
+  /* Deep ramp. blue_dark is [auth] deep; the rest are [derived]. */
+  --color-blue_very_light: #eef5ff;     /* [derived] */
+  --color-blue_light: #c4d8fe;          /* [derived] */
+  --color-blue_medium: #4a72be;         /* [derived] */
+  --color-blue_dark: #00349c;           /* [auth] deep */
+  --color-blue_very_dark: #001571;      /* [derived] */
+
+  /* Accent ramp. orange_dark is [auth] accent; the rest are [derived]. */
+  --color-orange_light: #ffe0c8;        /* [derived] */
+  --color-orange_medium: #ffb984;       /* [derived] */
+  --color-orange_dark: #fc8708;         /* [auth] accent */
+  --color-orange_very_dark: #c65f00;    /* [derived] */
+
+  /* Functional state colours. Not brand hues, kept recognisable. */
   --color-green_very_light: hsl(88deg, 47%, 88%);
   --color-green_light: hsl(127deg, 25%, 69%);
   --color-green_medium: hsl(127deg, 25%, 48%);
@@ -23,22 +58,17 @@
   --color-yellow_medium: hsl(56deg, 68%, 85%);
   --color-yellow_dark: hsl(56deg, 53%, 29%);
 
-  --color-orange_medium: hsl(42deg, 100%, 74%);
-  --color-orange_dark: hsl(28deg, 77%, 68%);
-  --color-orange_very_dark: hsl(28deg, 77%, 48%);
-
   --color-red_very_light: hsl(0deg, 47%, 88%);
   --color-red_light: hsl(0deg, 25%, 69%);
   --color-red_medium: hsl(0deg, 51%, 42%);
   --color-red_dark: hsl(0deg, 51%, 25%);
 
-  --color-grey_very_light: hsl(0deg, 0%, 97%);
-  --color-grey_light: hsl(0deg, 0%, 94%);
-  --color-grey_medium: hsl(0deg, 0%, 78%);
-  --color-grey_dark: hsl(0deg, 0%, 40%);
-  --color-grey_very_dark: hsl(0deg, 0%, 20%);
-
-  --color-white: hsl(0deg, 0%, 100%);
+  /* Surface ramp. [derived] brand-tinted neutrals (hue 262). */
+  --color-grey_very_light: #f4f6f8;
+  --color-grey_light: #e9ebef;
+  --color-grey_medium: #b5b7bd;
+  --color-grey_dark: #45484d;
+  --color-grey_very_dark: #14161b;
 
   /* Sizes */
   --spacing-0: 2px;
@@ -57,9 +87,13 @@
   --font-mono:
     Menlo, Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal,
     monospace;
+  /* Inter is self-hosted (see _fonts.scss). Fallbacks are system UI stacks so
+     the admin stays legible if the webfont is blocked. `Inter var` and `Inter`
+     cover both the variable and static installs, so a locally installed Inter
+     is used before the webfont. */
   --font-sans:
-    "Open Sans", "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Verdana,
-    Tahoma, sans-serif;
+    "Inter", "Inter var", system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
 
   /* Font Size - at the moment only in Pixel, because the base font size is 12px */
   --font-size_small: 10px; /* 0.875rem */

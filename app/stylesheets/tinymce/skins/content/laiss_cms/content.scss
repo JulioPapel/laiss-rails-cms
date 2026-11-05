@@ -6,6 +6,12 @@
 */
 
 @use "../../../../laiss_cms/custom-properties";
+// The editor renders in its own iframe document, which does not inherit the
+// admin's @font-face declarations. Without this the surrounding admin would use
+// Inter while the editable content silently fell back to system-ui.
+// content.min.css is emitted into app/assets/builds/tinymce/skins/content/<skin>/,
+// four levels below builds/. See _fonts.scss.
+@use "../../../../laiss_cms/fonts" with ($font-path: "../../../../laiss_cms");
 
 html {
   font-size: 13px;

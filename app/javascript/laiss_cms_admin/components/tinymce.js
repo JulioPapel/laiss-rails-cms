@@ -178,10 +178,15 @@ export class Tinymce extends HTMLElement {
       }
     })
 
+    // Order matters: `tinymce_defaults` also carries `content_css` (as a
+    // {light, dark} map read by the server), so the defaults must be spread
+    // FIRST and the resolved value applied after, or the map would be handed to
+    // TinyMCE verbatim and it would ignore it — falling back to its built-in
+    // content CSS and losing the Inter font inside the editor iframe.
     const config = {
-      content_css: this.preferredContentCss,
       ...readJSONScript("laiss_cms_tinymce_defaults"),
       ...customConfig,
+      content_css: this.preferredContentCss,
       language: currentLocale(),
       selector: `#${this.editorId}`,
       skin: this.preferredTheme

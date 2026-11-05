@@ -6,6 +6,10 @@
 */
 
 @use "../../../../laiss_cms/custom-properties";
+// Same reason as the light content skin: the iframe needs its own @font-face.
+// content.min.css is emitted into app/assets/builds/tinymce/skins/content/<skin>/,
+// four levels below builds/. See _fonts.scss.
+@use "../../../../laiss_cms/fonts" with ($font-path: "../../../../laiss_cms");
 
 html {
   font-size: 13px;

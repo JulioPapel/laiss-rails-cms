@@ -545,6 +545,11 @@
     display: flex;
     flex: 1 1 100%;
     justify-content: center;
+    // The Laiss wordmark is injected inline and its body fills with
+    // currentColor, so it follows the surrounding theme: white on the dark
+    // widget, ink on the light one. The mark's deep blue and accent orange are
+    // hardcoded in the artwork and stay brand-authoritative either way.
+    color: var(--dashboard-widget-text-color, var(--text-color));
 
     > svg {
       width: auto;

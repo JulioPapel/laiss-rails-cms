@@ -1,5 +1,7 @@
 @use "defaults";
-@use "fonts";
+// admin.css is emitted into app/assets/builds/laiss_cms/, so the fonts are two
+// levels up. See _fonts.scss for why these URLs must stay relative.
+@use "fonts" with ($font-path: ".");
 @use "admin/archive";
 @use "admin/attachments";
 @use "admin/base";
