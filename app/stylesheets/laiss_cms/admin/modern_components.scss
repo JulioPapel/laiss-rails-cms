@@ -762,8 +762,29 @@ dialog.laiss-cms-dialog-container,
 // DASHBOARD
 // ---------------------------------------------------------------------------
 #dashboard {
+  // The widget SHELL is .widget > turbo-frame, and every widget inside it now renders
+  // the theme's own .card (greeting, stat cards, system info) or a bare .widget-body
+  // (the lists). Giving the shell the panel background, border, radius and shadow as
+  // well produced a card inside a card: a 1px border in --panel-border-color with a
+  // 12px radius wrapping a 1px border in rgba(0,0,0,.125) with a 4px radius, two
+  // different greys a pixel apart. Measured on the stat cards before this change.
+  //
+  // So the shell carries no surface of its own, only the spacing between widgets. The
+  // theme's .card is the card.
   .widget,
   .dashboard-widget {
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  // The list widgets (locked pages, recent pages, sites, online users, usage) render a
+  // bare .widget-body with no .card of their own, so the surface goes on them. Ones
+  // that DO render a .card (greeting, stats, system info) are excluded, or they would
+  // get the double border back one level down.
+  > .container-fluid > .row > div[class*="col-"] > .widget > turbo-frame > .widget-body {
     background-color: var(--panel-background-color);
     border: 1px solid var(--panel-border-color);
     border-radius: var(--radius-md);
