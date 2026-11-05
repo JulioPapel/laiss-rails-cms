@@ -47,7 +47,7 @@ permissions:
 jobs:
   dispatch:
     name: Tell railscms.laiss.pt
-    runs-on: ubuntu-latest  # hosted: short, stateless, no repo secrets beyond GITHUB_TOKEN
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     # Skip a failed or cancelled CI run on main. Tag pushes and manual runs have
     # no workflow_run payload, so they pass.
