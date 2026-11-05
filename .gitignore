@@ -12,6 +12,9 @@ log
 spec/dummy/app/assets/builds/*
 !spec/dummy/app/assets/builds/.keep
 spec/dummy/db/*.sqlite3*
+# Written by `laiss_cms:test:prepare`, which runs the installer. Regenerable build
+# output, not source.
+spec/dummy/db/seeds/
 spec/dummy/postcss.config.js
 spec/dummy/public/assets/
 spec/dummy/uploads/
