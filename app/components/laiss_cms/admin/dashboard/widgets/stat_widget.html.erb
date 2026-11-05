@@ -1,23 +1,38 @@
-<div class="widget-body">
-  <div class="name">
-    <% label = capture do %>
-      <% if icon %>
-        <laiss-cms-icon name="<%= icon %>"></laiss-cms-icon>
+<%# Stat card, adopting the theme's .stat-widget-two structure verbatim.
+    Source: theme/index.html —
+
+      .col-lg-3.col-sm-6 > .card > .stat-widget-two.card-body
+        .stat-content > .stat-text + .stat-digit
+        .progress > .progress-bar.progress-bar-<variant>.w-<n>
+
+    Our data goes into .stat-text (the label) and .stat-digit (the count).
+
+    The theme's .progress bar is NOT rendered. It exists in the theme to show a
+    proportion ("85% of budget spent"), and our widgets carry a count plus an optional
+    infos line — there is no proportion to express. Rendering a bar at an invented
+    width would be exactly the kind of fabrication this project avoids, so the element
+    is omitted rather than faked. %>
+<div class="col-lg-3 col-sm-6">
+  <div class="card">
+    <div class="stat-widget-two card-body widget-body">
+      <div class="stat-content">
+        <div class="stat-text">
+          <% if link %>
+            <%= link_to title, link, data: {turbo_frame: "_top"} %>
+          <% else %>
+            <%= title %>
+          <% end %>
+        </div>
+        <div class="stat-digit count">
+          <% if icon %>
+            <laiss-cms-icon name="<%= icon %>"></laiss-cms-icon>
+          <% end %>
+          <%= number_with_delimiter(count) %>
+        </div>
+      </div>
+      <% if infos %>
+        <div class="stat-text m-t-10 infos"><small><%= infos %></small></div>
       <% end %>
-      <%= title %>
-    <% end %>
-    <% if link %>
-      <%= link_to label, link, class: "label-with-icon", data: {turbo_frame: "_top"} %>
-    <% else %>
-      <span class="label-with-icon"><%= label %></span>
-    <% end %>
-  </div>
-  <div class="count">
-    <%= number_with_delimiter(count) %>
-  </div>
-  <% if infos %>
-    <div class="infos">
-      <%= infos %>
     </div>
-  <% end %>
+  </div>
 </div>

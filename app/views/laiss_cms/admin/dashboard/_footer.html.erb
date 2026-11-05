@@ -1,20 +1,17 @@
-<footer>
-  <%#
-    Third-party credits, kept as text rather than links.
-
-    The licences require attribution, not a hyperlink. These four were external
-    links with target="_blank": they took a CMS author out of the admin and into
-    a browser tab they did not ask for, with no way back except the back button.
-    An internal tool should not do that to its users, so the credit stays and the
-    link goes. The URLs live in THIRD_PARTY_NOTICES.md for anyone who needs them.
-  %>
-  <div id="legal_info">
-    <%= LaissCms.t('LaissCms is open software and itself uses open software and free resources:') %>
-    <ul>
-      <li>Ruby on Rails</li>
-      <li>Shoelace</li>
-      <li>TinyMCE</li>
-      <li>Remix Icons</li>
-    </ul>
+<%# Third-party credits, in the theme's card.
+    The licences require attribution, not a hyperlink. These four were external links
+    with target="_blank": they took a CMS author out of the admin and into a browser
+    tab they did not ask for, with no way back except the back button. The credit
+    stays and the link goes. The URLs live in THIRD-PARTY-NOTICES.md. %>
+<div class="row">
+  <div class="col-lg-12">
+    <div class="card">
+      <div class="card-body">
+        <p class="text-muted m-b-0 f-s-12">
+          <%= LaissCms.t('LaissCms is open software and itself uses open software and free resources:') %>
+          Ruby on Rails &middot; Shoelace &middot; TinyMCE &middot; Remix Icons
+        </p>
+      </div>
+    </div>
   </div>
-</footer>
+</div>

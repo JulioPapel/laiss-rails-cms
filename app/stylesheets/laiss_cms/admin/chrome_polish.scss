@@ -311,11 +311,17 @@ sl-menu-item::part(checked-icon) {
     border-radius: var(--radius-sm);
   }
 
-  // Icons are one size, regardless of which icon set the entry uses.
+  // Navigation icons are --icon-size-xxl, set by navigation.scss on the host. This
+  // rule previously pinned them to --icon-size-1x (16px) "regardless of icon set",
+  // which overrode that because an ID selector beats a class selector. At 16px the
+  // page glyph in `ri-pages-line` — a rectangle with a header bar and an inner box —
+  // is too small to read as a page and looked like an empty square. The owner saw
+  // those and reported them as ghost boxes; they were correctly rendered icons at the
+  // wrong size.
+  //
+  // Only the flex behaviour is needed here, not the size.
   laiss-cms-icon,
   .icon {
-    width: var(--icon-size-1x);
-    height: var(--icon-size-1x);
     flex: 0 0 auto;
   }
 }

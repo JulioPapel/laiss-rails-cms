@@ -1,13 +1,15 @@
-<div class="greeting">
-  <h1>
-    <%= LaissCms.t(@first_time ? :welcome_note : :welcome_back_note, name: "") %>
-    <span class="user-name">
-      <%= @user.laiss_cms_display_name %>
-    </span>
-  </h1>
-  <% if @last_sign_at %>
-    <p>
-      <%= LaissCms.t('Your last login was on', time: LaissCms.l(@last_sign_at)) %>
-    </p>
-  <% end %>
+<%# Greeting, in the theme's card with a card-title and muted sub-line.
+    Source: theme/index.html — .card > .card-body > .card-title + supporting text. %>
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title">
+      <%= LaissCms.t(@first_time ? :welcome_note : :welcome_back_note, name: "") %>
+      <span class="text-primary user-name"><%= @user.laiss_cms_display_name %></span>
+    </h4>
+    <% if @last_sign_at %>
+      <p class="text-muted m-b-0">
+        <%= LaissCms.t('Your last login was on', time: LaissCms.l(@last_sign_at)) %>
+      </p>
+    <% end %>
+  </div>
 </div>

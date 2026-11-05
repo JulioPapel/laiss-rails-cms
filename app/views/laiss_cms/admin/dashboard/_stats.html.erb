@@ -1,5 +1,8 @@
+<%# Stat cards, in the theme's own row arrangement.
+    Source: theme/index.html — .row > .col-lg-3.col-sm-6 per stat.
+    Each StatWidget emits its own .col-lg-3.col-sm-6, so this is only the row. %>
 <% if LaissCms.config.dashboard.stats.any? %>
-  <div class="stats">
+  <div class="row">
     <% LaissCms.config.dashboard.stats.each do |stat, args| %>
       <%= render stat.new(**args) %>
     <% end %>

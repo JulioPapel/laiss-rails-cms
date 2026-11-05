@@ -391,3 +391,73 @@ in the built CSS (`theme-toggle`: 1 match) after the deletion.
 **Verified:** 18/18 settings specs; `settings-page` selector count in the built CSS is 0;
 `.laiss-icon` renders with zero empty boxes in the screenshot.
 
+
+---
+
+## Commit C — Dashboard (`template-first`)
+
+**Source:** `theme/index.html` — `.container-fluid > .row > .col-* > .card`, with
+`.stat-widget-two.card-body > .stat-content > .stat-text + .stat-digit` for the stat
+cards. Adopted verbatim; only the figures and labels are ours.
+
+**One theme element deliberately NOT used.** The stat card's `.progress` bar exists in
+the theme to show a proportion ("85% of budget spent"). Our widgets carry a count and
+an optional infos line — there is no proportion to express. Rendering a bar at an
+invented width would be fabrication, so the element is omitted rather than faked.
+
+**Semantic hooks kept alongside theme classes.** `.count`, `.infos`, `.widget-body`,
+`.user-name` are retained because the widget API and 93 component specs address them.
+They name what a value IS, not how it looks, so they survive a restyle.
+
+### Deletions, with grep evidence
+
+`dashboard.scss` went from **486 to 18 lines**. The 468 deleted lines defined 20
+selectors, each checked against all templates and components:
+
+| Checked | Result |
+|---|---|
+| `.bar`, `.count`, `.logo`, `.widget` | Substring matches only — `Menubar`, `country`, `logout`, a local variable named `widget`. **No class usage outside the dashboard.** |
+| The other 16 (`.bar__draft`, `.bar__public`, `.button_to`, `.greeting`, `.label-with-icon`, `.license`, `.license-text`, `.ruby-rails-version`, `.stats`, `.table-scroll`, `.top-row`, `.user-name`, `.version`, `.version-info`, `.widget-body`, `.widgets`) | Zero references outside `admin/dashboard/` |
+| Whole file | Every rule was nested under `#dashboard`, so nothing outside that screen could depend on it even in principle |
+
+What survives is the one thing that is still ours: `#dashboard` is the page's scroll
+container (`display: flex; overflow: auto`).
+
+**Verified:** 93 widget component specs and 9 dashboard feature specs pass; full gates
+green including the artifact check.
+
+---
+
+## THE ROOT CAUSE OF THE "GHOST SQUARES", AND WHY IT TOOK A TURN
+
+The owner's first complaint and the last fix of the icon investigation are the same
+bug. **`chrome_polish.scss` pinned navigation icons to `--icon-size-1x` (16px)** under
+the selector `#main_navi laiss-cms-icon`, described at the time as "icons are one size,
+regardless of which icon set the entry uses". `navigation.scss` sets them to
+`--icon-size-xxl` (26px). An **ID selector beats a class selector**, so the 16px pin
+won and the nav had always rendered its icons at 16px.
+
+At 16px, `ri-pages-line` — which is literally a rectangle with a header bar and an inner
+box — is too small to read as a page and reads as an empty square. So did `ri-menu-2`,
+`ri-archive-drawer` and the rest: all correct glyphs, all at the wrong size.
+
+Measured after the fix: **26×26 host / 26×26 svg.** Before: 16×16 host, 26×26 svg
+overflowing it.
+
+### The lesson worth keeping
+
+**One symptom, three causes.** The ghost squares were:
+
+1. a class collision (`class="icon"` matching theme rules aimed at `<i class="icon">`),
+2. twelve icons absent from the sprite, including `ri-translate-2-line`, and
+3. a 16px size pin that beat the intended 26px.
+
+Each fix exposed the next, because each was genuinely present. A pixel-level ASCII map
+settled it when three rounds of DOM and CSS probing had not: the map showed a filled
+rectangle outline with internal shapes — an icon drawing correctly — rather than the
+1px uniform border a CSS box or a tofu glyph would produce.
+
+The rule: **when a symptom survives its first plausible explanation, keep measuring
+until the evidence is unambiguous, and expect more than one cause.** Stopping at the
+first fix would have shipped two of the three.
+
