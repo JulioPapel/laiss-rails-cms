@@ -19,7 +19,7 @@ cd "$(dirname "$0")/.." || exit 2
 # The removal is deliberate: it fetched a 404ing rubygems.org endpoint on admin
 # page load, and the owner's policy is no upstream connections.
 #
-# beta2: 4408 -> 4410. Two regression specs for the seeder's previously silent
+# 4408 -> 4410. Two regression specs for the seeder's previously silent
 # behaviour: one for a missing db/seeds/laiss_cms/pages.yml, one for a file that
 # exists but declares no pages. Both were confirmed to fail against the old code.
 BASELINE_EXAMPLES=4410
@@ -201,7 +201,7 @@ run_js() {
 #
 # Every other gate runs against the dummy app, which is configured in whatever way
 # makes the suite work. That is exactly how the admin came to 500 on a fresh
-# install in beta2 without any gate noticing: the dummy app has propshaft, so the
+# install without any gate noticing: the dummy app has propshaft, so the
 # missing-pipeline case was never exercised.
 #
 # This builds a throwaway Rails app with no asset pipeline, points it at this

@@ -158,7 +158,7 @@ jobs:
   # ---------------------------------------------------------------------------
   # The scratch-app gate: the one check that cannot run against the dummy app.
   #
-  # The dummy has propshaft, which is exactly how 0.1.0.beta2 shipped an admin that
+  # The dummy has propshaft, which is exactly how a release once shipped an admin that
   # 500'd on every page in an app without an asset pipeline. This builds a
   # throwaway app and asserts the engine refuses to boot with a named error.
   #
