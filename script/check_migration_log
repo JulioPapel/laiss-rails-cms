@@ -1,0 +1,106 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Fail when a commit changes a screen but not the migration log.
+#
+# WHY THIS EXISTS
+#
+# The owner's rule: docs/design/focus-migration-log.md is the single source of truth for
+# what each screen adopted, and it is committed WITH each screen rather than updated at
+# the end. If the session dies mid-migration, that log is what tells the next person
+# where the work actually stopped.
+#
+# Audited when the rule was written, and it had already slipped twice: two dashboard
+# commits changed views and stylesheets without touching the log, so the only record of
+# those changes was the commit message.
+#
+# USAGE
+#
+#   script/check_migration_log               # check commits since origin/main, or the last 20
+#   script/check_migration_log --all         # every commit on the branch
+#   script/check_migration_log --range A..B
+#
+# A "screen change" is a change under app/views, app/components or app/stylesheets that
+# is not purely a build artifact. Such a commit must also touch the log — either adding a
+# section (an `## ` heading) or extending one. A commit that only bumps `script/gates`,
+# docs, specs or build output is not a screen change and is exempt.
+
+LOG = "docs/design/focus-migration-log.md"
+SCREEN_PATHS = %w[app/views/ app/components/ app/stylesheets/].freeze
+BASE_BRANCH = "main"
+
+def git(*args)
+  `git #{args.join(" ")} 2>/dev/null`.strip
+end
+
+def commit_range
+  if (i = ARGV.index("--range"))
+    return ARGV[i + 1]
+  end
+
+  base = git("merge-base", "origin/#{BASE_BRANCH}", "HEAD")
+  base = git("merge-base", BASE_BRANCH, "HEAD") if base.empty?
+  return "#{base}..HEAD" unless base.empty?
+
+  "HEAD~20..HEAD"
+end
+
+def files_in(commit)
+  git("show", "--name-only", "--format=", commit).split("\n")
+end
+
+def screen_change?(files)
+  files.any? do |f|
+    SCREEN_PATHS.any? { |p| f.start_with?(p) } && !f.include?("app/assets/builds")
+  end
+end
+
+range = ARGV.include?("--all") ? "#{git("rev-list", "--max-parents=0", "HEAD").split("\n").last}..HEAD" : commit_range
+
+commits = git("rev-list", "--reverse", range).split("\n")
+if commits.empty?
+  puts "  no commits in range #{range}; nothing to check"
+  exit 0
+end
+
+violations = []
+checked = 0
+
+# Commits that predate this rule. Listed rather than silently excused, so the gate can be
+# strict about everything after them without rewriting history. Adding to this list needs a
+# reason in the commit that adds it.
+GRANDFATHERED = %w[
+  de55d662c
+  e4c024473
+  35ea7df12
+  f74bb6e73
+].freeze
+
+commits.each do |c|
+  files = files_in(c)
+  next unless screen_change?(files)
+  next if GRANDFATHERED.include?(c[0, 9])
+
+  checked += 1
+  next if files.include?(LOG)
+
+  subject = git("log", "-1", "--format=%s", c)
+  short = c[0, 9]
+  violations << [short, subject, files.select { |f| SCREEN_PATHS.any? { |p| f.start_with?(p) } }]
+end
+
+if violations.empty?
+  puts "  #{checked} screen commit(s) checked, all recorded in #{LOG}"
+  exit 0
+end
+
+puts "  #{violations.size} screen commit(s) did not touch #{LOG}:"
+violations.each do |short, subject, files|
+  puts "    #{short}  #{subject}"
+  files.first(4).each { |f| puts "        #{f}" }
+  puts "        ... and #{files.size - 4} more" if files.size > 4
+end
+puts
+puts "Every screen commits its own log entry. The log is what tells the next person where"
+puts "the work stopped if this session dies mid-migration. Add the entry in the same commit."
+exit 1

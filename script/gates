@@ -175,6 +175,21 @@ run_js() {
 
   if pnpm run build > /dev/null 2>&1; then pass "build"; else fail "build"; fi
 
+  # The migration log is the single source of truth for what each screen adopted, and it
+  # is committed WITH the screen, not at the end. A session that dies mid-migration must
+  # leave the next person knowing where the work stopped. Audited when this gate was
+  # added: four historical commits had already slipped, two of them real screen changes.
+  #
+  # Checks commits that are not yet on main, so it guards new work rather than failing on
+  # history that predates the rule.
+  local logcheck
+  if logcheck=$(script/check_migration_log 2>&1); then
+    pass "migration log ($(echo "$logcheck" | grep -oE '[0-9]+ screen commit' | head -1))"
+  else
+    fail "migration log updated with each screen"
+    echo "$logcheck" | grep -E '^    [0-9a-f]{9}' | head -6
+  fi
+
   # Vitest is flaky upstream (see docs/development/toolchain-pinning.md): it can
   # exit 1 on an unhandled rejection while every test still passes. Retry once,
   # and keep the last count we managed to parse rather than reporting a zero.

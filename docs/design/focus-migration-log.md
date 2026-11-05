@@ -823,3 +823,46 @@ Specs: `spec/features/admin/pages_index_layout_spec.rb`, four examples. **Three 
 failing against the pre-fix files**; the tree example passes either way because that markup
 was not touched — stated rather than implied.
 
+
+---
+
+## The log is the single source of truth, and it ships with each screen
+
+**This file is the record of what each screen adopted.** Not the commit messages, not a
+summary at the end of the migration. If this session dies mid-migration, the next person
+reads this file to learn where the work actually stopped.
+
+**Therefore: every screen commits its own entry, in the same commit as the change.**
+
+That rule was audited when it was written, and it had already slipped — four commits
+changed views or stylesheets without touching this file, two of them real screen work:
+
+```
+de55d662c  Step 0: Bootstrap and theme SCSS foundation
+e4c024473  Fix the icon box artefacts
+35ea7df12  Dashboard: restore the widgets the conversion had hidden
+f74bb6e73  Dashboard: one card surface per widget, not two
+```
+
+The last two were substantive and are written up below retroactively. They are also the
+reason the rule is now enforced rather than remembered.
+
+### Enforced by a gate
+
+`script/check_migration_log` fails when a commit touching `app/views/`,
+`app/components/` or `app/stylesheets/` does not also touch this file. Build artifacts are
+excluded. It checks commits not yet on `main`, so it guards new work without failing on
+history; the four commits above are listed explicitly in the script as grandfathered, with
+this entry as the record of why.
+
+Negative-tested: a throwaway commit changing one stylesheet without the log exits 1 and
+names the commit and the file.
+
+### No dangling release-note links
+
+Checked when the beta note files were removed from the store's `docs/`: the repository has
+**zero** links to `docs/releases/v0.1.0.beta{1..5}.md`. The CHANGELOG mentions those
+versions as prose history with no markdown links at all, and `docs/releases/` contains only
+`v0.1.0.beta6.md`. `script/check_doc_links` covers `docs/**/*.md` and was negative-tested
+against a deliberate `releases/v0.1.0.beta5.md` link — it failed with "link target does not
+exist". A link to a deleted file cannot survive the gate.
