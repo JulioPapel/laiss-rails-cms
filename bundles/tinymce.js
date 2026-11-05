@@ -9,12 +9,9 @@ import "tinymce/icons/remixicons"
 import "tinymce/themes/silver"
 import "tinymce/models/dom"
 
-/* Import plugins */
-import "tinymce/plugins/anchor"
-import "tinymce/plugins/charmap"
-import "tinymce/plugins/code"
-import "tinymce/plugins/directionality"
-import "tinymce/plugins/fullscreen"
+/* Import plugins — body-copy set only. Every plugin here is required by a
+   button in the reduced toolbar; nothing else is bundled, so removing a button
+   from the config also removes its code from the bundle. */
 import "tinymce/plugins/link"
 import "tinymce/plugins/lists"
 import "tinymce/plugins/laiss_cms_link"

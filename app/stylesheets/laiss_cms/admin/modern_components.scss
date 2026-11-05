@@ -1090,3 +1090,89 @@ input.js_filter_field,
   background-position: right 0.3rem center;
   background-size: 0.5rem;
 }
+
+// ---------------------------------------------------------------------------
+// Fields with leading/trailing ICONS must reserve room for them.
+//
+// Measured on the page editor: the filter input had padL=12px padR=12px while
+// its magnifier icon occupied x=1304..1325 inside an input starting at x=1296 —
+// so the icon drew on top of the "F" in "Filter", and the clear icon on top of
+// the "s" in "elements" (owner's red marks 2).
+//
+// Cause: the blanket input rule above sets `padding: 0 var(--spacing-3)` and,
+// being later in the cascade with equal specificity, won over list_filter.scss's
+// `padding-left: var(--spacing-7)`. The fix restores the inset for any field
+// that actually has an icon, at higher specificity than the blanket rule.
+// ---------------------------------------------------------------------------
+laiss-cms-list-filter {
+  .js_filter_field,
+  input.js_filter_field {
+    padding-left: var(--spacing-7);
+    padding-right: var(--spacing-7);
+  }
+}
+
+// Generic: a field wrapped by an element that declares an icon on a side.
+.input-icon,
+.input-with-icon {
+  position: relative;
+
+  > laiss-cms-icon:first-child,
+  > .icon-leading {
+    position: absolute;
+    left: var(--spacing-2);
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  > input,
+  > select {
+    padding-left: var(--spacing-7);
+  }
+
+  > laiss-cms-icon:last-child,
+  > .icon-trailing {
+    position: absolute;
+    right: var(--spacing-2);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+  }
+}
+
+// Red marks 2, corrected: the filter field needs room for BOTH icons plus a
+// readable placeholder. At 16ch it measured 131px, which truncated the
+// placeholder to "Filter ele..." and left the clear icon crushed against it.
+// A flex-basis in pixels tied to the control scale gives it a usable floor
+// without letting it dominate the toolbar row.
+laiss-cms-list-filter {
+  display: block;
+  min-width: 15rem;
+  flex: 1 1 15rem;
+  max-width: 24rem;
+
+  .js_filter_field,
+  input.js_filter_field {
+    min-width: 0;
+    width: 100%;
+  }
+
+  // The clear control is a 16px hit area inside a 36px field; centre it and give
+  // it the same optical margin as the leading icon so the two balance.
+  .js_filter_field_clear {
+    right: var(--spacing-3);
+    width: 1rem;
+    height: 1rem;
+    align-items: center;
+    justify-content: center;
+
+    laiss-cms-icon,
+    .icon {
+      width: 0.75rem;
+      height: 0.75rem;
+      fill: currentcolor;
+    }
+  }
+}
