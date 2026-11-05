@@ -1,564 +1,509 @@
 @use "custom-properties";
+@use "journal-palette";
 
-@mixin dark-theme {
-  --body-background-color: var(--a-dark-grey);
+// Journal theme — one token contract, two value sets.
+//
+// Every token below is defined in BOTH mixins. That symmetry is the contract:
+// a third theme only swaps values. Where the old file defined a token in one
+// theme only (ten element-editor and thumbnail tokens were dark-only), this file
+// defines it in both so nothing falls back to an undefined custom property.
+//
+// Colour vocabulary, in order of use:
+//   paper-0..5  surfaces, from page background to recessed wells
+//   ink-1..8    text and rules, from faint rule to primary text
+//   --journal-accent / --journal-accent-strong  focus ring + primary action only
+//
+// No shadows except where elevation is genuinely modal (dialogs, dropdowns,
+// tooltips). Everything else separates with a 1px rule.
 
-  /* Borders */
-  --border-color: var(--a-darker-grey);
-  --border-inset-color: var(--a-grey);
+// ---------------------------------------------------------------------------
+// Shared helpers. Both themes use the same hairline, radius and rhythm; only
+// colour differs. Keeping these in each mixin (rather than :root) lets a host
+// override one theme without touching the other.
+// ---------------------------------------------------------------------------
+
+@mixin journal-chrome {
+  --border-width: var(--journal-rule-width);
+  --border-style: solid;
+  --border-default: var(--border-width) var(--border-style) var(--border-color);
+  --border-radius: var(--journal-radius);
+
+  /* Focus: 2px ring plus a 1px ink offset, so focus is visible even with the
+     accent removed. The accent is an enhancement, not the only signal. */
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 1px;
+
+  --text-shadow-light: none;
+  --transition-duration: 120ms;
+  --transition-easing: ease-out;
+}
+
+// LIGHT — paper stock, ink type.
+@mixin light-theme {
+  @include journal-chrome;
+
+  /* Surfaces */
+  --body-background-color: var(--journal-paper-1);
+  --panel-background-color: var(--journal-paper-0);
+  --panel-border-color: var(--journal-paper-4);
+  --panel-box-shadow: none;
+  --sidebar-background-color: var(--journal-paper-2);
+  --header-background: var(--journal-paper-0);
+  --toolbar-bg-color: var(--journal-paper-0);
+  --toolbar-border-bottom: var(--journal-rule-width) solid var(--journal-paper-4);
+  --toolbar-spacer-color: var(--journal-paper-3);
+
+  /* Text */
+  --text-color: var(--journal-ink-6);
+  --text-color-muted: var(--journal-ink-4);
+  --text-link-color: var(--journal-ink-7);
+  --muted-color: var(--journal-ink-4);
+  --highlight-color: var(--journal-ink-7);
+
+  /* Rules */
+  --border-color: var(--journal-ink-2);
+  --border-inset-color: var(--journal-paper-4);
+  --table-border-color: var(--journal-paper-4);
+
+  /* Focus — accent on light, with an ink offset underneath */
+  --focus-color: var(--journal-accent-strong);
 
   /* Buttons */
-  --button-bg-color: var(--color-blue_dark);
-  --button-border-color: var(--color-blue_medium);
-  --button-box-shadow: 0 1px 1px -1px hsl(0deg, 0%, 10%);
-  --button-focus-border-color: var(--color-orange_dark);
-  --button-focus-box-shadow: 0 0 0 1px var(--button-focus-border-color);
-  --button-hover-bg-color: var(--color-blue_medium);
-  --button-hover-border-color: var(--color-blue_medium);
-  --button-text-color: var(--color-white);
-  --button-text-shadow: none;
-  --button-disabled-bg-color: var(--a-dark-grey);
-  --button-disabled-border-color: var(--a-grey);
-  --button-secondary-bg-color: var(--a-darker-grey);
-  --button-secondary-border-color: var(--a-grey);
-  --button-secondary-hover-bg-color: var(--a-dark-grey);
-  --button-secondary-hover-border-color: var(--a-grey);
-  --button-secondary-text-color: var(--color-white);
-  --button-primary-text-color: var(--a-darker-grey);
+  --button-bg-color: var(--journal-ink-7);
+  --button-border-color: var(--journal-ink-7);
+  --button-box-shadow: none;
+  --button-focus-border-color: var(--journal-accent-strong);
+  --button-focus-box-shadow: 0 0 0 var(--focus-ring-width) var(--journal-accent-strong);
+  --button-hover-bg-color: var(--journal-ink-5);
+  --button-hover-border-color: var(--journal-ink-5);
+  --button-text-color: var(--journal-paper-0);
+  --button-disabled-bg-color: var(--journal-paper-4);
+  --button-disabled-border-color: var(--journal-paper-4);
+  --button-disabled-color: var(--journal-ink-3);
 
-  --code-background-color: var(--a-darkest-grey);
-  --code-border-color: var(--a-grey);
+  --button-secondary-bg-color: transparent;
+  --button-secondary-border-color: var(--journal-ink-2);
+  --button-secondary-hover-bg-color: var(--journal-paper-3);
+  --button-secondary-hover-border-color: var(--journal-ink-3);
+  --button-secondary-text-color: var(--journal-ink-6);
+  --button-primary-text-color: var(--journal-paper-0);
+
+  --button-ghost-text-color: var(--journal-ink-5);
+  --button-ghost-hover-color: var(--journal-paper-3);
+  --button-ghost-border-color: transparent;
+
+  /* Code */
+  --code-background-color: var(--journal-paper-3);
+  --code-border-color: var(--journal-paper-4);
 
   /* Dashboard */
-  --dashboard-widget-background-color: var(--a-darkest-grey);
+  --dashboard-widget-background-color: var(--journal-paper-0);
   --dashboard-widget-box-shadow: none;
-  --table-scroll-fade-color: rgba(0, 0, 0, 0);
+  --dashboard-widget-text-color: var(--journal-ink-6);
+  --table-scroll-fade-color: rgba(252, 250, 247, 0);
+  --table-scroll-shadow-color: rgba(35, 30, 25, 0.12);
+
+  /* Datepicker */
+  --datepicker-bg-color: var(--journal-paper-0);
+  --datepicker-border-color: var(--journal-paper-4);
+  --datepicker-box-shadow: var(--select-dropdown-box-shadow);
+  --datepicker-text-color: var(--text-color);
+  --datepicker-weekday-text-color: var(--journal-ink-4);
+  --datepicker-text-hover-color: var(--journal-ink-7);
+  --datepicker-day-hover-bg: var(--journal-paper-3);
+  --datepicker-today-border-color: var(--journal-ink-3);
+  --datepicker-today-hover-bg-color: var(--journal-ink-2);
+  --datepicker-today-hover-text-color: var(--journal-ink-7);
+  --datepicker-selected-bg-color: var(--journal-ink-7);
+  --datepicker-selected-text-color: var(--journal-paper-0);
+
+  /* Dialogs — the one place elevation is real */
+  --dialog-header-color: var(--journal-paper-2);
+  --dialog-header-text-color: var(--journal-ink-7);
+  --dialog-box-shadow: 0 8px 32px rgba(35, 30, 25, 0.18);
+  --dialog-overlay-color: rgba(35, 30, 25, 0.45);
+  --dialog-background-color: var(--journal-paper-0);
+
+  /* Elements */
+  --element-editor-background-color: var(--journal-paper-0);
+  --element-editor-border-color: var(--journal-paper-4);
+  --element-editor-dragged-background-color: var(--journal-paper-2);
+  --element-editor-dragged-border-color: var(--journal-ink-3);
+  --element-editor-hover-box-shadow-color: transparent;
+  --element-header-bg-color: var(--journal-paper-2);
+  --element-header-active-bg-color: var(--journal-paper-3);
+  --element-header-active-color: var(--journal-ink-7);
+  --element-header-deprecated-bg-color: var(--journal-paper-2);
+  --element-deprecated-border-color: var(--journal-ink-2);
+  --element-toolbar-background-color: var(--journal-paper-0);
+  --element-toolbar-border-color: var(--journal-paper-4);
+  --element-dirty-border-color: var(--journal-ink-4);
+  --element-dirty-header-color: var(--journal-ink-7);
+  --elements-window-handle-dragged-background-color: var(--journal-paper-3);
+  --droppable-elements-background-color: var(--journal-paper-2);
+
+  /* Nestable / list */
+  --nestable-elements-background-color: var(--journal-paper-2);
+  --nestable-elements-box-shadow-color: transparent;
+  --list-filter-background-color: var(--journal-paper-0);
+  --list-filter-focus-background-color: var(--journal-paper-2);
+
+  /* Form */
+  --form-field-background-color: var(--journal-paper-0);
+  --form-field-border-color: var(--journal-ink-2);
+  --form-field-box-shadow: none;
+  --form-field-addon-background-color: var(--journal-paper-3);
+  --form-field-label-color: var(--journal-ink-5);
+  --form-field-text-color: var(--journal-ink-7);
+  --form-field-disabled-text-color: var(--journal-ink-3);
+  --form-field-disabled-bg-color: var(--journal-paper-3);
+  --form-field-error-bg-color: var(--journal-paper-0);
+  --form-field-error-box-shadow: 0 0 0 1px var(--journal-ink-6);
+
+  /* Hints */
+  --hint-background-color: var(--journal-paper-3);
+  --hint-border-color: var(--journal-paper-4);
+  --hint-text-color: var(--journal-ink-5);
+  --hint-text-link-color: var(--journal-ink-7);
+
+  /* Icon buttons */
+  --icon-color: var(--journal-ink-5);
+  --icon-button-hover-bg-color: var(--journal-paper-3);
+  --icon-button-linked-color: var(--journal-ink-7);
+  --icon-button-linked-hover-color: var(--journal-ink-8);
+  --icon-button-linked-border-color: var(--journal-ink-3);
+  --icon-button-linked-hover-border-color: var(--journal-ink-5);
+
+  /* Main menu — ink block, paper type. The journal's cover. */
+  --main-menu-bg-color: var(--journal-ink-7);
+  --main-menu-text-color: var(--journal-paper-2);
+  --main-menu-icon-color: var(--journal-paper-3);
+  --main-menu-active-bg-color: var(--journal-paper-1);
+  --main-menu-active-text-color: var(--journal-ink-7);
+
+  /* Notices — monochrome, differentiated by rule weight and label, not hue */
+  --notice-info-background-color: var(--journal-paper-3);
+  --notice-info-border-color: var(--journal-ink-2);
+  --notice-info-text-color: var(--journal-ink-6);
+  --notice-success-background-color: var(--journal-paper-2);
+  --notice-success-border-color: var(--journal-ink-3);
+  --notice-success-text-color: var(--journal-ink-6);
+  --notice-warning-background-color: var(--journal-paper-2);
+  --notice-warning-border-color: var(--journal-ink-5);
+  --notice-warning-text-color: var(--journal-ink-7);
+  --notice-error-background-color: var(--journal-paper-2);
+  --notice-error-border-color: var(--journal-ink-8);
+  --notice-error-text-color: var(--journal-ink-8);
+
+  /* Pagination */
+  --pagination-background-color: var(--journal-paper-0);
+  --pagination-border-color: var(--journal-paper-4);
+  --pagination-active-bg-color: var(--journal-ink-7);
+  --pagination-active-text-color: var(--journal-paper-0);
+  --pagination-disabled-text-color: var(--journal-ink-3);
+
+  /* Pictures */
+  --picture-thumbnail-background-color: var(--journal-paper-3);
+  --picture-thumbnail-toolbar-bg-color: var(--journal-paper-0);
+  --thumbnail-background: var(--journal-paper-3);
+  --image-overlay-box-shadow: 0 8px 32px rgba(35, 30, 25, 0.18);
+  --image-overlay-hover-bg-color: var(--journal-paper-3);
+
+  /* Selects */
+  --select-disabled-background-color: var(--journal-paper-3);
+  --select-disabled-border-color: var(--journal-paper-4);
+  --select-disabled-text-color: var(--journal-ink-3);
+  --select-selected-bg-color: var(--journal-paper-3);
+  --select-selected-marker-color: var(--journal-ink-6);
+  --select-dropdown-background-color: var(--journal-paper-0);
+  --select-dropdown-border-color: var(--journal-paper-4);
+  --select-dropdown-box-shadow: 0 4px 16px rgba(35, 30, 25, 0.14);
+  --select-dropdown-text-color: var(--journal-ink-6);
+
+  /* Sitemap */
+  --sitemap-page-background-color: var(--journal-paper-0);
+  --sitemap-page-hover-color: var(--journal-paper-3);
+  --sitemap-info-background-color: var(--journal-paper-2);
+  --sitemap-highlight-color: var(--journal-ink-4);
+
+  /* Tables */
+  --table-row-even-background-color: var(--journal-paper-0);
+  --table-row-odd-background-color: var(--journal-paper-1);
+  --table-row-hover-color: var(--journal-paper-3);
+
+  /* Tags */
+  --tag-background-color: var(--journal-paper-3);
+  --tag-hover-background-color: var(--journal-paper-4);
+  --tag-active-background-color: var(--journal-ink-6);
+  --tag-active-text-color: var(--journal-paper-0);
+
+  /* Tooltip */
+  --tooltip-background-color: var(--journal-ink-7);
+  --tooltip-box-shadow: 0 2px 8px rgba(35, 30, 25, 0.2);
+
+  /* Upload */
+  --file-upload-text-color: var(--journal-ink-5);
+  --file-upload-failed-text-color: var(--journal-ink-8);
+  --spinner-color: var(--journal-ink-4);
+  --sl-input-label-color: var(--journal-ink-5);
+
+  /* Shoelace primary ramp — monochrome, so <sl-*> components match the journal */
+  --sl-color-primary-50: var(--journal-paper-2);
+  --sl-color-primary-100: var(--journal-paper-3);
+  --sl-color-primary-200: var(--journal-paper-4);
+  --sl-color-primary-300: var(--journal-ink-2);
+  --sl-color-primary-400: var(--journal-ink-3);
+  --sl-color-primary-500: var(--journal-ink-4);
+  --sl-color-primary-600: var(--journal-ink-5);
+  --sl-color-primary-700: var(--journal-ink-6);
+  --sl-color-primary-800: var(--journal-ink-7);
+  --sl-color-primary-900: var(--journal-ink-8);
+  --sl-color-primary-950: var(--journal-ink-8);
+
+  --sl-color-neutral-50: var(--journal-paper-2);
+  --sl-color-neutral-100: var(--journal-paper-3);
+  --sl-color-neutral-200: var(--journal-paper-4);
+  --sl-color-neutral-300: var(--journal-ink-2);
+  --sl-color-neutral-400: var(--journal-ink-3);
+  --sl-color-neutral-500: var(--journal-ink-4);
+  --sl-color-neutral-600: var(--journal-ink-5);
+  --sl-color-neutral-700: var(--journal-ink-6);
+  --sl-color-neutral-800: var(--journal-ink-7);
+  --sl-color-neutral-900: var(--journal-ink-8);
+  --sl-color-neutral-950: var(--journal-ink-8);
+}
+
+// DARK — ink stock, paper type. Same names, inverted scale.
+@mixin dark-theme {
+  @include journal-chrome;
+
+  /* Surfaces */
+  --body-background-color: var(--journal-ink-8);
+  --panel-background-color: var(--journal-ink-7);
+  --panel-border-color: var(--journal-ink-5);
+  --panel-box-shadow: none;
+  --sidebar-background-color: var(--journal-ink-8);
+  --header-background: var(--journal-ink-7);
+  --toolbar-bg-color: var(--journal-ink-7);
+  --toolbar-border-bottom: var(--journal-rule-width) solid var(--journal-ink-5);
+  --toolbar-spacer-color: var(--journal-ink-6);
+
+  /* Text */
+  --text-color: var(--journal-ink-1);
+  --text-color-muted: var(--journal-ink-3);
+  --text-link-color: var(--journal-paper-1);
+  --muted-color: var(--journal-ink-3);
+  --highlight-color: var(--journal-paper-1);
+
+  /* Rules */
+  --border-color: var(--journal-ink-5);
+  --border-inset-color: var(--journal-ink-6);
+  --table-border-color: var(--journal-ink-6);
+
+  /* Focus — the authoritative accent is 8.3:1 on ink, so no derivation needed */
+  --focus-color: var(--journal-accent);
+
+  /* Buttons */
+  --button-bg-color: var(--journal-paper-1);
+  --button-border-color: var(--journal-paper-1);
+  --button-box-shadow: none;
+  --button-focus-border-color: var(--journal-accent);
+  --button-focus-box-shadow: 0 0 0 var(--focus-ring-width) var(--journal-accent);
+  --button-hover-bg-color: var(--journal-paper-3);
+  --button-hover-border-color: var(--journal-paper-3);
+  --button-text-color: var(--journal-ink-8);
+  --button-disabled-bg-color: var(--journal-ink-6);
+  --button-disabled-border-color: var(--journal-ink-6);
+  --button-disabled-color: var(--journal-ink-4);
+
+  --button-secondary-bg-color: transparent;
+  --button-secondary-border-color: var(--journal-ink-4);
+  --button-secondary-hover-bg-color: var(--journal-ink-7);
+  --button-secondary-hover-border-color: var(--journal-ink-3);
+  --button-secondary-text-color: var(--journal-ink-1);
+  --button-primary-text-color: var(--journal-ink-8);
+
+  --button-ghost-text-color: var(--journal-ink-1);
+  --button-ghost-hover-color: var(--journal-ink-6);
+  --button-ghost-border-color: transparent;
+
+  /* Code */
+  --code-background-color: var(--journal-ink-7);
+  --code-border-color: var(--journal-ink-5);
+
+  /* Dashboard */
+  --dashboard-widget-background-color: var(--journal-ink-7);
+  --dashboard-widget-box-shadow: none;
+  --dashboard-widget-text-color: var(--journal-ink-1);
+  --table-scroll-fade-color: rgba(7, 5, 4, 0);
   --table-scroll-shadow-color: rgba(0, 0, 0, 0.6);
 
   /* Datepicker */
-  --datepicker-bg-color: var(--a-dark-grey);
-  --datepicker-border-color: var(--a-grey);
+  --datepicker-bg-color: var(--journal-ink-7);
+  --datepicker-border-color: var(--journal-ink-5);
   --datepicker-box-shadow: var(--select-dropdown-box-shadow);
   --datepicker-text-color: var(--text-color);
-  --datepicker-weekday-text-color: var(--a-lighter-grey);
-  --datepicker-text-hover-color: var(--color-orange_medium);
-  --datepicker-day-hover-bg: var(--a-grey);
-  --datepicker-today-border-color: var(--a-light-grey);
-  --datepicker-today-hover-bg-color: var(--a-light-grey);
-  --datepicker-today-hover-text-color: var(--color-white);
-  --datepicker-selected-bg-color: var(--color-blue_medium);
-  --datepicker-selected-text-color: var(--color-white);
+  --datepicker-weekday-text-color: var(--journal-ink-3);
+  --datepicker-text-hover-color: var(--journal-paper-1);
+  --datepicker-day-hover-bg: var(--journal-ink-6);
+  --datepicker-today-border-color: var(--journal-ink-4);
+  --datepicker-today-hover-bg-color: var(--journal-ink-5);
+  --datepicker-today-hover-text-color: var(--journal-paper-1);
+  --datepicker-selected-bg-color: var(--journal-paper-1);
+  --datepicker-selected-text-color: var(--journal-ink-8);
 
   /* Dialogs */
-  --dialog-header-color: var(--color-blue_dark);
-  --dialog-header-text-color: var(--color-white);
-  --dialog-box-shadow: 0 var(--spacing-2) var(--spacing-4)
-    hsla(0deg, 0%, 0%, 0.5);
-  --dialog-overlay-color: hsla(0deg, 0%, 10%, 0.8);
-  --dialog-background-color: var(--a-dark-grey);
+  --dialog-header-color: var(--journal-ink-6);
+  --dialog-header-text-color: var(--journal-paper-1);
+  --dialog-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --dialog-overlay-color: rgba(0, 0, 0, 0.6);
+  --dialog-background-color: var(--journal-ink-7);
 
   /* Elements */
-  --element-editor-background-color: var(--a-dark-grey);
-  --element-editor-border-color: var(--a-darkest-grey);
-  --element-editor-dragged-background-color: var(--color-blue_medium);
-  --element-editor-dragged-border-color: var(--color-orange_dark);
-  --element-editor-hover-box-shadow-color: var(--a-darkest-grey);
-  --element-header-bg-color: transparent;
-  --element-header-active-bg-color: var(--color-blue_medium);
-  --element-header-active-color: var(--color-white);
-  --element-header-deprecated-bg-color: hsla(29deg, 95%, 20%, 0.25);
-  --element-deprecated-border-color: hsl(29deg, 95%, 30%);
-  --element-toolbar-background-color: var(--a-dark-grey);
-  --element-toolbar-border-color: var(--a-darker-grey);
-  --element-dirty-border-color: hsl(55deg, 67%, 45%);
-  --element-dirty-header-color: hsl(55deg, 45%, 15%);
+  --element-editor-background-color: var(--journal-ink-7);
+  --element-editor-border-color: var(--journal-ink-5);
+  --element-editor-dragged-background-color: var(--journal-ink-6);
+  --element-editor-dragged-border-color: var(--journal-ink-3);
+  --element-editor-hover-box-shadow-color: transparent;
+  --element-header-bg-color: var(--journal-ink-6);
+  --element-header-active-bg-color: var(--journal-ink-5);
+  --element-header-active-color: var(--journal-paper-1);
+  --element-header-deprecated-bg-color: var(--journal-ink-6);
+  --element-deprecated-border-color: var(--journal-ink-4);
+  --element-toolbar-background-color: var(--journal-ink-7);
+  --element-toolbar-border-color: var(--journal-ink-5);
+  --element-dirty-border-color: var(--journal-ink-3);
+  --element-dirty-header-color: var(--journal-paper-1);
+  --elements-window-handle-dragged-background-color: var(--journal-ink-5);
+  --droppable-elements-background-color: var(--journal-ink-6);
 
-  --elements-window-handle-dragged-background-color: var(--color-orange_dark);
+  /* Nestable / list */
+  --nestable-elements-background-color: var(--journal-ink-6);
+  --nestable-elements-box-shadow-color: transparent;
+  --list-filter-background-color: var(--journal-ink-7);
+  --list-filter-focus-background-color: var(--journal-ink-6);
 
-  --droppable-elements-background-color: var(--color-blue_dark);
-
-  --nestable-elements-background-color: var(--a-dark-grey);
-  --nestable-elements-box-shadow-color: var(--a-darkest-grey);
-
-  /* Focus Status */
-  --focus-color: var(--color-orange_dark);
-
-  /* Form Fields */
-  --form-field-addon-background-color: transparent;
-  --form-field-background-color: var(--a-darkest-grey);
-  --form-field-border-color: var(--border-inset-color);
-  --form-field-box-shadow: inset 0 0 1px var(--a-dark-grey);
-  --form-field-label-color: var(--text-color);
-  --form-field-text-color: var(--text-color);
-  --form-field-disabled-text-color: var(--form-field-text-color);
-  --form-field-disabled-bg-color: transparent;
-  --form-field-error-bg-color: hsl(0deg, 47%, 10%);
-  --form-field-error-box-shadow: inset 0 0 1px hsla(0deg, 25%, 30%, 0.5);
-
-  /* Header */
-  --header-background: var(--a-darkest-grey);
+  /* Form */
+  --form-field-background-color: var(--journal-ink-8);
+  --form-field-border-color: var(--journal-ink-4);
+  --form-field-box-shadow: none;
+  --form-field-addon-background-color: var(--journal-ink-6);
+  --form-field-label-color: var(--journal-ink-2);
+  --form-field-text-color: var(--journal-paper-1);
+  --form-field-disabled-text-color: var(--journal-ink-4);
+  --form-field-disabled-bg-color: var(--journal-ink-7);
+  --form-field-error-bg-color: var(--journal-ink-8);
+  --form-field-error-box-shadow: 0 0 0 1px var(--journal-paper-2);
 
   /* Hints */
-  --hint-background-color: hsl(55deg, 20%, 25%);
-  --hint-border-color: hsla(55deg, 20%, 50%, 0.5);
-  --hint-text-color: hsl(55deg, 20%, 75%);
-  --hint-text-link-color: hsla(0deg, 0%, 100%, 0.85);
+  --hint-background-color: var(--journal-ink-6);
+  --hint-border-color: var(--journal-ink-5);
+  --hint-text-color: var(--journal-ink-1);
+  --hint-text-link-color: var(--journal-paper-1);
 
-  /* Icon Buttons */
-  --icon-button-linked-color: hsla(42deg, 100%, 40%, 0.75);
-  --icon-button-linked-hover-color: hsla(42deg, 100%, 50%, 0.75);
-  --icon-button-linked-border-color: hsl(42deg, 100%, 50%);
-  --icon-button-linked-hover-border-color: hsl(42deg, 100%, 60%);
-  --icon-button-hover-bg-color: var(--a-darkest-grey);
+  /* Icon buttons */
+  --icon-color: var(--journal-ink-2);
+  --icon-button-hover-bg-color: var(--journal-ink-6);
+  --icon-button-linked-color: var(--journal-paper-1);
+  --icon-button-linked-hover-color: var(--journal-paper-0);
+  --icon-button-linked-border-color: var(--journal-ink-4);
+  --icon-button-linked-hover-border-color: var(--journal-ink-3);
 
-  /* Icons */
-  --icon-color: var(--a-lighter-grey);
-
-  --image-overlay-box-shadow: -4px 0 4px 0px hsla(0deg, 0%, 0%, 0.5);
-  --image-overlay-hover-bg-color: var(--a-darker-grey);
-
-  --list-filter-background-color: var(--form-field-background-color);
-  --list-filter-focus-background-color: var(--form-field-background-color);
-
-  /* Main Menu */
-  --main-menu-bg-color: var(--color-blue_dark);
-  --main-menu-active-bg-color: var(--color-orange_dark);
-  --main-menu-active-text-color: var(--color-blue_dark);
-  --main-menu-text-color: var(--color-white);
-  --main-menu-icon-color: var(--color-white);
+  /* Main menu — paper block on ink, the inverted cover */
+  --main-menu-bg-color: var(--journal-ink-7);
+  --main-menu-text-color: var(--journal-ink-1);
+  --main-menu-icon-color: var(--journal-ink-2);
+  --main-menu-active-bg-color: var(--journal-paper-1);
+  --main-menu-active-text-color: var(--journal-ink-8);
 
   /* Notices */
-  --notice-success-background-color: hsl(88deg, 47%, 20%);
-  --notice-success-border-color: hsl(127deg, 25%, 30%);
-  --notice-success-text-color: hsl(127deg, 42%, 65%);
-
-  --notice-info-background-color: hsl(215deg, 63%, 20%);
-  --notice-info-border-color: hsl(225deg, 25%, 30%);
-  --notice-info-text-color: hsl(225deg, 55%, 80%);
-
-  --notice-warning-background-color: hsl(55deg, 70%, 15%);
-  --notice-warning-border-color: hsl(55deg, 25%, 30%);
-  --notice-warning-text-color: hsl(55deg, 53%, 80%);
-
-  --notice-error-background-color: hsl(0deg, 45%, 15%);
-  --notice-error-border-color: hsl(0deg, 25%, 30%);
-  --notice-error-text-color: hsl(0, 50%, 75%);
+  --notice-info-background-color: var(--journal-ink-6);
+  --notice-info-border-color: var(--journal-ink-4);
+  --notice-info-text-color: var(--journal-ink-1);
+  --notice-success-background-color: var(--journal-ink-6);
+  --notice-success-border-color: var(--journal-ink-3);
+  --notice-success-text-color: var(--journal-ink-1);
+  --notice-warning-background-color: var(--journal-ink-6);
+  --notice-warning-border-color: var(--journal-ink-2);
+  --notice-warning-text-color: var(--journal-paper-1);
+  --notice-error-background-color: var(--journal-ink-6);
+  --notice-error-border-color: var(--journal-paper-2);
+  --notice-error-text-color: var(--journal-paper-0);
 
   /* Pagination */
-  --pagination-background-color: var(--a-darker-grey);
-  --pagination-border-color: var(--a-dark-grey);
-  --pagination-active-bg-color: var(--color-blue_dark);
-  --pagination-active-text-color: var(--color-white);
-  --pagination-disabled-text-color: var(--a-light-grey);
+  --pagination-background-color: var(--journal-ink-7);
+  --pagination-border-color: var(--journal-ink-5);
+  --pagination-active-bg-color: var(--journal-paper-1);
+  --pagination-active-text-color: var(--journal-ink-8);
+  --pagination-disabled-text-color: var(--journal-ink-4);
 
-  /* Panels */
-  --panel-background-color: var(--body-background-color);
-  --panel-border-color: var(--a-grey);
-  --panel-box-shadow: 0 var(--spacing-0) var(--spacing-2)
-    hsla(0deg, 0%, 0%, 0.5);
-
-  --picture-thumbnail-background-color: var(--a-dark-grey);
-  --picture-thumbnail-toolbar-bg-color: var(--a-darker-grey);
-  --picture-tool-background-color: var(--a-darker-grey);
-  --picture-tool-hover-background-color: var(--a-darkest-grey);
-
-  --scrollbar-thumb-color: var(--a-dark-grey);
-  --scrollbar-track-color: var(--a-darkest-grey);
-
-  --search-field-background-color: var(--a-dark-grey);
+  /* Pictures */
+  --picture-thumbnail-background-color: var(--journal-ink-6);
+  --picture-thumbnail-toolbar-bg-color: var(--journal-ink-7);
+  --thumbnail-background: var(--journal-ink-6);
+  --image-overlay-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --image-overlay-hover-bg-color: var(--journal-ink-6);
 
   /* Selects */
-  --select-background-color: var(--form-field-background-color);
-  --select-border-color: var(--form-field-border-color);
-  --select-text-color: var(--text-color);
-  --select-hover-bg-color: var(--color-blue_dark);
-  --select-hover-border-color: var(--form-field-border-color);
-  --select-hover-text-color: var(--text-color);
-  --select-selected-bg-color: var(--a-grey);
-  --select-selected-marker-color: var(--color-blue_medium);
-  --select-background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="hsl(200deg, 5%, 70%)" viewBox="0 0 24 24"><path d="M11.9997 13.1714L16.9495 8.22168L18.3637 9.63589L11.9997 15.9999L5.63574 9.63589L7.04996 8.22168L11.9997 13.1714Z"></path></svg>');
-  --select-close-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="hsl(200deg, 5%, 70%)"><path d="M11.9997 10.5865L16.9495 5.63672L18.3637 7.05093L13.4139 12.0007L18.3637 16.9504L16.9495 18.3646L11.9997 13.4149L7.04996 18.3646L5.63574 16.9504L10.5855 12.0007L5.63574 7.05093L7.04996 5.63672L11.9997 10.5865Z"></path></svg>');
-  --select-disabled-background-color: transparent;
-  --select-disabled-border-color: var(--a-grey);
-  --select-disabled-text-color: var(--select-text-color);
-  --select-dropdown-background-color: var(--a-darker-grey);
-  --select-dropdown-box-shadow: 0 var(--spacing-2) var(--spacing-2)
-    hsla(0deg, 0%, 0%, 0.75);
-  --select-dropdown-border-color: var(--a-grey);
-
-  /* Sidebar */
-  --sidebar-background-color: var(--a-darker-grey);
+  --select-disabled-background-color: var(--journal-ink-6);
+  --select-disabled-border-color: var(--journal-ink-5);
+  --select-disabled-text-color: var(--journal-ink-4);
+  --select-selected-bg-color: var(--journal-ink-6);
+  --select-selected-marker-color: var(--journal-paper-1);
+  --select-dropdown-background-color: var(--journal-ink-7);
+  --select-dropdown-border-color: var(--journal-ink-5);
+  --select-dropdown-box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --select-dropdown-text-color: var(--journal-ink-1);
 
   /* Sitemap */
-  --sitemap-page-background-color: var(--a-darker-grey);
-  --sitemap-page-hover-color: var(--a-grey);
-  --sitemap-info-background-color: var(--a-darker-grey);
-  --sitemap-highlight-color: var(--a-grey);
+  --sitemap-page-background-color: var(--journal-ink-7);
+  --sitemap-page-hover-color: var(--journal-ink-6);
+  --sitemap-info-background-color: var(--journal-ink-6);
+  --sitemap-highlight-color: var(--journal-ink-3);
 
   /* Tables */
-  --table-border-color: var(--border-color);
-  --table-row-even-background-color: var(--a-darker-grey);
-  --table-row-odd-background-color: var(--a-darkest-grey);
-  --table-row-hover-color: var(--a-grey);
+  --table-row-even-background-color: var(--journal-ink-8);
+  --table-row-odd-background-color: var(--journal-ink-7);
+  --table-row-hover-color: var(--journal-ink-6);
 
   /* Tags */
-  --tag-background-color: var(--a-grey);
-  --tag-hover-background-color: var(--a-dark-grey);
-  --tag-active-background-color: var(--color-orange_dark);
-  --tag-active-text-color: var(--a-grey);
-  --tag-background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="hsl(200deg, 5%, 70%)"><path d="M10.9042 2.10025L20.8037 3.51446L22.2179 13.414L13.0255 22.6063C12.635 22.9969 12.0019 22.9969 11.6113 22.6063L1.71184 12.7069C1.32131 12.3163 1.32131 11.6832 1.71184 11.2926L10.9042 2.10025ZM11.6113 4.22157L3.83316 11.9997L12.3184 20.485L20.0966 12.7069L19.036 5.28223L11.6113 4.22157ZM13.7327 10.5855C12.9516 9.80448 12.9516 8.53815 13.7327 7.7571C14.5137 6.97606 15.78 6.97606 16.5611 7.7571C17.3421 8.53815 17.3421 9.80448 16.5611 10.5855C15.78 11.3666 14.5137 11.3666 13.7327 10.5855Z"></path></svg>');
-  --tag-active-background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="hsl(200deg, 5%, 22.5%)"><path d="M10.9042 2.10025L20.8037 3.51446L22.2179 13.414L13.0255 22.6063C12.635 22.9969 12.0019 22.9969 11.6113 22.6063L1.71184 12.7069C1.32131 12.3163 1.32131 11.6832 1.71184 11.2926L10.9042 2.10025ZM11.6113 4.22157L3.83316 11.9997L12.3184 20.485L20.0966 12.7069L19.036 5.28223L11.6113 4.22157ZM13.7327 10.5855C12.9516 9.80448 12.9516 8.53815 13.7327 7.7571C14.5137 6.97606 15.78 6.97606 16.5611 7.7571C17.3421 8.53815 17.3421 9.80448 16.5611 10.5855C15.78 11.3666 14.5137 11.3666 13.7327 10.5855Z"></path></svg>');
+  --tag-background-color: var(--journal-ink-6);
+  --tag-hover-background-color: var(--journal-ink-5);
+  --tag-active-background-color: var(--journal-paper-1);
+  --tag-active-text-color: var(--journal-ink-8);
 
-  /* Text */
-  --text-color: var(--a-lightest-grey);
-  --text-color-muted: var(--a-lighter-grey);
-  --text-link-color: var(--color-orange_medium);
-  --text-shadow-light: 0 0 var(--spacing-1) hsla(0deg, 0%, 20%, 0.5);
+  /* Tooltip */
+  --tooltip-background-color: var(--journal-paper-1);
+  --tooltip-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 
-  /* Thumbnails */
-  --thumbnail-background:
-    linear-gradient(45deg, var(--a-grey) 25%, transparent 25%) 0.5em 0.5em/1em
-      1em,
-    linear-gradient(-45deg, var(--a-grey) 25%, transparent 25%) -0.5em 0/1em 1em,
-    linear-gradient(45deg, transparent 75%, var(--a-grey) 75%) 0 0/1em 1em,
-    linear-gradient(-45deg, transparent 75%, var(--a-grey) 75%) 0 0.5em/1em 1em
-      var(--a-dark-grey);
+  /* Upload */
+  --file-upload-text-color: var(--journal-ink-2);
+  --file-upload-failed-text-color: var(--journal-paper-0);
+  --spinner-color: var(--journal-ink-3);
+  --sl-input-label-color: var(--journal-ink-2);
 
-  /* Toolbar */
-  --toolbar-bg-color: var(--a-darker-grey);
-  --toolbar-border-bottom: 1px solid var(--a-darkest-grey);
-  --toolbar-spacer-color: var(--a-grey);
+  /* Shoelace primary ramp, inverted */
+  --sl-color-primary-50: var(--journal-ink-8);
+  --sl-color-primary-100: var(--journal-ink-7);
+  --sl-color-primary-200: var(--journal-ink-6);
+  --sl-color-primary-300: var(--journal-ink-5);
+  --sl-color-primary-400: var(--journal-ink-4);
+  --sl-color-primary-500: var(--journal-ink-3);
+  --sl-color-primary-600: var(--journal-ink-2);
+  --sl-color-primary-700: var(--journal-ink-1);
+  --sl-color-primary-800: var(--journal-paper-2);
+  --sl-color-primary-900: var(--journal-paper-1);
+  --sl-color-primary-950: var(--journal-paper-0);
 
-  /* Tooltips */
-  --tooltip-background-color: var(--color-blue_dark);
-  --tooltip-box-shadow: 0 0 var(--spacing-1) hsla(0deg, 0%, 0%, 0.5);
-
-  /* Shoelace */
-  --tabs_indicator-color: var(--color-orange_dark);
-  --tabs_track-color: var(--border-color);
-  --sl-input-label-color: var(--text-color);
-
-  /* File Upload */
-  --file-upload-failed-text-color: var(--notice-error-text-color);
-  --file-upload-text-color: var(--text-color);
-  --file-upload_background-color: var(--a-grey);
-  --file-upload_single-upload-background-color: var(--a-dark-grey);
-  --file-upload_progress-track-color: var(--a-darker-grey);
-  --file-upload_progress-indicator-color: var(--color-blue_medium);
-  --file-upload_progress-indicator-color-canceled: var(--a-grey);
-  --file-upload_progress-indicator-color-failed: var(
-    --notice-error-border-color
-  );
-  --file-upload_progress-indicator-color-invalid: var(
-    --notice-warning-border-color
-  );
-  --file-upload_progress-indicator-color-successful: var(
-    --notice-success-border-color
-  );
-  --file-upload_progress-indicator-color-upload-finished: var(
-    --color-blue_medium
-  );
-
-  /*
-  * Shoelace Theme Tokens
-  */
-
-  /* Primary */
-  --sl-color-primary-50: var(--color-orange_medium);
-  --sl-color-primary-100: var(--color-orange_medium);
-  --sl-color-primary-200: var(--color-orange_medium);
-  --sl-color-primary-300: var(--color-orange_dark);
-  --sl-color-primary-400: var(--color-orange_dark);
-  --sl-color-primary-500: var(--color-orange_dark);
-  --sl-color-primary-600: var(--color-orange_dark);
-  --sl-color-primary-700: var(--color-orange_very_dark);
-  --sl-color-primary-800: var(--color-orange_very_dark);
-  --sl-color-primary-900: var(--color-orange_very_dark);
-  --sl-color-primary-950: var(--color-orange_very_dark);
-
-  /* Neutral */
-  --sl-color-neutral-50: var(--a-grey);
-  --sl-color-neutral-100: var(--a-grey);
-  --sl-color-neutral-200: var(--a-light-grey);
-  --sl-color-neutral-300: var(--a-light-grey);
-  --sl-color-neutral-400: var(--a-light-grey);
-  --sl-color-neutral-500: var(--a-lighter-grey);
-  --sl-color-neutral-600: var(--a-lighter-grey);
-  --sl-color-neutral-700: var(--a-lighter-grey);
-  --sl-color-neutral-800: var(--a-lightest-grey);
-  --sl-color-neutral-900: var(--a-lightest-grey);
-  --sl-color-neutral-950: var(--a-lightest-grey);
-}
-
-@mixin light-theme {
-  --body-background-color: var(--color-grey_very_light);
-
-  /* Borders */
-  --border-color: hsla(0deg, 0%, 69%, 0.5);
-  --border-inset-color: hsla(0deg, 0%, 79%, 0.5);
-
-  /* Buttons */
-  --button-bg-color: var(--color-white);
-  --button-border-color: var(--border-color);
-  --button-box-shadow: 0 1px 1px -1px hsl(0deg, 0%, 20%);
-  --button-focus-border-color: var(--color-orange_dark);
-  --button-focus-box-shadow: 0 0 0 1px var(--button-focus-border-color);
-  --button-hover-bg-color: var(--color-grey_very_light);
-  --button-hover-border-color: hsla(0deg, 0%, 59%, 0.5);
-  --button-text-color: var(--text-color);
-  --button-text-shadow: none;
-  --button-disabled-bg-color: hsla(0deg, 0%, 100%, 0.5);
-  --button-disabled-border-color: var(--button-border-color);
-  --button-secondary-bg-color: var(--color-grey_light);
-  --button-secondary-border-color: var(--border-color);
-  --button-secondary-hover-bg-color: var(--color-white);
-  --button-secondary-hover-border-color: var(--color-grey_medium);
-  --button-secondary-text-color: var(--text-color);
-  --button-primary-text-color: var(--color-white);
-
-  --code-background-color: var(--color-grey_light);
-  --code-border-color: var(--border-color);
-
-  /* Dashboard */
-  --dashboard-widget-background-color: var(--color-white);
-  --dashboard-widget-box-shadow: 0px 1px 2px 0px rgba(10, 10, 10, 0.1);
-  --table-scroll-fade-color: rgba(255, 255, 255, 0);
-  --table-scroll-shadow-color: rgba(0, 0, 0, 0.15);
-
-  /* Datepicker */
-  --datepicker-bg-color: var(--color-white);
-  --datepicker-border-color: var(--border-color);
-  --datepicker-box-shadow: var(--select-dropdown-box-shadow);
-  --datepicker-text-color: var(--text-color);
-  --datepicker-weekday-text-color: rgba(0, 0, 0, 0.54);
-  --datepicker-text-hover-color: var(--color-orange_dark);
-  --datepicker-day-hover-bg: var(--color-grey_light);
-  --datepicker-today-border-color: var(--color-grey_dark);
-  --datepicker-today-hover-bg-color: var(--color-grey_dark);
-  --datepicker-today-hover-text-color: var(--color-white);
-  --datepicker-selected-bg-color: var(--color-blue_medium);
-  --datepicker-selected-text-color: var(--color-white);
-
-  /* Dialogs */
-  --dialog-header-color: var(--color-blue_dark);
-  --dialog-header-text-color: var(--color-white);
-  --dialog-box-shadow: 0 var(--spacing-2) var(--spacing-4)
-    hsla(0deg, 0%, 14%, 0.15);
-  --dialog-overlay-color: hsla(0deg, 0%, 39%, 0.4);
-  --dialog-background-color: var(--color-grey_very_light);
-
-  /* Elements */
-  --element-editor-background-color: var(--color-grey_very_light);
-  --element-header-bg-color: transparent;
-  --element-header-active-bg-color: var(--color-blue_dark);
-  --element-header-active-color: var(--color-white);
-  --element-header-deprecated-bg-color: hsla(29deg, 95%, 84%, 0.25);
-  --element-deprecated-border-color: hsl(29deg, 95%, 84%);
-  --element-toolbar-background-color: var(--color-grey_very_light);
-  --element-toolbar-border-color: var(--color-grey_light);
-  --element-dirty-border-color: hsl(56deg, 67%, 52%);
-  --element-dirty-header-color: hsl(56deg, 100%, 93%);
-
-  /* Focus Status */
-  --focus-color: hsla(28deg, 77%, 68%, 0.75);
-
-  /* Form Fields */
-  --form-field-addon-background-color: transparent;
-  --form-field-background-color: var(--color-white);
-  --form-field-border-color: var(--border-color) var(--border-color)
-    var(--border-inset-color) var(--border-inset-color);
-  --form-field-box-shadow: inset 0 0 1px var(--color-grey_light);
-  --form-field-label-color: var(--text-color);
-  --form-field-text-color: var(--text-color);
-  --form-field-disabled-text-color: var(--form-field-text-color);
-  --form-field-disabled-bg-color: transparent;
-  --form-field-error-bg-color: hsl(0deg, 47%, 96%);
-  --form-field-error-box-shadow: inset 0 0 1px hsla(0deg, 25%, 69%, 0.5);
-
-  /* Header */
-  --header-background: hsl(0deg, 0%, 85%);
-
-  /* Hints */
-  --hint-background-color: var(--color-yellow_light);
-  --hint-border-color: var(--color-grey_light);
-  --hint-text-color: hsl(49deg, 18%, 30%);
-  --hint-text-link-color: var(--color-grey_very_dark);
-
-  /* Icon Buttons */
-  --icon-button-linked-color: hsla(42deg, 100%, 74%, 0.75);
-  --icon-button-linked-hover-color: hsla(42deg, 100%, 64%, 0.75);
-  --icon-button-linked-border-color: hsl(42deg, 100%, 64%);
-  --icon-button-linked-hover-border-color: hsl(42deg, 100%, 54%);
-  --icon-button-hover-bg-color: hsla(0deg, 0%, 69%, 0.5);
-
-  /* Icons */
-  --icon-color: hsla(224deg, 23%, 26%, 0.75);
-
-  --image-overlay-box-shadow: -4px 0 4px 0px var(--text-color);
-  --image-overlay-hover-bg-color: var(--color-grey_light);
-
-  --list-filter-background-color: hsla(0deg, 0%, 100%, 0.25);
-  --list-filter-focus-background-color: var(--color-white);
-
-  /* Main Menu */
-  --main-menu-bg-color: var(--color-blue_dark);
-  --main-menu-active-bg-color: var(--color-orange_dark);
-  --main-menu-active-text-color: var(--color-blue_dark);
-  --main-menu-text-color: var(--color-white);
-  --main-menu-icon-color: var(--color-white);
-
-  /* Notices */
-  --notice-success-background-color: hsl(88deg, 47%, 88%);
-  --notice-success-border-color: hsl(127deg, 25%, 69%);
-  --notice-success-text-color: hsl(128deg, 32%, 26%);
-
-  --notice-info-background-color: hsl(215deg, 63%, 87%);
-  --notice-info-border-color: hsl(222deg, 25%, 61%);
-  --notice-info-text-color: hsl(225deg, 53%, 29%);
-
-  --notice-warning-background-color: hsl(56deg, 68%, 85%);
-  --notice-warning-border-color: hsl(55deg, 25%, 69%);
-  --notice-warning-text-color: hsl(56deg, 53%, 29%);
-
-  --notice-error-background-color: hsl(0deg, 47%, 88%);
-  --notice-error-border-color: hsl(0deg, 25%, 69%);
-  --notice-error-text-color: hsl(0deg, 51%, 42%);
-
-  /* Pagination */
-  --pagination-background-color: var(--color-grey_very_light);
-  --pagination-border-color: var(--border-color);
-  --pagination-active-bg-color: var(--color-blue_dark);
-  --pagination-active-text-color: var(--color-white);
-  --pagination-disabled-text-color: #c0c0c0;
-
-  /* Panels */
-  --panel-background-color: var(--body-background-color);
-  --panel-border-color: var(--color-grey_light);
-  --panel-box-shadow: var(--dashboard-widget-box-shadow);
-
-  --picture-tool-background-color: var(--color-white);
-  --picture-tool-hover-background-color: var(--color-grey_very_light);
-
-  --scrollbar-thumb-color: var(--color-white);
-  --scrollbar-track-color: var(--color-grey_light);
-
-  --search-field-background-color: var(--color-grey_very_light);
-
-  /* Selects */
-  --select-background-color: var(--form-field-background-color);
-  --select-border-color: var(--border-inset-color);
-  --select-text-color: var(--form-field-text-color);
-  --select-hover-bg-color: var(--color-blue_dark);
-  --select-hover-border-color: var(--border-color);
-  --select-hover-text-color: var(--color-white);
-  --select-selected-bg-color: var(--color-grey_light);
-  --select-selected-marker-color: var(--color-blue_medium);
-  --select-background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="hsla(224deg, 23%, 26%, 0.75)"><path d="M11.9999 13.1714L16.9497 8.22168L18.3639 9.63589L11.9999 15.9999L5.63599 9.63589L7.0502 8.22168L11.9999 13.1714Z"></path></svg>');
-  --select-close-icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="hsla(224deg, 23%, 26%, 0.75)"><path d="M11.9997 10.5865L16.9495 5.63672L18.3637 7.05093L13.4139 12.0007L18.3637 16.9504L16.9495 18.3646L11.9997 13.4149L7.04996 18.3646L5.63574 16.9504L10.5855 12.0007L5.63574 7.05093L7.04996 5.63672L11.9997 10.5865Z"></path></svg>');
-  --select-disabled-background-color: transparent;
-  --select-disabled-border-color: var(--border-inset-color);
-  --select-disabled-text-color: var(--select-text-color);
-  --select-dropdown-background-color: var(--color-white);
-  --select-dropdown-box-shadow: 0 var(--spacing-2) var(--spacing-2)
-    hsla(0deg, 0%, 0%, 0.15);
-  --select-dropdown-border-color: var(--color-grey_very_light);
-
-  /* Sidebar */
-  --sidebar-background-color: var(--color-grey_very_light);
-
-  /* Sitemap */
-  --sitemap-page-background-color: hsla(0deg, 0%, 100%, 0.75);
-  --sitemap-page-hover-color: hsla(60deg, 81%, 92%, 0.5);
-  --sitemap-info-background-color: hsla(0deg, 0%, 100%, 0.5);
-  --sitemap-highlight-color: hsla(57deg, 100%, 82%, 0.5);
-
-  /* Tables */
-  --table-border-color: var(--color-grey_light);
-  --table-row-even-background-color: var(--color-white);
-  --table-row-odd-background-color: hsla(0deg, 0%, 100%, 0.5);
-  --table-row-hover-color: hsla(60deg, 81%, 92%, 0.5);
-
-  /* Tags */
-  --tag-background-color: var(--color-grey_light);
-  --tag-background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="hsla(224deg, 23%, 26%, 0.75)"><path d="M10.9042 2.10025L20.8037 3.51446L22.2179 13.414L13.0255 22.6063C12.635 22.9969 12.0019 22.9969 11.6113 22.6063L1.71184 12.7069C1.32131 12.3163 1.32131 11.6832 1.71184 11.2926L10.9042 2.10025ZM11.6113 4.22157L3.83316 11.9997L12.3184 20.485L20.0966 12.7069L19.036 5.28223L11.6113 4.22157ZM13.7327 10.5855C12.9516 9.80448 12.9516 8.53815 13.7327 7.7571C14.5137 6.97606 15.78 6.97606 16.5611 7.7571C17.3421 8.53815 17.3421 9.80448 16.5611 10.5855C15.78 11.3666 14.5137 11.3666 13.7327 10.5855Z"></path></svg>');
-  --tag-hover-background-color: var(--color-grey_medium);
-  --tag-active-background-color: var(--color-blue_medium);
-  --tag-active-text-color: var(--color-grey_very_light);
-  --tag-active-background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="rgba(255, 255, 255, 0.95)"><path d="M10.9042 2.10025L20.8037 3.51446L22.2179 13.414L13.0255 22.6063C12.635 22.9969 12.0019 22.9969 11.6113 22.6063L1.71184 12.7069C1.32131 12.3163 1.32131 11.6832 1.71184 11.2926L10.9042 2.10025ZM11.6113 4.22157L3.83316 11.9997L12.3184 20.485L20.0966 12.7069L19.036 5.28223L11.6113 4.22157ZM13.7327 10.5855C12.9516 9.80448 12.9516 8.53815 13.7327 7.7571C14.5137 6.97606 15.78 6.97606 16.5611 7.7571C17.3421 8.53815 17.3421 9.80448 16.5611 10.5855C15.78 11.3666 14.5137 11.3666 13.7327 10.5855Z"></path></svg>');
-
-  /* Text */
-  --text-color: hsla(224deg, 23%, 26%, 0.8);
-  --text-color-muted: hsla(224deg, 23%, 26%, 0.6);
-  --text-link-color: var(--color-orange_very_dark);
-  --text-shadow-light: 0 0 var(--spacing-1) hsla(0deg, 0%, 100%, 0.5);
-
-  /* Thumbnails */
-  --thumbnail-background:
-    linear-gradient(45deg, var(--color-grey_light) 25%, transparent 25%) 0.5em
-      0.5em/1em 1em,
-    linear-gradient(-45deg, var(--color-grey_light) 25%, transparent 25%) -0.5em
-      0/1em 1em,
-    linear-gradient(45deg, transparent 75%, var(--color-grey_light) 75%) 0 0/1em
-      1em,
-    linear-gradient(-45deg, transparent 75%, var(--color-grey_light) 75%) 0
-      0.5em/1em 1em var(--color-grey_medium);
-
-  /* Toolbar */
-  --toolbar-bg-color: var(--color-grey_light);
-  --toolbar-border-bottom: var(--border-default);
-  --toolbar-spacer-color: var(--border-color);
-
-  /* Tooltips */
-  --tooltip-background-color: var(--color-blue_dark);
-  --tooltip-box-shadow: 0 0 var(--spacing-1) var(--color-grey_light);
-
-  /* Shoelace */
-  --tabs_indicator-color: var(--color-orange_dark);
-  --tabs_track-color: var(--color-grey_light);
-  --sl-input-label-color: var(--text-color);
-
-  /* File Upload */
-  --file-upload-failed-text-color: var(--color-red_medium);
-  --file-upload-text-color: var(--text-color);
-  --file-upload_background-color: hsla(0deg, 0%, 80%, 0.8);
-  --file-upload_single-upload-background-color: var(--color-grey_light);
-  --file-upload_progress-track-color: var(--color-blue_very_light);
-  --file-upload_progress-indicator-color: var(--color-blue_dark);
-  --file-upload_progress-indicator-color-canceled: hsla(0deg, 0%, 60%, 0.8);
-  --file-upload_progress-indicator-color-failed: var(--color-red_medium);
-  --file-upload_progress-indicator-color-invalid: var(--color-red_medium);
-  --file-upload_progress-indicator-color-successful: var(--color-green_medium);
-  --file-upload_progress-indicator-color-upload-finished: var(
-    --color-blue_dark
-  );
-
-  /*
-  * Shoelace Theme Tokens
-  */
-
-  /* Primary */
-  --sl-color-primary-50: var(--color-blue_very_light);
-  --sl-color-primary-100: var(--color-blue_very_light);
-  --sl-color-primary-200: var(--color-blue_light);
-  --sl-color-primary-300: var(--color-blue_light);
-  --sl-color-primary-400: var(--color-blue_medium);
-  --sl-color-primary-500: var(--color-blue_medium);
-  --sl-color-primary-600: var(--color-blue_dark);
-  --sl-color-primary-700: var(--color-blue_dark);
-  --sl-color-primary-800: var(--color-blue_dark);
-  --sl-color-primary-900: var(--color-blue_dark);
-  --sl-color-primary-950: var(--color-blue_dark);
-
-  /* Neutral */
-  --sl-color-neutral-50: var(--color-grey_very_light);
-  --sl-color-neutral-100: var(--color-grey_very_light);
-  --sl-color-neutral-200: var(--color-grey_light);
-  --sl-color-neutral-300: var(--color-grey_light);
-  --sl-color-neutral-400: var(--color-grey_medium);
-  --sl-color-neutral-500: var(--color-grey_medium);
-  --sl-color-neutral-600: var(--color-grey_dark);
-  --sl-color-neutral-700: var(--color-grey_dark);
-  --sl-color-neutral-800: var(--color-grey_very_dark);
-  --sl-color-neutral-900: var(--color-grey_very_dark);
-  --sl-color-neutral-950: var(--color-grey_very_dark);
+  --sl-color-neutral-50: var(--journal-ink-8);
+  --sl-color-neutral-100: var(--journal-ink-7);
+  --sl-color-neutral-200: var(--journal-ink-6);
+  --sl-color-neutral-300: var(--journal-ink-5);
+  --sl-color-neutral-400: var(--journal-ink-4);
+  --sl-color-neutral-500: var(--journal-ink-3);
+  --sl-color-neutral-600: var(--journal-ink-2);
+  --sl-color-neutral-700: var(--journal-ink-1);
+  --sl-color-neutral-800: var(--journal-paper-2);
+  --sl-color-neutral-900: var(--journal-paper-1);
+  --sl-color-neutral-950: var(--journal-paper-0);
 }

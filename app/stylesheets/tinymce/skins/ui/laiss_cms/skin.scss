@@ -176,7 +176,7 @@ button::-moz-focus-inner {
   .accessibility-issue--warn
   .accessibility-issue__description {
   background-color: rgba(255, 165, 0, 0.1);
-  border-color: rgba(255, 165, 0, 0.5);
+  border-color: var(--border-color);
   color: #000;
 }
 
@@ -185,19 +185,19 @@ button::-moz-focus-inner {
   .accessibility-issue--warn
   .accessibility-issue__description
   > :last-child {
-  border-color: rgba(255, 165, 0, 0.5);
+  border-color: var(--border-color);
 }
 
 .tox .tox-dialog__body-content .accessibility-issue--warn .tox-form__group h2 {
-  color: var(--color-orange_very_dark);
+  color: var(--text-color);
 }
 
 .tox .tox-dialog__body-content .accessibility-issue--warn .tox-icon svg {
-  fill: var(--color-orange_very_dark);
+  fill: var(--text-color);
 }
 
 .tox .tox-dialog__body-content .accessibility-issue--warn a .tox-icon {
-  color: var(--color-orange_very_dark);
+  color: var(--text-color);
 }
 
 .tox
@@ -3150,8 +3150,8 @@ body.tox-dialog__disable-scroll {
 }
 
 .tox .tox-selector {
-  background-color: var(--color-orange_dark);
-  border-color: var(--color-orange_dark);
+  background-color: var(--text-color);
+  border-color: var(--text-color);
   border-style: solid;
   border-width: 1px;
   box-sizing: border-box;

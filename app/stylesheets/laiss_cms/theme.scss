@@ -1,5 +1,14 @@
 @use "themes";
 
+// Theme selection.
+//
+// Default: follow the operating system. That behaviour is unchanged.
+//
+// Explicit override: set `data-theme="dark"` or `data-theme="light"` on <html>
+// to force one regardless of the OS. This is useful for hosts that expose a
+// theme switch, and it is how the theme is exercised in tests, since a headless
+// browser cannot emulate prefers-color-scheme. The attribute rules come last so
+// they win over the media queries without any !important.
 @media (prefers-color-scheme: dark) {
   html {
     @include themes.dark-theme;
@@ -10,4 +19,12 @@
   html {
     @include themes.light-theme;
   }
+}
+
+html[data-theme="dark"] {
+  @include themes.dark-theme;
+}
+
+html[data-theme="light"] {
+  @include themes.light-theme;
 }

@@ -1,6 +1,0 @@
-@use "custom-properties";
-@use "themes";
-
-html {
-  @include themes.light-theme;
-}

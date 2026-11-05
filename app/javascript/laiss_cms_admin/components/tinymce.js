@@ -141,12 +141,17 @@ export class Tinymce extends HTMLElement {
             : css.light
           : css
 
-      // Update the skin by reinitializing the editor with new configuration
+      // Update the skin by reinitializing the editor with new configuration.
+      //
+      // `this.configuration` already resolves content_css from `isDark`, so the
+      // spread must come FIRST and the explicit skin last. Spreading it after
+      // content_css was silently overwriting the resolved value with the raw
+      // {light, dark} map, which TinyMCE ignores.
       editor.remove()
       tinymce
         .init({
-          content_css,
           ...this.configuration,
+          content_css,
           skin
         })
         .then((editors) => {
@@ -200,10 +205,18 @@ export class Tinymce extends HTMLElement {
     return config
   }
 
-  get preferredTheme() {
+  // Dark is active when <html data-theme="dark"> is set explicitly, otherwise
+  // when the OS prefers dark. The explicit attribute has to win here too, or a
+  // host that forces a theme gets an editor on the opposite skin.
+  get isDark() {
+    const forced = document.documentElement.getAttribute("data-theme")
+    if (forced === "dark") return true
+    if (forced === "light") return false
     return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? DARK_THEME
-      : LIGHT_THEME
+  }
+
+  get preferredTheme() {
+    return this.isDark ? DARK_THEME : LIGHT_THEME
   }
 
   // Absolute asset URLs for the editor content stylesheet, supplied by the
@@ -213,9 +226,7 @@ export class Tinymce extends HTMLElement {
   get preferredContentCss() {
     const css = (readJSONScript("laiss_cms_tinymce_defaults") || {}).content_css
     if (css && typeof css === "object") {
-      return window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? css.dark
-        : css.light
+      return this.isDark ? css.dark : css.light
     }
     return css
   }

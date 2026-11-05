@@ -182,9 +182,14 @@
       var(--transition-easing);
   }
 
+  // Journal: the active tab is marked by a paper-on-ink inversion and a heavier
+  // weight, not by a colour band. (This was a hardcoded upstream orange, which
+  // the hex sweep could not see because it was written as hsl().)
   &.active a,
   a:hover {
-    background-color: hsl(28deg, 77%, 63%);
+    background-color: var(--main-menu-active-bg-color);
+    color: var(--main-menu-active-text-color);
+    font-weight: var(--font-weight_semibold);
   }
 }
 

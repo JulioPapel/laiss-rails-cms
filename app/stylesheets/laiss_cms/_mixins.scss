@@ -1,11 +1,17 @@
+// Journal focus: an accent ring with an ink offset underneath.
+//
+// The accent alone is not relied on: the offset ring is drawn in `--text-color`,
+// so focus remains visible if `--journal-accent` is removed or neutralised, and
+// for anyone who cannot distinguish the accent hue. 2px + 1px offset also
+// exceeds the WCAG 2.1 non-text contrast minimum against both paper and ink.
 @mixin default-focus-style(
   $border-color: var(--focus-color),
-  $box-shadow: 0 0 0 2px var(--focus-color),
+  $box-shadow: 0 0 0 var(--focus-ring-width, 2px) var(--focus-color),
   $border-radius: var(--border-radius_medium)
 ) {
   border-color: $border-color;
   border-radius: $border-radius;
-  box-shadow: $box-shadow;
+  box-shadow: $box-shadow, 0 0 0 calc(var(--focus-ring-width, 2px) + var(--focus-ring-offset, 1px)) var(--text-color);
   outline: 0 none;
 
   &::-moz-focus-inner {

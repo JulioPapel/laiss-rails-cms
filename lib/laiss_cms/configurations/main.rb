@@ -367,6 +367,20 @@ module LaissCms
       #
       option :admin_stylesheets, :collection, collection_class: Set, item_type: :string, default: ["laiss_cms/admin/custom.css"]
 
+      # === Admin Theme
+      #
+      # Forces the admin theme regardless of the operating system.
+      #
+      # Default is nil: follow `prefers-color-scheme`. Set to "dark" or "light"
+      # to pin it. The value becomes `data-theme` on <html>, which both the CSS
+      # token contract and the TinyMCE editor read, so the chrome and the editor
+      # iframe always switch together.
+      #
+      #     # config/initializers/laiss_cms.rb
+      #     LaissCms.config.admin_theme = "dark"
+      #
+      option :admin_theme, :string, default: nil
+
       # Define page publish targets
       #
       # A publish target is a ActiveJob that gets performed

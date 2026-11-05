@@ -12,6 +12,10 @@
 // content.min.css is emitted into app/assets/builds/tinymce/skins/content/<skin>/,
 // four levels below builds/. See _fonts.scss.
 @use "../../../../laiss_cms/fonts" with ($font-path: "../../../../laiss_cms");
+@use "../../../../laiss_cms/journal-palette";
+// The editor body is its own document: give it the paper/ink contract so the
+// editable area matches the admin chrome rather than reading as a blank page.
+@use "../../../../laiss_cms/themes";
 
 html {
   font-size: 13px;
@@ -21,11 +25,13 @@ body {
   font-family: var(--font-sans);
   line-height: 1.4;
   margin: 1em;
-  color: #333;
+  color: var(--journal-ink-6);
+  background-color: var(--journal-paper-0);
 }
 
 a {
-  color: #000;
+  color: var(--journal-ink-7);
+  text-decoration-color: var(--journal-ink-4);
 }
 
 table {
@@ -34,7 +40,7 @@ table {
 
 table td,
 table th {
-  border: 1px solid #666;
+  border: 1px solid var(--journal-ink-2);
   padding: 0.4rem;
 }
 
@@ -44,32 +50,33 @@ figure {
 }
 
 figure figcaption {
-  color: #333;
+  color: var(--journal-ink-4);
   display: block;
   margin-top: 0.25rem;
   text-align: center;
 }
 
 hr {
-  border-color: #666;
+  border-color: var(--journal-ink-2);
   border-style: solid;
   border-width: 1px 0 0 0;
 }
 
 code {
-  background-color: #999;
+  background-color: var(--journal-paper-3);
+  border: 1px solid var(--journal-paper-4);
   border-radius: var(--border-radius_medium);
   padding: 0.1rem 0.2rem;
 }
 
 .mce-content-body:not([dir="rtl"]) blockquote {
-  border-left: 2px solid #666;
+  border-left: 2px solid var(--journal-ink-3);
   margin-left: 1.5rem;
   padding-left: 1rem;
 }
 
 .mce-content-body[dir="rtl"] blockquote {
-  border-right: 2px solid #666;
+  border-right: 2px solid var(--journal-ink-3);
   margin-right: 1.5rem;
   padding-right: 1rem;
 }

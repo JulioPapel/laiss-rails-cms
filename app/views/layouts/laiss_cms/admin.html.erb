@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="<%= ::I18n.locale %>" class="no-js">
+<%# data-theme, when set, forces a theme regardless of the OS. It is read by
+    theme.scss (the CSS token contract) and by the TinyMCE component, so both the
+    chrome and the editor iframe switch together. Nil means "follow the OS". %>
+<html lang="<%= ::I18n.locale %>" class="no-js"<% if LaissCms.config.admin_theme.present? %> data-theme="<%= LaissCms.config.admin_theme %>"<% end %>>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

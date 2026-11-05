@@ -108,8 +108,10 @@
   --font-default: var(--font-size_medium) var(--font-sans);
 
   /* Borders */
-  --border-radius_medium: 3px;
-  --border-radius_large: 6px;
+  // Journal: corners are nearly square. 2px reads as a printed edge rather than
+  // a rounded card; the "large" step stays small so no element looks pillowed.
+  --border-radius_medium: 2px;
+  --border-radius_large: 2px;
   --border-width_small: 1px;
   --border-style: solid;
   --border-default: var(--border-width_small) var(--border-style)

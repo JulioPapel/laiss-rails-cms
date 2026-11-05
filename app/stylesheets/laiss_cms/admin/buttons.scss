@@ -8,6 +8,40 @@ laiss-cms-uploader .button {
   position: relative;
   @include mixins.button-defaults;
 
+  // The single primary action in a view. This is the ONLY rule that paints the
+  // brand accent as a surface, and it reads `--journal-accent` so making the
+  // admin fully monochrome is a one-token change (see _journal-palette.scss).
+  //
+  // Everything else — secondary, ghost, links, active states — stays ink/paper.
+  &.primary {
+    background-color: var(--journal-accent);
+    border-color: var(--journal-accent);
+    color: var(--journal-paper-0);
+    font-weight: var(--font-weight_semibold);
+
+    &:focus:not([disabled]):not(.disabled) {
+      @include mixins.default-focus-style;
+    }
+
+    &:hover:not([disabled]):not(.disabled) {
+      background-color: var(--journal-accent-strong);
+      border-color: var(--journal-accent-strong);
+    }
+
+    &:active:not([disabled]):not(.disabled) {
+      background-color: var(--journal-accent-strong);
+      border-color: var(--journal-accent-strong);
+      box-shadow: none;
+    }
+
+    &[disabled],
+    &.disabled {
+      background-color: var(--button-disabled-bg-color);
+      border-color: var(--button-disabled-border-color);
+      color: var(--button-disabled-color);
+    }
+  }
+
   &.secondary {
     background-color: var(--button-secondary-bg-color);
     color: var(--button-secondary-text-color);
