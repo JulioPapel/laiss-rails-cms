@@ -1,123 +1,66 @@
-## Devise based authentication for LaissCMS
+# Authentication
 
-[![Gem Version](https://badge.fury.io/rb/laiss-cms-devise.svg)](http://badge.fury.io/rb/laiss-cms-devise)
+Devise-based authentication for `laiss_cms`. The integration ships inside the
+engine; there is no separate authentication gem to install.
 
-LaissCMS has no authentication in its core. So it is possible to bring your own authentication and use it to authorize users in LaissCMS. If you don't have your own authentication, you can use this gem.
+`devise` itself is **not** a dependency of `laiss_cms`. A host app that supplies
+its own user model and sign-in must be able to boot without it, so the
+integration does nothing until asked for.
 
-Since LaissCms CMS 9.0, `laiss-cms-devise` is developed inside the [LaissCms CMS repository](https://github.com/LaissCMS/laiss_cms/tree/main/devise)
-and released together with `laiss_cms` using the same version.
-Older versions are maintained in the [`laiss-cms-devise` repository](https://github.com/LaissCMS/laiss-cms-devise).
-
-## Install
-
-Just put the gem into your projects `Gemfile`.
+## Turning it on
 
 ```ruby
 # Gemfile
-gem 'laiss-cms-devise'
+gem "laiss_cms", git: "https://github.com/JulioPapel/laiss-rails-cms.git", tag: "<tag>"
+gem "devise", "~> 4.9"
 ```
-
-and run `bundle install`.
-
-Then run the installer:
-
-```bash
-$ bin/rails g laiss_cms:devise:install
-```
-
-## Upgrading
-
-After updating the gem, please run the installer again.
-
-```bash
-$ bundle update laiss-cms-devise
-$ bin/rails g laiss_cms:devise:install
-```
-
-## Devise modules
-
-Default Devise modules included in `LaissCms::User` model
-
-- `:database_authenticatable`
-- `:trackable`
-- `:validatable`
-- `:timeoutable`
-- `:recoverable`
-- `:rememberable`
-
-If you want to add additional modules into the LaissCms user class append them to `LaissCms::Devise.config.devise_modules` in an initializer in your app.
-
-### Register additional modules example
 
 ```ruby
-# config/initializers/laiss_cms.rb
-LaissCms::Devise.config.devise_modules << :registerable
+# config/application.rb, after `require "laiss_cms"`
+require "laiss_cms/devise"
 ```
 
-### Using old encryption
-
-If your app uses an old encryption that needs the +devise-encryptable+ gem you also need to load the devise module.
-
-```ruby
-# config/initializers/laiss_cms.rb
-LaissCms::Devise.config.devise_modules << :encryptable
-```
-
-## Role changes
-
-Granting or revoking the `admin` role asks the admin performing the change to
-confirm their own password, both when creating a user and when editing one.
-Since `admin` is the only role that can manage users, every other role and
-every other user attribute can be edited with a valid session alone.
-
-Roles that need a password are configurable:
-
-```ruby
-# config/initializers/laiss_cms.rb
-LaissCms::Devise.config.privileged_user_roles << "editor"
-```
-
-Set this to `false` to grant roles with a valid session alone:
-
-```ruby
-# config/initializers/laiss_cms.rb
-LaissCms::Devise.config.require_password_for_role_change = false
-```
-
-## Testing
-
-If you want to contribute (and you should ^_^), you need to run the tests locally on your machine.
-
-The gem shares the bundle and the dummy app of the LaissCms CMS repository, so prepare the test database from the repository root.
-The dummy app only loads `laiss-cms-devise` for these specs, because the LaissCms CMS specs use a stub user instead,
-so `bin/rspec` runs them from the `devise` directory, separately from the LaissCms CMS specs.
-
-### 1. Once to prepare the test suite:
+Then:
 
 ```bash
-$ bundle install
-$ bundle exec rake laiss_cms:test:prepare
+bin/rails g laiss_cms:devise:install
+bin/rails db:migrate
 ```
 
-### 2. Run the tests with:
+Without the `require`, there is no `LaissCms::User`, no `/admin/login`,
+`/admin/signup`, `/admin/logout` or `/admin/passwords` route, and no admin user
+screen. The rest of the CMS works normally.
 
-```bash
-$ bin/rspec devise/spec
-```
+## Where the code lives, and why
 
-Getting Help
-------------
+| Path | Contents |
+| --- | --- |
+| `lib/laiss_cms/devise.rb` | The public entry point and `available?` |
+| `lib/laiss_cms/devise_app/` | `LaissCms::User` and the admin controllers |
+| `lib/laiss_cms/devise_support/` | The Railtie, config, install generator, patch |
 
-This is a private, in-house gem. It has no public issue tracker, demo site or
-chat channel. Raise problems with the Laiss Labs team directly.
+None of it is under `app/`, deliberately. Rails eager loads that tree in
+production, so an app without the `devise` gem failed at boot with
+`uninitialized constant Devise`. `lib/laiss_cms/devise_app` is added as an
+autoload root only when the integration loads.
 
-Resources
----------
+The integration is a Railtie rather than an Engine: as an engine its root became
+the `laiss_cms` gem root and Rails loaded `config/routes.rb` a second time.
 
-* Sourcecode: `devise/` in the laiss-rails-cms repository
-* Documentation: the `guides/` directory in the same repository
+## Specs
 
-License
--------
+They live in `devise/spec/` and run in their own process, because the core specs
+boot the dummy app *without* the integration so the `DummyUser` stub path stays
+covered. `bin/rspec` handles the split.
 
-* BSD: [LICENSE](LICENSE)
+## Licence
+
+BSD-3-Clause, retained from the upstream `laiss-cms-devise` gem. `LICENSE` in this
+directory is the authoritative copy and is kept verbatim, including the upstream
+copyright and contributor attribution, which the licence requires.
+
+## History
+
+`CHANGELOG.md` is the upstream changelog from before this code was folded into the
+engine. It is kept for attribution, not as a description of this repository's
+releases.

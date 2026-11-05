@@ -1,55 +1,46 @@
-# LaissCMS Translations
+# Translations
 
-Translation files for [LaissCMS](https://github.com/LaissCMS/laiss_cms) 8.0 and above.
+Every supported locale ships inside `laiss_cms` itself. There is no separate
+translation gem to install and no install generator to run.
 
-## LaissCms version
+## Using them
 
-Since LaissCms CMS 9.0, `laiss_cms_i18n` is developed inside the [LaissCms CMS repository](https://github.com/LaissCMS/laiss_cms/tree/main/i18n)
-and released together with `laiss_cms` using the same version.
-Older versions are maintained in the [`laiss_cms_i18n` repository](https://github.com/LaissCMS/laiss_cms_i18n).
+Nothing to add to the `Gemfile`. The locale files are on `I18n.load_path` as soon
+as `laiss_cms` is required, so the only decision is which locale the admin uses:
 
-| LaissCms CMS | laiss_cms_i18n | Branch        |
-|-------------|-------------|---------------|
-| >= 9.0      | Same as LaissCms CMS | `main` of `laiss_cms` |
-| 8.4         | >= 8.4.0    | `8.4-stable`  |
-| 8.3         | >= 8.2.0    | `8.2-stable`  |
-| 8.2         | >= 8.2.0    | `8.2-stable`  |
-| 8.0         | 5.x         | `5.1-stable`  |
-| 7.x         | 4.3.x       | `4.3-stable`  |
-| 7.0         | 4.0.x       | `4.0-stable`  |
-| 6.1         | 3.2.x       | `3.2-stable`  |
-| 5.3         | 2.3.x       | `2.3-stable`  |
-
-## Installation
-
-Add the gem to your `Gemfile` and run the install generator:
-
-```
-bundle add laiss_cms_i18n
-bin/rails g laiss_cms_i18n:install
+```ruby
+# config/application.rb
+config.i18n.available_locales = [:en, :de, :fr]
+config.i18n.default_locale = :en
 ```
 
-Pass the locales you want to generate files for with the `--locales` option.
-Separate multiple locales by space.
+Available: `en` `de` `es` `fr` `it` `nb-NO` `nl` `pl` `ru` `zh-CN`
 
-```
-bin/rails g laiss_cms_i18n:install --locales de it es
-```
+## Where the files live
 
-## Available locales
+| Path | Contents |
+| --- | --- |
+| `config/locales/laiss_cms.en.yml` | English, the reference locale |
+| `config/locales/extra/laiss_cms.<locale>.yml` | Every other locale |
+| `config/locales/extra/laiss_cms_users.<locale>.yml` | Admin user screens |
+| `config/locales/extra/laiss_cms_devise.<locale>.yml` | Devise's own messages |
 
-`de` `es` `fr` `it` `nb-NO` `nl` `pl` `ru` `zh-CN`
+Rails globs `config/locales/**/*.yml` from every engine root, so no initializer
+is involved. An earlier attempt to add one registered `de` twice.
 
-### Noteworthy missing translations
+## Overriding a translation
 
-Russian (`ru`) and Chinese (`zh-CN`) are at roughly 68% coverage and need help.
+Put your own file in the host app's `config/locales/` using the same tree. A host
+app's load path comes after the engine's, so the later entry wins.
 
-## Contributing
+## Licence
 
-1. Fork the repository
-2. Add or update translations in the locale files under `i18n/locales/`
-3. Open a pull request
+The translation files are MIT licensed, as they were in the upstream
+`laiss_cms_i18n` gem. `LICENSE` in this directory records that, and it is retained
+verbatim.
 
-## License
+## History
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+`CHANGELOG.md` is the upstream changelog from before these files were folded into
+the engine. It is kept for attribution, not as a description of this repository's
+releases.

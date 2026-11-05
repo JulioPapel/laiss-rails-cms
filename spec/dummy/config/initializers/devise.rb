@@ -9,7 +9,7 @@
 # Use this hook to configure devise mailer, warden hooks and so forth.
 # Many of these configuration options can be set straight in your model.
 
-# The laiss-cms-devise gem is only loaded in development and for the devise
+# The authentication integration is only loaded in development and for the devise
 # specs, so skip this initializer whenever Devise is absent.
 return unless defined?(Devise)
 

@@ -10,7 +10,7 @@ in what a writer types — so an author cannot break the structure of a page.
 > This is **not published to RubyGems** and never will be. Install it from git at
 > a tag. There is no gem on rubygems.org and no support contract.
 
-Current version: **0.1.0.beta1**. See [docs/versioning.md](docs/versioning.md) —
+Current version: **0.1.0.beta2**. See [docs/versioning.md](docs/versioning.md) —
 this project has its own version sequence, deliberately unrelated to any other
 CMS's numbering.
 
@@ -70,7 +70,7 @@ git install needs no Node toolchain.
 ```ruby
 gem "laiss_cms",
   git: "git@github.com:JulioPapel/laiss-rails-cms.git",
-  tag: "v0.1.0.beta1"
+  tag: "v0.1.0.beta2"
 
 # Optional: Devise-based authentication.
 # The integration ships inside laiss_cms; only the devise gem is separate, and it
@@ -98,7 +98,7 @@ Then run these **in this order**:
 bundle install
 bin/rails active_storage:install        # REQUIRED — image upload fails without it
 bin/rails laiss_cms:install             # config, migrations, mount, demo files
-bin/rails g laiss_cms:devise:install    # only if you added laiss-cms-devise
+bin/rails g laiss_cms:devise:install    # only if using the bundled sign-in
 bin/rails db:migrate
 bin/rails db:seed                       # REQUIRED — creates the site, the default
                                         # language and the root page
@@ -127,14 +127,10 @@ To get a content tree, add `db/seeds/laiss_cms/pages.yml`:
       title: About
 ```
 
-If you use `laiss-cms-devise`, also add this to `config/application.rb`:
-
-```ruby
-require "laiss_cms/devise"
-```
-
-The gem's name and its require path differ, so Bundler does not always load it.
-If the admin raises `NoCurrentUserFoundError`, that line is what's missing.
+If the admin raises `NoCurrentUserFoundError`, the authentication integration is
+not loaded. Either add `require "laiss_cms/devise"` to `config/application.rb`
+(see [installation](#installation) above), or define `current_user` yourself if
+you are bringing your own sign-in.
 
 ## Configuration
 

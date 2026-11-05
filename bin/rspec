@@ -2,8 +2,10 @@
 
 ROOT = File.expand_path("..", __dir__)
 
-# The devise specs boot the dummy app with laiss-cms-devise loaded, the core specs
-# without it, so each one runs in its own RSpec process from its own directory.
+# The devise specs boot the dummy app with `laiss_cms/devise` required, the core
+# specs without it, so each one runs in its own RSpec process from its own
+# directory. Keeping that split is what proves the engine still boots for apps
+# that bring their own authentication.
 LIBS = %w[. devise]
 
 # Ignore line info, e.g. foo/bar.rb:123 would become foo/bar.rb

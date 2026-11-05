@@ -120,7 +120,13 @@ module LaissCms
         unless options[:auto_accept]
           name = ask("- What is the name of your site's primary language?", default: name)
         end
-        {code:, name:}
+        # `ask` returns nil when stdin is not a terminal — CI, Docker, or any
+        # scripted install. Taking that at face value wrote
+        # `default_language.code = nil` into the generated initializer, and the
+        # seeder then died on `create_default_language!` with a validation error
+        # naming neither the installer nor the language. Falling back to the
+        # defaults makes a non-interactive install produce a working app.
+        {code: code.presence || "en", name: name.presence || "English"}
       end
 
       def header

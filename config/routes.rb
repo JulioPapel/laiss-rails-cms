@@ -113,7 +113,7 @@ LaissCms::Engine.routes.draw do
 
     get "/styleguide", to: "styleguide#index"
 
-    # Authentication routes. Folded in from the former laiss-cms-devise engine,
+    # Authentication routes. Folded in from the former separate authentication gem,
     # but registered only when the `devise` gem is present: the engine treats
     # devise as optional, so a host app that supplies its own user model and
     # sign-in must still be able to boot.

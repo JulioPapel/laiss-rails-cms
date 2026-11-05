@@ -73,7 +73,7 @@ module LaissCms
         before do
           expect(::I18n).to receive(:load_path) do
             [
-              "/opt/gems/laiss-cms-devise/config/locales/laiss_cms.de.yml",
+              "/opt/gems/laiss_cms/config/locales/extra/laiss_cms.de.yml",
               "/opt/gems/laiss_cms/config/locales/extra/laiss_cms.de.yml"
             ]
           end

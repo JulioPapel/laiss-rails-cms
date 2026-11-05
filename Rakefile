@@ -61,7 +61,7 @@ namespace :laiss_cms do
       sh "bin/rspec", "spec"
     end
 
-    desc "Prepares the database and runs the laiss-cms-devise specs"
+    desc "Prepares the database and runs the authentication (devise) specs"
     task devise: :prepare do
       sh "bin/rspec", "devise/spec"
     end

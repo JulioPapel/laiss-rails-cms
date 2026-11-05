@@ -439,8 +439,9 @@ module LaissCms
 
       # === The user class to be used for LaissCms
       #
-      # If you don't have your own user model or don't want to provide one,
-      # add the `laiss-cms-devise` gem into your App's Gemfile.
+      # If you don't have your own user model or don't want to provide one, the
+      # engine ships a Devise integration: add `gem "devise"` to your Gemfile and
+      # `require "laiss_cms/devise"` to config/application.rb.
       #
       # == Example
       #     LaissCms.config.user_class = "MyUser"

@@ -31,8 +31,9 @@ module LaissCms
     # that returns the current user. To change the method +current_laiss_cms_user+
     # will call, set +LaissCms.current_user_method+ to a different method name.
     #
-    # If you don't have an App that can provide a +current_user+ object,
-    # you can install the `laiss-cms-devise` gem that provides everything you need.
+    # If you don't have an App that can provide a +current_user+ object, the
+    # engine's bundled Devise integration provides everything you need: add
+    # `require "laiss_cms/devise"` to config/application.rb.
     #
     def current_laiss_cms_user
       current_user_method = LaissCms.config.current_user_method
