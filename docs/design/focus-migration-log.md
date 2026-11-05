@@ -4,6 +4,38 @@ One entry per step. What changed, what was verified, and **what is knowingly wro
 that point** — because during a migration of this size something usually is, and a log
 that only records successes is useless when something breaks four steps later.
 
+## THE RULE THIS MIGRATION KEEPS RELEARNING
+
+> **Any vendored rule that assumes it owns the viewport must be measured, not read.**
+
+Three defects of identical shape appeared in the first two steps, each invisible to
+reading and obvious to measuring:
+
+| Symptom | The rule | What it assumed |
+|---|---|---|
+| Every admin page blank | `#main-wrapper { opacity: 0 }` | its jQuery entry point adds `.show` on ready |
+| Content could not scroll | `#main-wrapper { overflow: hidden }` | its own fixed-height scroll containers |
+| Preview iframe unclickable | `#main_content { height: 100% }` | a parent with a definite height |
+
+A fourth is likely still ahead — `position: fixed` on modals, dropdowns and print
+styles is the usual hiding place, and **scoped CSS does not fix `position: fixed`**:
+it still resolves against the viewport, not `#laiss_cms`. When dialogs and dropdowns
+are converted, check explicitly whether a theme rule positions against the viewport.
+If one does, the fix is a `transform` or `contain` on the container to create a
+containing block — which has its own consequences for stacking and scrolling, so
+measure before applying.
+
+The method, when this bites:
+
+1. Print `getBoundingClientRect()` and computed `height`/`min-height`/`position`/
+   `display`/`overflow`/`transform`/`contain`/`will-change` for the containing chain.
+2. Do it on both states — with and without the change.
+3. Diff the tables. The property that moved is the cause.
+
+That is cheaper than three bisect cycles and produces a diagnosis rather than a
+guess. The `814px → 152px` table in Step 1b found in one pass what three CSS
+hypotheses had not.
+
 Gates are `script/gates`, run in full after every step. A count that drops is a stop
 signal, not a note.
 
