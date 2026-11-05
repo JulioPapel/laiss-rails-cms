@@ -704,3 +704,122 @@ of Profile / Inbox / Logout driven by Bootstrap's JavaScript, which this project
 ship — so the control's *shape* is adopted, and the dropdown itself is deferred to the
 shared pass where the menu component is settled.
 
+
+---
+
+## Screen 1 of the remaining list — Pages index (`table-basic.html` + tree)
+
+**Where the work stopped:** this screen is complete and committed. Next is Library /
+pictures. Nothing after that has been started.
+
+### Provenance, in one sentence per view
+
+- **List view (`?view=list`): converted from `theme/table-basic.html`** —
+  `.table-responsive > table.table`, `.badge` for status. The theme's outer
+  `.card > .card-title + .card-body` frame is deliberately **not** reproduced.
+- **Tree view (`?view=tree`): composed, because the theme has no usable counterpart.**
+  See the evidence below.
+
+### Why the tree is a composition, with the evidence
+
+`theme/uc-nestable.html` is the only page in the theme with a tree. Its markup is
+`.dd > ol.dd-list > li.dd-item > div.dd-handle`, and **all of its layout comes from a
+jQuery plugin we do not ship**:
+
+```
+theme/vendor/nestable2/css/jquery.nestable.min.css
+  .dd-list .dd-list { padding-left: 30px }   ← the indentation
+  .dd-item          { min-height: 20px }
+  .dd-handle        { display: block; height: 30px; border: 1px solid #ccc }
+```
+
+The theme's own SCSS for the component (`scss/components/uc/_uc-nestable.scss`) contains
+only thirteen declarations, and every one of them restyles the **handle's colour**:
+
+```
+color: $white;  background: $primary;  border-radius: 0;  border: 1px solid $border;
+```
+
+So adopting `uc-nestable.html` "verbatim" would mean shipping nestable2's plugin CSS and
+reimplementing its drag behaviour — a vendor library the project has consistently refused.
+`col-xxl-*` was mapped rather than forked for the same reason.
+
+The tree therefore keeps our `.sitemap_*` structure, which already carries the states the
+plugin demo has none of: folded/unfolded, locked, offline, restricted, scheduled,
+per-page action tools, drag handle on non-root pages. Composing it from the theme's
+**visual** primitives — the same card, the same badges, the same icon size, the same
+hairline row rule — is what was approved in the audit as "Composition — nested list, not a
+table".
+
+**This is the one place in the screen where I am substituting something for a theme page,
+and it is flagged rather than presented as a direct adoption.**
+
+### Two defects found while converting, and their causes
+
+**1. The status badge showed as a bare word with no chip and no gap.**
+`page_status_indicators.html.erb` emitted `<span class="page_status">` with no badge class
+at all. It now emits the theme's `.badge badge-<variant>`, mapped by meaning:
+
+| State | Variant | Why |
+|---|---|---|
+| locked | `badge-warning` | someone is holding it; not an error |
+| restricted | `badge-light` | visible to some, quietly |
+| offline | `badge-light` | the normal state of a draft |
+| scheduled | `badge-primary` | waiting on a date is a plan, not a problem |
+
+`badge-danger` is unused on purpose: red stays reserved for actual failure.
+
+Then the gap measured **0px** even after the badge was applied, because the theme's
+`#laiss_cms .badge` sets `display: inline-block` at specificity **(1,1,0)** and our bare
+`.page_status` flex rule is **(0,1,0)**. `gap` does nothing on an inline-block. Fixed with
+`body#laiss_cms .page_status` — measured after: `display: inline-flex`, `gap: 4px`.
+
+**This is the same cascade inversion logged in the shared pass. It is the second
+occurrence, and it will not be the last: any rule of ours written on a bare class is
+below the theme's reset.**
+
+**2. `table.table` collided with our own `.table` div-grid.** `tables.scss` defined
+`.table { display: flex; flex-direction: column }` for a `<div class="table">` grid used by
+exactly one view (legacy page URLs). Adding the theme's `class="table"` to real `<table>`
+elements made every index table a flex container — measured `display: flex` on the table,
+which is invalid for table layout. Our class was renamed `.div-table` (its only user
+updated), leaving `.table` to mean the theme's table. This is a rename, not a removal: the
+`div-table` grid keeps its exact behaviour.
+
+### The 375px view was broken by the desktop sidebar, and it was pre-existing
+
+At 375 the filter sidebar is `position: fixed` with `width: var(--sidebar-width)` —
+**232px over a 375px viewport**, leaving the table 143px. Two separate causes:
+
+1. `#library_sidebar` had no mobile rule at all. It is now `position: static`, full width,
+   and sits after the table.
+2. `#main_content:has(#filter_bar)` still reserved `--sidebar-width` as **padding-right**
+   after that, because `#filter_bar` lives *inside* `#library_sidebar`. Now overridden at
+   the strength the desktop rule uses.
+
+Measured after: `padding-right` 232px → **9.6px**, table 143px → **363px** inside its own
+scroll region, `document.scrollWidth` = **375** (no page overflow).
+
+**A build trap worth recording:** `pnpm run build:css` alone **exits 0 on a Sass error**,
+so a `rm` + `build:css` cycle left a stale file and I measured twice against CSS that did
+not contain my change. `pnpm run build` (the one the gate runs) does exit non-zero —
+verified by breaking the SCSS on purpose: exit 65. Always use `pnpm run build`, and check
+the file, not the exit code of the narrow script.
+
+### Verification, per the two mandatory rules
+
+| | Before | After |
+|---|---|---|
+| `#main_content *` elements, tree | 320 | 320 (unchanged — tree markup not converted) |
+| `innerText`, tree | 179 chars | 179 chars |
+| `#main_content *` elements, list | 520 | 520 |
+| `innerText`, list | 606 chars | 606 chars |
+| `table` computed display | `flex` (wrong) | `table` |
+| status badge | no `.badge`, gap 0px | `.badge`, `inline-flex`, gap 4px |
+| 375: table width | 143px | 363px |
+| 375: `document.scrollWidth` | 375 | 375 |
+
+Specs: `spec/features/admin/pages_index_layout_spec.rb`, four examples. **Three confirmed
+failing against the pre-fix files**; the tree example passes either way because that markup
+was not touched — stated rather than implied.
+

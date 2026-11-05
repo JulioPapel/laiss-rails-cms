@@ -36,7 +36,7 @@ def png_dimensions(path)
   # IHDR is always the first chunk: 8-byte signature, 4-byte length, 4-byte type,
   # then width and height as big-endian uint32.
   header.byteslice(16, 8).unpack("N2")
-rescue StandardError
+rescue
   nil
 end
 
@@ -86,7 +86,7 @@ def main(argv)
     end
   end.sort
 
-  abort "FAIL: no PNG files found in #{targets.join(', ')}" if files.empty?
+  abort "FAIL: no PNG files found in #{targets.join(", ")}" if files.empty?
 
   failures = []
   checked = 0

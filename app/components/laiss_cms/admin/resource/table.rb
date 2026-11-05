@@ -53,35 +53,55 @@ module LaissCms
         end
 
         erb_template <<~ERB
+          <%# Resource index table.
+              Source: theme/table-basic.html — `.table-responsive > table.table`.
+
+              `table` is the theme's own Bootstrap table component; `.table-responsive`
+              is the theme's overflow wrapper. `list` is kept alongside them as a
+              semantic hook: ~40 feature specs and the sort/filter JS address
+              `table.list`, and it names what the element IS rather than how it looks,
+              which is the same reasoning the dashboard used for `.count` and
+              `.widget-body`.
+
+              Deliberately NOT wrapped in the theme's `.card`. table-basic.html puts its
+              demo table inside `.card > .card-title + .card-body`, but that page shows
+              one small table as an example of a component. Here the table IS the page:
+              the toolbar, the filters and the pagination all belong to it. A card around
+              the whole index would draw a border between the page and itself, and the
+              workspace design reference is explicit that a card is for parallel items you
+              pick one of, not for the contents of a page. The theme's card frame is used
+              where the theme uses it for that purpose — see the dashboard widgets. %>
           <% if collection.any? %>
-            <table class="list">
-              <thead>
-                <tr>
-                  <% headers.each do |header| %>
-                    <%= header %>
-                  <% end %>
-                  <% if actions? %>
-                    <th class="tools"></th>
-                  <% end %>
-                </tr>
-              </thead>
-              <tbody>
-                <% collection.each do |resource| %>
-                  <tr class="<%= cycle('even', 'odd') %>">
-                    <% cells.each do |cell| %>
-                       <%= render cell_for(cell, resource) %>
+            <div class="table-responsive">
+              <table class="table list">
+                <thead>
+                  <tr>
+                    <% headers.each do |header| %>
+                      <%= header %>
                     <% end %>
                     <% if actions? %>
-                      <td class="tools">
-                        <% actions.each do |action| %>
-                          <%= render action_for(action, resource) %>
-                        <% end %>
-                      </td>
+                      <th class="tools"></th>
                     <% end %>
                   </tr>
-                <% end %>
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  <% collection.each do |resource| %>
+                    <tr class="<%= cycle('even', 'odd') %>">
+                      <% cells.each do |cell| %>
+                         <%= render cell_for(cell, resource) %>
+                      <% end %>
+                      <% if actions? %>
+                        <td class="tools">
+                          <% actions.each do |action| %>
+                            <%= render action_for(action, resource) %>
+                          <% end %>
+                        </td>
+                      <% end %>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
           <% else %>
             <laiss-cms-message type="info">
               <%= nothing_found_label %>

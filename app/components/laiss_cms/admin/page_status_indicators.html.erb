@@ -1,29 +1,45 @@
+<%# Page status, as the theme's badges.
+    Source: theme/table-basic.html — `<span class="badge badge-primary">Sale</span>` in the
+    status column of a `.table`. The theme's badge variants live in
+    `scss/components/ui/_ui-badge.scss` (`.badge-primary`, `.badge-success`,
+    `.badge-warning`, `.badge-danger`, `.badge-light`), and Bootstrap's `.badge` base is in
+    the compiled component layer.
+
+    Mapping, by what the state MEANS rather than by colour preference:
+
+      locked      → badge-warning   someone is holding the page; not an error
+      restricted  → badge-light     visible to some, quietly
+      offline     → badge-light     not published yet; the normal state of a draft
+      scheduled   → badge-primary   waiting on a date, which is a plan not a problem
+
+    `badge-danger` is deliberately unused: nothing on this screen is a failure. Reserving
+    red for actual errors is what keeps it meaningful when one does appear.
+
+    `.page_status` is kept alongside `.badge` as the semantic hook the specs address. %>
 <% if @page.locked? %>
-  <span class="page_status locked">
+  <span class="page_status badge badge-warning" title="<%= @page.status_title(:locked) %>">
     <laiss-cms-icon name="edit" size="1x"></laiss-cms-icon>
     <%= @page.status_title(:locked) %>
   </span>
 <% end %>
 
 <% if @page.restricted? %>
-  <span class="page_status">
+  <span class="page_status badge badge-light" title="<%= @page.status_title(:restricted) %>">
     <laiss-cms-icon name="lock" size="1x"></laiss-cms-icon>
     <%= @page.status_title(:restricted) %>
   </span>
 <% end %>
 
 <% if !@page.public? && !@page.scheduled? %>
-  <span class="page_status">
+  <span class="page_status badge badge-light" title="<%= @page.status_title(:public) %>">
     <laiss-cms-icon name="cloud-off" size="1x"></laiss-cms-icon>
     <%= @page.status_title(:public) %>
   </span>
 <% end %>
 
 <% if @page.scheduled? %>
-  <span class="page_status">
-    <sl-tooltip content="<%= @page.status_message(:scheduled) %>">
-      <laiss-cms-icon name="calendar-schedule" size="1x"></laiss-cms-icon>
-      <%= @page.status_title(:scheduled) %>
-    </sl-tooltip>
+  <span class="page_status badge badge-primary" title="<%= @page.status_message(:scheduled) %>">
+    <laiss-cms-icon name="calendar-schedule" size="1x"></laiss-cms-icon>
+    <%= @page.status_title(:scheduled) %>
   </span>
 <% end %>

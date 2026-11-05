@@ -224,13 +224,35 @@ laiss-cms-drawer {
 
     // These views previously relied on the sidebar's width; with the drawer
     // overlaying, they must own their own horizontal space.
+    //
+    // `#filter_bar` and `.tag-list` MUST be listed: both live inside
+    // `#library_sidebar`, so `:has(#filter_bar)` still matches once the sidebar is in
+    // the flow. Without it the desktop rule reserved `--sidebar-width` (232px) as
+    // padding and the table was left 143px wide on a 375px viewport. Measured.
+    //
+    // The `body#laiss_cms` prefix is load-bearing, not decoration. `frame.scss` writes
+    // these as nested chains — `#main_content:has(#filter_bar):has(.resources-table-wrapper)`
+    // is (2,1,0), while a plain `#main_content:has(#filter_bar)` is (2,0,0). Source
+    // order does not settle it; specificity does. Same device, and same reason, as
+    // notices.scss and sitemap.scss.
     &:has(.resources-table-wrapper),
+    &:has(.table-responsive),
     &:has(#filter_bar),
     &:has(.tag-list) {
       padding-right: calc(
         var(--journal-fluid-gutter) + var(--journal-safe-right)
       );
     }
+  }
+
+  // Same override at the id-prefixed strength `frame.scss` uses for its nested chains.
+  body#laiss_cms #main_content:has(#filter_bar),
+  body#laiss_cms #main_content:has(.tag-list),
+  body#laiss_cms #main_content:has(.table-responsive),
+  body#laiss_cms #main_content:has(.resources-table-wrapper) {
+    padding-right: calc(
+      var(--journal-fluid-gutter) + var(--journal-safe-right)
+    );
   }
 
   // --- Touch targets --------------------------------------------------------
@@ -264,6 +286,26 @@ laiss-cms-drawer {
     justify-content: center;
   }
 
+  // The resource filter sidebar is `position: fixed` on desktop with its own
+  // width, which is correct there and fatal here: at 375px it measured 232px wide
+  // and covered the table, leaving the list 141px. Measured, not assumed —
+  // `#library_sidebar` at 143,48 was 232x712 over a 375px viewport.
+  //
+  // Below the breakpoint it becomes a normal block in the flow, full width, so the
+  // table gets the whole viewport and the table's own scroll region handles width.
+  // It sits after the table rather than floating over it, because the filter panel
+  // is secondary to the list on a narrow screen.
+  div#library_sidebar {
+    position: static;
+    width: auto;
+    height: auto;
+    max-height: none;
+    border-left: 0;
+    border-top: 1px solid var(--border-color);
+    overflow-y: visible;
+    margin-top: var(--journal-fluid-gutter);
+  }
+
   // Tables scroll inside their own region instead of squeezing columns.
   //
   // Scoped to the resource-table wrapper on purpose. A blanket
@@ -271,7 +313,10 @@ laiss-cms-drawer {
   // element editor's forms live in tables, and making every table a scroll
   // container left the Save button unreachable ("could not be scrolled into
   // view"). Only the wide index tables need their own scroll region.
-  .resources-table-wrapper {
+  .resources-table-wrapper,
+  // The theme's own overflow wrapper, which the resource table now uses
+  // (table-basic.html wraps its table this way). Same scroll behaviour.
+  .table-responsive {
     display: block;
     max-width: 100%;
     overflow-x: auto;

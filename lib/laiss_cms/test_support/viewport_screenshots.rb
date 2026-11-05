@@ -70,7 +70,10 @@ module LaissCms
                 "widths under 500 use driven_with_viewport, which emulates rather than resizes."
         end
 
+        # standard:disable Lint/Debugger -- save_screenshot is Capybara's capture API,
+        # not a debugger entry point; the cop matches the method name alone.
         page.save_screenshot(path)
+        # standard:enable Lint/Debugger
 
         file_width, file_height = png_dimensions(path)
         raise "Wrote #{path} but it is #{file_width}px wide, not #{width}px." if file_width != width
