@@ -8,6 +8,27 @@ CMS engine; that derivation is recorded in `LICENSE` and nowhere else.
 
 ## Unreleased
 
+## 0.1.0.beta4 — corrective
+
+Both defects found by executing `ci.yml`'s steps rather than reading them. Neither
+affects an installed app.
+
+- **The devise spec job could not have passed.** `ci.yml` ran
+  `bundle exec rspec devise/spec` from the root, which loaded the core spec helper
+  (a load-path lookup hits `./spec` first), leaving the integration inactive and
+  failing five files with `uninitialized constant LaissCms::Devise`. `script/gates`
+  passed because it goes through `bin/rspec`, which cd's into each lib.
+
+  Every CI job now runs a `script/gates` subset, so there is one implementation of
+  the checks. The `counts` job is gone: it duplicated the example floors with stale
+  hardcoded numbers and would have failed on every run. Two things the refactor
+  nearly lost were caught and preserved — the committed-build-artifacts check, now
+  in `run_js` and negative-tested, and the plain-`rails` requirement of the scratch
+  gate.
+
+- **33 committed coverage artifacts** under `devise/coverage`, including a lock file
+  and generated HTML. Untracked and now ignored.
+
 ## 0.1.0.beta3 — corrective
 
 Two defects in 0.1.0.beta2, both found by installing that release into a fresh app.

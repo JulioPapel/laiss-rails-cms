@@ -11,7 +11,7 @@ A walkthrough that matches the current admin: create a page, add an element, edi
 an ingredient, publish.
 
 Every command below has been run against this repository at tag
-`v0.1.0.beta3`.
+`v0.1.0.beta4`.
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ cd my-site
 # Gemfile
 gem "laiss_cms",
   git: "git@github.com:JulioPapel/laiss-rails-cms.git",
-  tag: "v0.1.0.beta3"
+  tag: "v0.1.0.beta4"
 
 # optional: authentication. The integration ships inside laiss_cms; only the
 # devise gem is separate, and leaving it out is a supported setup.
