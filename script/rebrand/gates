@@ -182,12 +182,106 @@ run_rebrand() {
   fi
 }
 
+# The one check that cannot be done from inside this repository.
+#
+# Every other gate runs against the dummy app, which is configured in whatever way
+# makes the suite work. That is exactly how the admin came to 500 on a fresh
+# install in beta2 without any gate noticing: the dummy app has propshaft, so the
+# missing-pipeline case was never exercised.
+#
+# This builds a throwaway Rails app with no asset pipeline, points it at this
+# checkout, and asserts that booting it raises LaissCms::AssetPipelineMissing —
+# the friendly error naming the fix — rather than succeeding and then failing on
+# the first admin request.
+run_scratch() {
+  echo "Scratch app"
+
+  local work
+  work=$(mktemp -d)
+  # shellcheck disable=SC2064
+  trap "rm -rf '$work'" RETURN
+
+  local root
+  root=$(pwd)
+
+  if ! command -v rails > /dev/null 2>&1; then
+    fail "scratch app (rails executable not on PATH)"
+    return
+  fi
+
+  ( cd "$work" && rails new nopipe --minimal --skip-bundle --skip-git \
+      --skip-test --skip-system-test --skip-ci --no-rc ) > /tmp/scratch-new.log 2>&1 || {
+    fail "scratch app could not be generated"
+    tail -5 /tmp/scratch-new.log
+    return
+  }
+
+  local app="$work/nopipe"
+
+  # A --minimal app has no asset pipeline and its own development.rb still
+  # references config.assets.quiet, which is the thing under test elsewhere.
+  rm -f "$app/config/initializers/assets.rb"
+  sed -i.bak 's/^  config\.assets\.quiet = true/  # removed by gates/' \
+    "$app/config/environments/development.rb"
+  rm -f "$app/config/environments/development.rb.bak"
+
+  cat > "$app/Gemfile" <<RUBY
+source "https://rubygems.org"
+
+gem "rails", "~> 8.1.4"
+gem "sqlite3"
+gem "puma"
+gem "laiss_cms", path: "$root"
+RUBY
+
+  # Enable the frameworks the engine touches, and point storage at a local disk,
+  # exactly as a host app must.
+  ruby -e '
+    path = ARGV[0] + "/config/application.rb"
+    s = File.read(path)
+    %w[active_job/railtie active_storage/engine action_mailer/railtie].each do |fw|
+      s = s.sub(%r{^# require "#{Regexp.escape(fw)}"}, %(require "#{fw}"))
+    end
+    s = s.sub("class Application < Rails::Application\n",
+              "class Application < Rails::Application\n    config.active_storage.service = :local\n")
+    unless s.include?(%(require "laiss_cms"))
+      s = s.sub("Bundler.require(*Rails.groups)", %(Bundler.require(*Rails.groups)\nrequire "laiss_cms"))
+    end
+    File.write(path, s)
+  ' "$app"
+
+  printf 'development:\n  adapter: sqlite3\n  database: db/development.sqlite3\n' > "$app/config/database.yml"
+  printf 'local:\n  service: Disk\n  root: <%%= Rails.root.join("storage") %%>\n' > "$app/config/storage.yml"
+  mkdir -p "$app/db"
+
+  if ! ( cd "$app" && bundle install --quiet ) > /tmp/scratch-bundle.log 2>&1; then
+    fail "scratch app bundle install failed"
+    tail -5 /tmp/scratch-bundle.log
+    return
+  fi
+
+  # The assertion: boot raises the named error with the fix in its message.
+  local out
+  out=$( cd "$app" && SECRET_KEY_BASE=x RAILS_ENV=development bin/rails runner 'puts "BOOTED"' 2>&1 )
+
+  if echo "$out" | grep -q "LaissCms::AssetPipelineMissing" \
+     && echo "$out" | grep -q 'gem "propshaft"'; then
+    pass "no pipeline raises a named boot error with the fix"
+  elif echo "$out" | grep -q "BOOTED"; then
+    fail "booted without an asset pipeline; the requirement is not enforced"
+  else
+    fail "unexpected failure without an asset pipeline"
+    echo "$out" | head -8
+  fi
+}
+
 case "${1:-all}" in
   ruby) run_ruby ;;
   js) run_js ;;
   rebrand) run_rebrand ;;
-  all) run_ruby; run_js; run_rebrand ;;
-  *) echo "usage: $0 [all|ruby|js|rebrand]" >&2; exit 2 ;;
+  scratch) run_scratch ;;
+  all) run_ruby; run_js; run_rebrand; run_scratch ;;
+  *) echo "usage: $0 [all|ruby|js|rebrand|scratch]" >&2; exit 2 ;;
 esac
 
 echo

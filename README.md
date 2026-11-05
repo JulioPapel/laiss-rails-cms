@@ -10,7 +10,7 @@ in what a writer types — so an author cannot break the structure of a page.
 > This is **not published to RubyGems** and never will be. Install it from git at
 > a tag. There is no gem on rubygems.org and no support contract.
 
-Current version: **0.1.0.beta2**. See [docs/versioning.md](docs/versioning.md) —
+Current version: **0.1.0.beta3**. See [docs/versioning.md](docs/versioning.md) —
 this project has its own version sequence, deliberately unrelated to any other
 CMS's numbering.
 
@@ -70,7 +70,7 @@ git install needs no Node toolchain.
 ```ruby
 gem "laiss_cms",
   git: "git@github.com:JulioPapel/laiss-rails-cms.git",
-  tag: "v0.1.0.beta2"
+  tag: "v0.1.0.beta3"
 
 # Optional: Devise-based authentication.
 # The integration ships inside laiss_cms; only the devise gem is separate, and it
@@ -92,10 +92,13 @@ require "laiss_cms/devise"   # only if using the bundled sign-in
 Without that line there is no `LaissCms::User`, no sign-in routes and no admin
 user screen — and the rest of the CMS works normally.
 
-Your app needs an asset pipeline — either `propshaft` (Rails' default) or
-`sprockets`. The admin renders its JavaScript through `importmap-rails`, which
-reads `config.assets`, so an app without one raises `NoMethodError` on every admin
-page. Rails' `--minimal` template omits both; add `gem "propshaft"` in that case.
+Your app also needs an asset pipeline — `propshaft` (Rails' default) or
+`sprockets`. Skip this if you already have one; Rails' `--minimal` template has
+neither, and the engine refuses to boot without it, naming the fix:
+
+```ruby
+gem "propshaft"
+```
 
 Then run these **in this order**:
 

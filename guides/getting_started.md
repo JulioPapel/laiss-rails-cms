@@ -11,7 +11,7 @@ A walkthrough that matches the current admin: create a page, add an element, edi
 an ingredient, publish.
 
 Every command below has been run against this repository at tag
-`v0.1.0.beta2`.
+`v0.1.0.beta3`.
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ cd my-site
 # Gemfile
 gem "laiss_cms",
   git: "git@github.com:JulioPapel/laiss-rails-cms.git",
-  tag: "v0.1.0.beta2"
+  tag: "v0.1.0.beta3"
 
 # optional: authentication. The integration ships inside laiss_cms; only the
 # devise gem is separate, and leaving it out is a supported setup.
@@ -49,8 +49,13 @@ bundle install
 ```
 
 Your app needs an asset pipeline — `propshaft` (Rails' default) or `sprockets`.
-The admin's JavaScript is rendered through `importmap-rails`, which reads
-`config.assets`; without a pipeline every admin page raises `NoMethodError`.
+The admin renders through `importmap-rails`, which reads `config.assets`. Rails'
+`--minimal` template has neither, and the engine stops at boot with a message
+naming the gem to add:
+
+```ruby
+gem "propshaft"
+```
 
 ## 3. Install, in this order
 

@@ -8,6 +8,29 @@ CMS engine; that derivation is recorded in `LICENSE` and nowhere else.
 
 ## Unreleased
 
+## 0.1.0.beta3 — corrective
+
+Two defects in 0.1.0.beta2, both found by installing that release into a fresh app.
+No migrations, no config renames, no data changes.
+
+- **The admin was broken in an app without an asset pipeline.** Every admin page
+  returned 500 with `NoMethodError: undefined method 'assets'`, raised from inside
+  a template because `importmap-rails` reads `config.assets` and Rails'
+  `--minimal` template ships neither propshaft nor sprockets. The engine now
+  checks at boot and raises `LaissCms::AssetPipelineMissing`, whose message names
+  the gem to add. A pipeline stays a requirement: the admin is the engine's whole
+  surface and its routes cannot be switched off, so failing at boot beats a 500 on
+  the first request.
+
+- **`script/gates` did not prepare the test database.** A fresh clone failed both
+  Ruby gates with `no such table: laiss_cms_attachments`; it passed only where the
+  database already existed. The gate now runs `laiss_cms:test:prepare` when the
+  tables are absent. CI was already doing this in a separate step — the gap was in
+  the script the release notes point readers at.
+
+- Added a `scratch` gate that builds a throwaway Rails app with no asset pipeline
+  and asserts the boot error appears. Confirmed to fail when the guard is removed.
+
 ## 0.1.0.beta2 — one gem, and a test suite that does not depend on file order
 
 Packaging and correctness. Nothing here changes what the admin looks like.

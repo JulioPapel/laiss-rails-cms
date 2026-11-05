@@ -85,4 +85,26 @@ module LaissCms
       "Unknown Version! Please use one of #{LaissCms::EagerLoading::PAGE_VERSIONS.join(", ")}"
     end
   end
+
+  # Raised at boot when the host app has no asset pipeline. The admin renders its
+  # stylesheets and JavaScript through one, so without it every admin page would
+  # fail with `NoMethodError: undefined method 'assets'` from inside a template.
+  class AssetPipelineMissing < StandardError
+    def message
+      <<~MSG
+        LaissCms needs an asset pipeline and this app has neither propshaft nor sprockets.
+
+        The admin renders its stylesheets and JavaScript through the pipeline
+        (`importmap-rails` reads `config.assets`), so without one every admin page
+        fails with `NoMethodError: undefined method 'assets'`.
+
+        Add one line to your Gemfile:
+
+            gem "propshaft"
+
+        then run `bundle install` and restart. `gem "sprockets", "~> 4.2"` works too.
+        Rails' `--minimal` template is what omits both.
+      MSG
+    end
+  end
 end

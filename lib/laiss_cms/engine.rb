@@ -284,6 +284,28 @@ module LaissCms
       end
     end
 
+    # The admin renders its stylesheets and JavaScript through the asset pipeline:
+    # the layout calls asset_path, stylesheet_link_tag and
+    # javascript_importmap_tags, and importmap-rails reads config.assets. Without
+    # a pipeline every admin page raises
+    #   NoMethodError: undefined method 'assets'
+    # from inside a template, which names neither this engine nor the fix.
+    #
+    # Fail at boot instead, with the requirement and the exact line to add. The
+    # admin routes are always drawn and cannot be switched off, so an app without
+    # a pipeline has no working surface at all — 500ing on the first admin request
+    # is strictly worse than saying so up front.
+    #
+    # Not a gem dependency: either propshaft or sprockets satisfies it, and adding
+    # both would force a choice on apps that already have one.
+    initializer "laiss_cms.require_asset_pipeline" do |app|
+      # `config.assets` is added by propshaft's and sprockets' railties, so its
+      # absence means neither is installed.
+      next if app.config.respond_to?(:assets)
+
+      raise LaissCms::AssetPipelineMissing.new
+    end
+
     initializer "laiss_cms.webp-mime_type" do |app|
       webp = "image/webp"
       svg = "image/svg+xml"
