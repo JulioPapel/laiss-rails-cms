@@ -70,18 +70,21 @@
   --color-grey_dark: #45484d;
   --color-grey_very_dark: #14161b;
 
-  /* Sizes */
-  --spacing-0: 2px;
-  --spacing-1: 4px;
-  --spacing-2: 8px;
-  --spacing-3: 12px;
-  --spacing-4: 16px;
-  --spacing-5: 20px;
-  --spacing-6: 24px;
-  --spacing-7: 28px;
-  --spacing-8: 32px;
-  --spacing-9: 36px;
-  --spacing-10: 40px;
+  /* Sizes — rem, so the whole UI scales with the user's font setting.
+     The admin base was 12px (0.75rem), so these are computed against a 16px
+     root: 4px = 0.25rem, and so on. Keeping the identical visual values means
+     nothing moves at default settings; only the unit changes. */
+  --spacing-0: 0.125rem;  /* 2px */
+  --spacing-1: 0.25rem;   /* 4px */
+  --spacing-2: 0.5rem;    /* 8px */
+  --spacing-3: 0.75rem;   /* 12px */
+  --spacing-4: 1rem;      /* 16px */
+  --spacing-5: 1.25rem;   /* 20px */
+  --spacing-6: 1.5rem;    /* 24px */
+  --spacing-7: 1.75rem;   /* 28px */
+  --spacing-8: 2rem;      /* 32px */
+  --spacing-9: 2.25rem;   /* 36px */
+  --spacing-10: 2.5rem;   /* 40px */
 
   /* Font Families */
   --font-mono:
@@ -96,10 +99,10 @@
     "Helvetica Neue", Arial, sans-serif;
 
   /* Font Size - at the moment only in Pixel, because the base font size is 12px */
-  --font-size_small: 10px; /* 0.875rem */
-  --font-size_medium: 12px; /* 1rem */
-  --font-size_large: 16px; /* 1.25 rem */
-  --font-size_xlarge: 24px; /* 2 rem */
+  --font-size_small: 0.625rem; /* 10px */
+  --font-size_medium: 0.75rem; /* 12px */
+  --font-size_large: 1rem; /* 16px */
+  --font-size_xlarge: 1.5rem; /* 24px */
 
   --font-weight_normal: 500;
   --font-weight_semibold: 600;
