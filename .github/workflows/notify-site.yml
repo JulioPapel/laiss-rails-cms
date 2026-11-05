@@ -59,11 +59,14 @@ jobs:
         env:
           TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
         run: |
+          # Defaulted so this step can be exercised outside a runner, where
+          # GITHUB_OUTPUT is unset and `set -u` would abort it.
+          output="${GITHUB_OUTPUT:-/dev/null}"
           if [ -z "${TOKEN}" ]; then
-            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "configured=false" >> "$output"
             echo "::notice title=Site dispatch skipped::SITE_DISPATCH_TOKEN is not set on this repository. See the site's coolify.md, section 5."
           else
-            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "configured=true" >> "$output"
           fi
 
       - name: Resolve the ref to publish
@@ -82,7 +85,7 @@ jobs:
           else
             ref="${GITHUB_SHA}"
           fi
-          echo "cms_ref=${ref}" >> "$GITHUB_OUTPUT"
+          echo "cms_ref=${ref}" >> "${GITHUB_OUTPUT:-/dev/null}"
           echo "Publishing documentation for: ${ref}"
 
       - name: Dispatch cms-docs-updated to the site

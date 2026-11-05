@@ -102,14 +102,16 @@ fi
 
 # --- Hygiene ---------------------------------------------------------------
 
-pii=$(git grep -l 'julio@laisslabs' -- . 2>/dev/null | wc -l | tr -d ' ')
+# Excludes this script itself, which necessarily contains the pattern it searches
+# for. An auditor that flags its own source is a false positive.
+pii=$(git grep -l 'julio@laisslabs' -- . ':!script/audit' 2>/dev/null | wc -l | tr -d ' ')
 if [ "$pii" = "0" ]; then
   row "no personal email in tracked files" "VERIFIED" "0 matches"
 else
   row "no personal email in tracked files" "FAIL" "$pii file(s)"
 fi
 
-paths=$(git grep -lE '/home/[a-z]+/|agent-stores|/cursor/stores' -- . 2>/dev/null | wc -l | tr -d ' ')
+paths=$(git grep -lE '/home/[a-z]+/|agent-stores|/cursor/stores' -- . ':!script/audit' 2>/dev/null | wc -l | tr -d ' ')
 if [ "$paths" = "0" ]; then
   row "no absolute local paths in tracked files" "VERIFIED" "0 matches"
 else

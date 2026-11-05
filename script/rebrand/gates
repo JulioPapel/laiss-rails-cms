@@ -36,6 +36,29 @@ failures=0
 pass() { printf '  \033[32mPASS\033[0m  %s\n' "$1"; }
 fail() { printf '  \033[31mFAIL\033[0m  %s\n' "$1"; failures=$((failures + 1)); }
 
+# A missing tool used to surface as five bare "FAIL" lines with no cause: the JS
+# gates each ran a command that exited 127, and the reason was only visible by
+# re-running the command by hand. On a machine without mise that is the first thing
+# that happens. Name it once, up front, with what to install.
+require_tool() {
+  if ! command -v "$1" > /dev/null 2>&1; then
+    printf '  \033[31mFAIL\033[0m  %s is not on PATH — %s\n' "$1" "$2"
+    failures=$((failures + 1))
+    return 1
+  fi
+  return 0
+}
+
+check_prerequisites() {
+  local ok=0
+  require_tool ruby "install Ruby >= 3.4 (see .ruby-version)" || ok=1
+  require_tool bundle "gem install bundler" || ok=1
+  require_tool pnpm "install pnpm (CI does this with pnpm/action-setup@v4)" || ok=1
+  require_tool node "install Node (see .tool-versions)" || ok=1
+  require_tool git "install git" || ok=1
+  return $ok
+}
+
 run_ruby() {
   echo "Ruby"
 
@@ -303,6 +326,16 @@ RUBY
     echo "$out" | head -8
   fi
 }
+
+echo "Prerequisites"
+if ! check_prerequisites; then
+  echo
+  echo "Missing prerequisites — the checks below cannot run. Nothing was verified."
+  echo "1 GATE FAILED"
+  exit 1
+fi
+echo "  all present"
+echo
 
 case "${1:-all}" in
   ruby) run_ruby ;;
