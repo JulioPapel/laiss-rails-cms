@@ -48,6 +48,10 @@ gem "devise", "~> 4.9"
 bundle install
 ```
 
+Your app needs an asset pipeline — `propshaft` (Rails' default) or `sprockets`.
+The admin's JavaScript is rendered through `importmap-rails`, which reads
+`config.assets`; without a pipeline every admin page raises `NoMethodError`.
+
 ## 3. Install, in this order
 
 ```bash

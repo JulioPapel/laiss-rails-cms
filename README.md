@@ -92,6 +92,11 @@ require "laiss_cms/devise"   # only if using the bundled sign-in
 Without that line there is no `LaissCms::User`, no sign-in routes and no admin
 user screen — and the rest of the CMS works normally.
 
+Your app needs an asset pipeline — either `propshaft` (Rails' default) or
+`sprockets`. The admin renders its JavaScript through `importmap-rails`, which
+reads `config.assets`, so an app without one raises `NoMethodError` on every admin
+page. Rails' `--minimal` template omits both; add `gem "propshaft"` in that case.
+
 Then run these **in this order**:
 
 ```bash

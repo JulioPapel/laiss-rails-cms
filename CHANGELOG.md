@@ -70,6 +70,14 @@ Packaging and correctness. Nothing here changes what the admin looks like.
   asset-path initializer now checks for it, so a minimal Rails app without
   sprockets or propshaft can load the engine.
 
+- **The admin did not render in an app without an asset pipeline.** Every admin
+  page raised `NoMethodError: undefined method 'assets'`, because the layout renders
+  its JavaScript through `importmap-rails`, which reads `config.assets`. The engine
+  already worked in any app with propshaft or sprockets — but Rails' `--minimal`
+  template has neither, and nothing said so. The requirement is now stated in the
+  README, the getting-started guide and the release note's Requirements list, and
+  noted in the gemspec beside the `importmap-rails` dependency that causes it.
+
 - **`db:seed` created nothing, silently.** The installer told you to run it but
   wrote no `db/seeds/laiss_cms/pages.yml`, and the seeder returned early when that
   file was absent without printing anything. The admin then came up with no site,

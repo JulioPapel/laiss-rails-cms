@@ -55,6 +55,13 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency "gutentag", ">= 2.2.1", "< 4.0"
   gem.add_runtime_dependency "image_processing", ">= 1.14", "< 3.0"
   gem.add_runtime_dependency "importmap-rails", ["~> 2.0"]
+  # Not a gem dependency, because either pipeline satisfies it, but the admin
+  # requires one of them: `javascript_importmap_tags` reads `config.assets`, so an
+  # app without an asset pipeline raises NoMethodError when rendering any admin
+  # page. Rails' `--minimal` template omits both, which is how this was found — by
+  # installing the released gem into one. Documented in the README and the release
+  # notes; asserted here so the requirement is visible next to the importmap
+  # dependency that causes it.
   gem.add_runtime_dependency "kaminari", ["~> 1.1"]
   gem.add_runtime_dependency "originator", ["~> 3.1"]
   gem.add_runtime_dependency "ransack", ">= 4.0", "< 7.0"
