@@ -866,3 +866,145 @@ versions as prose history with no markdown links at all, and `docs/releases/` co
 `v0.1.0.beta6.md`. `script/check_doc_links` covers `docs/**/*.md` and was negative-tested
 against a deliberate `releases/v0.1.0.beta5.md` link — it failed with "link target does not
 exist". A link to a deleted file cannot survive the gate.
+
+---
+
+# MIGRATION-LEVEL DEFECT: the theme's universal reset inverted the cascade
+
+**This is not a component footnote.** It affected every screen in the admin, it was
+invisible to every spec, and it silently made each new rule we wrote a coin flip.
+
+## What the reset was doing
+
+The theme's base layer is a bare `* { padding: 0 }`:
+
+```scss
+// theme/base/_reset.scss, upstream
+* { outline: none; padding: 0; }
+```
+
+In the original theme that is specificity **(0,0,0)**, so any class rule overrode it and
+the layering worked as designed. But the whole theme is imported inside `#laiss_cms { }` so
+it cannot touch the host page — and Sass prefixes the parent, emitting:
+
+```css
+#laiss_cms * { outline: none; padding: 0 }   /* specificity (1,0,0) — an ID */
+```
+
+**An id beats every bare class.** Every rule in our component layer written as
+`.thing { padding: … }` (0,1,0) or `button { padding: … }` (0,0,1) lost to a *reset*. That
+is the one thing a reset must never win against, and it had been true since the theme was
+scoped.
+
+## Step 1 — measured the blast radius before touching anything
+
+Probe: every rule in `admin.css` whose selector is at most (0,1,0) — the only kind the
+reset can beat — that declares `padding` or `margin` and matches a real element on the
+Pages index. For each, the declared value was resolved to pixels with a detached element
+and compared against the computed value on the live element.
+
+```
+rules examined:  61
+reset winning:   41   (of which 24 computed to exactly 0px)
+```
+
+The 24 that computed to 0px — i.e. **the reset beat them outright**:
+
+```
+button, input[type=submit], a.button   .toolbar            .pagination
+input[type=text], select, textarea     .pagination-wrapper .per-page-select-form
+.toolbar input.search_input_field      .resources-table-wrapper
+.laiss-cms-popover                     .ts-wrapper.laiss_cms_selectbox .ts-control
+.main_navi_entry label                 .subnavi_tab a
+.dayContainer, .flatpickr-*            .numInputWrapper span
+td.status .page_status
+```
+
+The other 17 were mismatches where a **different rule of ours** with higher specificity
+won — normal cascade behaviour, not the reset. They are listed separately because counting
+them as damage would have overstated the blast radius.
+
+Corroborating symptom from the pre-fix baseline capture: `button` and `input` measured
+**0×0** on screens where they are not hidden.
+
+## Step 2 — the fix
+
+`theme/base/_reset.scss` now wraps the reset in `:where()`:
+
+```scss
+:where(#laiss_cms) {
+  * { outline: none; padding: 0; … }
+}
+```
+
+`:where()` contributes **zero specificity**, so the emitted selector is
+`:where(#laiss_cms) *` at **(0,0,1)** — the same weight as a bare element selector, which
+is what a reset is. It still only matches inside `#laiss_cms`, so the host-safety guarantee
+that motivates the wrapper is unchanged.
+
+Restored order:
+
+```
+theme component (1,x,x)  >  our component (0,1,x)  >  reset (0,0,1)  >  UA default
+```
+
+The file carries a comment saying not to rewrite it as a plain `*` inside the wrapper and
+not to "simplify" the `:where()` away, because either puts it back at (1,0,0).
+
+## Step 3 — verified, and the blast radius was real
+
+Same probe after the fix:
+
+```
+rules examined:  61
+reset winning:    3   (24 → 3)
+```
+
+The three remaining are **not** the reset, and each was checked individually:
+
+| Rule | Why it is still 0 | Verdict |
+|---|---|---|
+| `.dayContainer` | flatpickr's own later rule sets `padding: 0` | vendor ordering, correct |
+| `td.status .page_status` | `:first-of-type` deliberately zeroes the left margin | correct |
+| `textarea, input[...]` | a later rule of ours overrides the shorthand | correct |
+
+Spot-checks of previously-dead rules now computing correctly:
+
+| | Before | After |
+|---|---|---|
+| `.toolbar` padding | 0px | **12px 24px** |
+| `.pagination` padding | 0px | **8px** |
+| `.laiss-cms-popover` padding | 0px | **8px** |
+| search input padding | 0px | **8px 16px 8px 32px** |
+| `select` padding (settings) | 0px | **6px 12px** |
+| `select` size (pages) | 18×36 | **62×36** |
+
+## Step 4 — every converted screen re-shot and diffed
+
+Content was expected to be unchanged, because this fix changes styling, not markup. It was:
+
+| Screen | elements before → after | innerText before → after |
+|---|---|---|
+| dashboard | 618 → 618 | 1,307 → 1,307 |
+| settings | 132 → 132 | 1,515 → 1,515 |
+| pages list | 520 → 520 | 607 → 607 |
+| pages tree | 320 → 320 | 179 → 179 |
+
+One geometry change on the pages list, and it is the fix working:
+`input` 18×36 → **62×36**, table 1036 → 1020px. The select was being crushed to its content
+width by the missing padding.
+
+Screenshots re-taken at 1440 and at a verified 375 for all four screens; every file
+confirmed by `script/check_screenshots`, `scrollWidth` equal to the viewport on all eight.
+
+All 4,423 core specs and 167 devise specs pass.
+
+## The lesson
+
+**A reset scoped under an id is not a reset.** When a stylesheet is nested for host safety,
+every bare `*` rule inside it silently gains an id's weight. The symptom is not an error —
+it is a component that looks "almost right", with padding missing, and no spec can see it
+because nothing is broken, only unstyled.
+
+Anything similar in another scoped stylesheet needs the same `:where()` treatment. Grep for
+`* {` inside any scoped block before adding a new one.

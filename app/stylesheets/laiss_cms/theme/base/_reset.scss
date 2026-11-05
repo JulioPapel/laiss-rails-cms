@@ -5,21 +5,36 @@
 // replaced by native CSS.
 @import "../abstracts/maps";
 
+// ---------------------------------------------------------------------------
+// THE UNIVERSAL RESET - scoped through :where(), deliberately.
+//
+// This block used to be a bare `* { padding: 0 }` inside the `#laiss_cms { }`
+// wrapper in focus.scss, which emitted `#laiss_cms *` and therefore scored
+// specificity (1,0,0) - an ID. Every bare-class rule in our own component layer is
+// (0,1,0) and LOST to it. Measured on the Pages index: 24 of our rules declared a
+// padding that computed to 0px, including `button`, `input`, `select`, `.toolbar`,
+// `.pagination` and `.laiss-cms-popover`.
+//
+// In the original theme this reset is `*` at (0,0,0), so ANY class overrode it and
+// the layering worked as the theme intended. Scoping it under an id silently inverted
+// the cascade for the entire admin: our components were losing to a reset, which is
+// the one thing a reset must never win against.
+//
+// `:where()` contributes ZERO specificity, so `:where(#laiss_cms) *` scores (0,0,1) -
+// the same weight as a bare element selector, which is what a reset is. It still only
+// matches elements inside #laiss_cms, so the scoping guarantee is unchanged.
+//
+//     theme component (1,x,x)  >  our component (0,1,x)  >  reset (0,0,1)  >  UA
+//
+// Do not rewrite this as a plain `*` inside the wrapper, and do not "simplify" the
+// :where() away. Both put it back at (1,0,0) and reintroduce the bug.
+// ---------------------------------------------------------------------------
+// The universal reset lives in ./_universal-reset.scss, NOT here.
+//
+// It has to be imported outside the `#laiss_cms { }` wrapper in focus.scss, because
+// everything in this file is nested inside that wrapper and Sass would prefix the reset
+// with the id. See _universal-reset.scss for the measurement and the reasoning.
 
-
-
-* {
-    outline: none;
-    padding: 0;
-    &::after {
-        margin: 0;
-        padding: 0;
-    }
-    &::before {
-        margin: 0;
-        padding: 0;
-    }
-}
 
 body {
     overflow-x: hidden;

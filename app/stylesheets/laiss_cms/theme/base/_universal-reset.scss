@@ -1,0 +1,48 @@
+// The universal reset, kept in its own file because of WHERE it has to be imported.
+//
+// WHY THIS IS SEPARATE FROM theme/base/_reset.scss
+//
+// The theme's base layer is imported inside the `#laiss_cms { }` wrapper in focus.scss,
+// which is right for the theme's components: scoping them under the body id is what stops
+// the CMS from restyling its host page.
+//
+// It is wrong for this rule. Sass prefixes every selector in a nested import with the
+// parent, so a bare `* { padding: 0 }` became `#laiss_cms *` at specificity **(1,0,0)** —
+// an id. That beats every bare-class rule in our component layer, all of which are at most
+// (0,1,0). Measured on the Pages index before the fix: 24 of our rules declared a padding
+// that computed to 0px, including `button`, `input`, `select`, `.toolbar`, `.pagination`
+// and `.laiss-cms-popover`.
+//
+// In the original theme this reset is `*` at (0,0,0), so any class overrode it and the
+// layering worked as intended. Scoping it under an id inverted the cascade for the whole
+// admin: our components were losing to a reset, which is the one thing a reset must never
+// win against.
+//
+// `:where()` contributes ZERO specificity, so `:where(#laiss_cms) *` scores (0,0,1) — the
+// weight of a bare element selector, which is what a reset is — while still only matching
+// inside #laiss_cms. Restored order:
+//
+//     theme component (1,x,x)  >  our component (0,1,x)  >  reset (0,0,1)  >  UA default
+//
+// Because it self-scopes, it must be imported OUTSIDE the wrapper (focus.scss does this).
+// Import it inside and Sass prefixes it to `#laiss_cms :where(#laiss_cms) *`, which is
+// both (1,0,1) again and impossible to match, since there is no #laiss_cms inside
+// #laiss_cms.
+//
+// Do not "simplify" the :where() away, and do not move this back into base/_reset.scss.
+// Either one restores the bug. spec/features/admin/cascade_reset_spec.rb fails if you do.
+
+:where(#laiss_cms) * {
+  outline: none;
+  padding: 0;
+
+  &::after {
+    margin: 0;
+    padding: 0;
+  }
+
+  &::before {
+    margin: 0;
+    padding: 0;
+  }
+}

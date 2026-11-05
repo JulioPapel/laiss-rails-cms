@@ -97,3 +97,14 @@
 
 }
 
+// The universal reset, imported OUTSIDE the wrapper on purpose.
+//
+// It self-scopes with `:where(#laiss_cms)`, which contributes zero specificity, so the
+// emitted selector is `:where(#laiss_cms) *` at (0,0,1) — the weight a reset should have.
+// Inside the wrapper Sass would prefix it to `#laiss_cms :where(#laiss_cms) *`, which is
+// both (1,0,1) — beating our classes again — and unable to match anything, because a
+// #laiss_cms nested inside a #laiss_cms id does not exist.
+//
+// See theme/base/_reset.scss for the full reasoning and the measurements.
+@import "theme/base/universal-reset";
+
