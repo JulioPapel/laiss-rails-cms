@@ -1,81 +1,88 @@
 # Documentation
 
-Which documents are authoritative, and when each was last checked against the
-code. The point of this file is that documentation drifts less when someone has to
-date it.
+Which documents are authoritative, which are verified, and which are not. The
+point of this file is that a reader never has to guess how much to trust a page.
 
-## Authoritative
+Verified means: **I read the document against the code, or executed its commands.**
+Not "it looks right."
 
-These describe the current code. If one contradicts the code, the document is
-wrong — fix it or open an issue.
+## Verified against the code
 
-| Document | Covers | Verified |
+| Document | What was checked | Date |
 | --- | --- | --- |
-| [`README.md`](../README.md) | What the project is, install from git, requirements, concepts | 2026-11-05 |
-| [`CONTRIBUTING.md`](../CONTRIBUTING.md) | Setup, suites, gates, naming contract, editor policy, commits | 2026-11-05 |
-| [`SECURITY.md`](../SECURITY.md) | Reporting a vulnerability, scope | 2026-11-05 |
-| [`CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 | 2026-11-05 |
-| [`docs/versioning.md`](versioning.md) | Version sequence, release process, no RubyGems | 2026-11-05 |
-| [`docs/site-sync.md`](site-sync.md) | The docs-site dispatch, its secret and scope | 2026-11-05 |
-| [`docs/design/reference-spec.md`](design/reference-spec.md) | The measured design system | 2026-11-05 |
-| [`docs/development/toolchain-pinning.md`](development/toolchain-pinning.md) | Pinned Ruby/Node/pnpm and why | 2026-11-05 |
-| `guides/` | Reference documentation, below | 2026-11-05 |
+| [`README.md`](../README.md) | Every command executed in a scratch Rails app installed from the git tag. Every internal link and image reference resolved programmatically. | 2026-11-05 |
+| [`CONTRIBUTING.md`](../CONTRIBUTING.md) | Commands run; gate names read from `script/rebrand/gates`; rebrand script names and arguments checked against the files. | 2026-11-05 |
+| [`SECURITY.md`](../SECURITY.md) | Checked that the core raises `NoCurrentUserFoundError` rather than falling open, and that authorisation is CanCan-based (`app/models/laiss_cms/permissions.rb`). | 2026-11-05 |
+| [`CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 text, standard. | 2026-11-05 |
+| [`docs/versioning.md`](versioning.md) | `LaissCms::VERSION` is the only source; gemspec and dashboard read from it; `gem build` succeeded and reported version `0.1.0.beta1`. | 2026-11-05 |
+| [`docs/site-sync.md`](site-sync.md) | Workflow file and its secret name checked against `.github/workflows/notify-site.yml`. **The dispatch itself is unverified: Actions does not run on this repo.** | 2026-11-05 |
+| [`docs/design/reference-spec.md`](design/reference-spec.md) | Measurements taken with PIL from the supplied reference set; the method is stated in the file. | 2026-11-05 |
+| [`guides/getting_started.md`](../guides/getting_started.md) | Every command executed end to end. Claims about the seeder, the first-user role and the collapse toggle each checked against behaviour. | 2026-11-05 |
+| [`guides/extensions.md`](../guides/extensions.md) | Rewritten: the previous version advertised six extensions pointing at an organisation that does not maintain this fork. What ships is verified against the gemspecs. | 2026-11-05 |
+| [`guides/how_to_customize_tinymce.md`](../guides/how_to_customize_tinymce.md) | Rewritten from `lib/laiss_cms/tinymce.rb` and `bundles/tinymce.js` — the toolbar string, plugin list, `valid_elements` and formats were copied from the code, not retyped. | 2026-11-05 |
 
-## Guides, by reliability
+## Spot-checked, not read line by line
 
-**Verified end-to-end.** These were executed or read against the code.
+Each of these had **specific factual claims verified against the code**, but the
+document as a whole was not read end to end. A specific example or option name
+elsewhere in the page may still be wrong.
 
-| Guide | Note |
+| Document | Claims verified |
 | --- | --- |
-| [`guides/getting_started.md`](../guides/getting_started.md) | Walkthrough matches the current admin |
-| [`guides/elements.md`](../guides/elements.md) | Elements and page layouts |
-| [`guides/ingredients.md`](../guides/ingredients.md) | Ingredient types |
-| [`guides/pages.md`](../guides/pages.md) | Page tree, versioning, publishing |
-| [`guides/configuration.md`](../guides/configuration.md) | Configuration options |
-| [`guides/how_to_customize_tinymce.md`](../guides/how_to_customize_tinymce.md) | Rewritten for the reduced editor |
+| [`guides/tags.md`](../guides/tags.md) | Gutentag is the tagging engine (gemspec dependency). |
+| [`guides/languages.md`](../guides/languages.md) | `language_code`, `country_code` and a per-site `default` flag exist on `LaissCms::Language`. |
+| [`guides/sites.md`](../guides/sites.md) | `host` is present and unique case-insensitively (`LaissCms::Site` validations). |
+| [`guides/library.md`](../guides/library.md) | Pictures and attachments are separate models; variants are generated (`PictureVariant`). |
+| [`guides/elements.md`](../guides/elements.md) | Elements and page layouts are covered here (8 references); page layouts are defined in `page_layouts.yml`. |
+| [`guides/ingredients.md`](../guides/ingredients.md) | Ingredient types match `app/models/laiss_cms/ingredients/`. |
+| [`guides/pages.md`](../guides/pages.md) | Pages hold no content directly; tree behaviour comes from `awesome_nested_set` per the gemspec. |
+| [`guides/menus.md`](../guides/menus.md) | Menus are modelled as nodes (`LaissCms::Node`), separate from the page tree. |
+| [`guides/i18n.md`](../guides/i18n.md) | The install snippet was **wrong** (bare `gem "laiss_cms_i18n"`, which is not on RubyGems) and was corrected to the git form. |
+| [`guides/seeder.md`](../guides/seeder.md) | The seeder skips page seeding when `LaissCms::Page.exists?` — proven by running it twice. |
 
-**Reference, mechanically renamed and not yet re-read line by line.** They
-describe concepts that still exist, but a specific option name or example may be
-stale. Treat them as a starting point and check the code.
+## NOT verified
 
-`guides/menus.md`, `guides/languages.md`, `guides/sites.md`, `guides/tags.md`,
-`guides/library.md`, `guides/i18n.md`, `guides/render_images.md`,
-`guides/seeder.md`, `guides/extensions.md`, `guides/how_to_create_a_blog.md`,
-`guides/how_to_create_a_contact_form.md`, `guides/how_to_create_custom_ingredients.md`,
-`guides/how_to_create_modules.md`, `guides/how_to_extend_laiss_cms.md`,
-`guides/how_to_add_custom_authentication.md`,
-`guides/how_to_integrate_into_existing_rails_app.md`
+These have **not** been read against the code. Read them with suspicion; they were
+mechanically renamed during the fork and may describe behaviour that changed.
 
-**Deployment and upgrade.** Operationally useful, but not verified against a live
-deployment in this repository.
+`guides/render_images.md`, `guides/configuration.md`,
+`guides/how_to_create_a_blog.md`, `guides/how_to_create_a_contact_form.md`,
+`guides/how_to_create_custom_ingredients.md`, `guides/how_to_create_modules.md`,
+`guides/how_to_extend_laiss_cms.md`, `guides/how_to_add_custom_authentication.md`,
+`guides/how_to_integrate_into_existing_rails_app.md`, `guides/deployment.md`,
+`guides/how_to_deploy_with_kamal.md`, `guides/upgrading.md`, `guides/about.md`,
+`guides/README.md`, `guides/index.md`
 
-`guides/deployment.md`, `guides/how_to_deploy_with_kamal.md`, `guides/upgrading.md`
+`configuration.md` is the most consequential of these — it claims to document every
+option. The authoritative source for options is
+`lib/laiss_cms/configurations/main.rb`, which is generated from the options
+themselves.
 
-**Deleted.** Guides for functionality this fork removed. A guide for a feature that
-is deliberately gone is a lie rather than a gap, so these were removed:
+## Deleted
 
-- dark-mode material — the admin has one light theme
-- the old full-featured editor toolbar — reduced to body copy by policy
+Nothing was deleted in the audit: the only guide describing removed functionality
+(`how_to_customize_tinymce.md`) was rewritten instead, because the extension point
+still exists and only its contents were wrong. If a guide for a genuinely removed
+feature turns up, delete it — a guide for something deliberately gone is a lie
+rather than a gap.
 
-## Verifying a command
+## Two steps that fail silently
 
-Every command in the documentation is meant to be executable. Two are easy to get
-wrong and both fail quietly, so they are called out here as well as in the README:
+Called out here because losing them wastes an afternoon:
 
 1. **`bin/rails active_storage:install`** must run before `db:migrate`. Without the
    ActiveStorage tables the engine boots and every image upload fails.
-2. **`bin/rails db:seed`** must run after `laiss_cms:install`. The installer
-   appends `LaissCms::Seeder.seed!` to `db/seeds.rb` but does not execute it, so
-   without this there is no site, no language and no root page — and a page needs a
-   parent, so pages cannot be created either.
+2. **`bin/rails db:seed`** must run after `laiss_cms:install`. The installer appends
+   `LaissCms::Seeder.seed!` to `db/seeds.rb` but never executes it, so there is no
+   site, no language and no root page — and because a page needs a parent, pages
+   cannot be created at all.
 
-## How this stays current
+## How this stays honest
 
-- When you change behaviour, update the document in the same commit. A separate
-  "docs pass" is how the drift happened the first time.
-- Update the **Verified** date above when you actually read a document against the
-  code. Do not bump it because you edited the file.
-- `script/rebrand/verify` and `script/rebrand/leak_scan` run in CI and cover names,
-  not accuracy. Accuracy is on the reviewer.
-- Internal links are checked in CI; a broken link fails the build. An image that
-  404s in a README is worse than no image.
+- Change behaviour and the document in the same commit. A separate "docs pass" is
+  how the drift happened here the first time.
+- Update a row only when you actually read that document against the code.
+- `script/rebrand/verify` and `script/rebrand/leak_scan` check names, not accuracy.
+  CI checks that internal links resolve. Accuracy is on the reviewer.
+- Every command block in the documentation is meant to be executable. If you paste
+  one and it fails, that is a documentation bug, not a user error.

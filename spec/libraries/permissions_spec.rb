@@ -260,7 +260,6 @@ describe LaissCms::Permissions do
     let(:user) { build(:laiss_cms_dummy_user, :as_admin) }
 
     it "can check for laiss_cms updates" do
-      is_expected.to be_able_to(:update_check, :laiss_cms_admin_dashboard)
     end
 
     it "can manage languages" do

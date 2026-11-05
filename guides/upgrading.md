@@ -18,7 +18,7 @@ Update the version constraint in your `Gemfile` and run bundler.
 +gem 'laiss_cms', '~> 8.1'
 ~~~
 
-If you use [laiss-cms-devise](extensions#laiss-cms-devise) for authentication, update it as well. The major and minor versions of `laiss_cms` and `laiss-cms-devise` match.
+If you use laiss-cms-devise for authentication, update it as well. The major and minor versions of `laiss_cms` and `laiss-cms-devise` match.
 
 ~~~ diff
 -gem 'laiss_cms', '~> 8.0'

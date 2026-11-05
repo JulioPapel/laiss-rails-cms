@@ -79,6 +79,20 @@ pnpm exec vitest --run            # components, ~851 tests
 `bin/rspec` runs each library from its own directory with its own bundle. Use it
 when you want both suites together.
 
+### Verify a checkout with one command
+
+```bash
+script/gates
+```
+
+That runs all twelve gates in order and prints a pass/fail table with the counts.
+It is the same logic CI runs, so a green run here means the code is sound even if
+GitHub Actions is unavailable. Use it before opening a pull request and before
+trusting a tag.
+
+It also takes a subset: `script/gates ruby`, `script/gates js`,
+`script/gates rebrand`.
+
 ### The counts matter
 
 CI asserts the example counts **do not drop**. A broken `require` makes RSpec load

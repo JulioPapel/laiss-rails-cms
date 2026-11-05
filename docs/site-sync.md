@@ -13,39 +13,44 @@ tells it to.
 | GitHub event | `repository_dispatch` |
 | Event type | `cms-docs-updated` |
 
-The payload names the ref to build against:
+The payload names the ref to build against. **The keys are `cms_ref` and
+`cms_repo`** — the site repo reads `client_payload.cms_ref`, so a payload using a
+different key is accepted by the API and then silently ignored:
 
 ```json
 {
   "event_type": "cms-docs-updated",
   "client_payload": {
-    "ref": "v0.1.0.beta1",
-    "ref_type": "tag",
-    "sha": "<full commit sha>",
-    "tag": "v0.1.0.beta1"
+    "cms_ref": "v0.1.0.beta1",
+    "cms_repo": "JulioPapel/laiss-rails-cms"
   }
 }
 ```
 
-On a **tag** push, `ref` is the tag name and `tag` is set, so a release builds
-against that exact tag rather than against whatever `main` happens to be. On a
-**branch** push, `ref` is the commit sha and `tag` is empty.
+`cms_ref` is the tag on a tag push, or the commit SHA otherwise, so a release
+builds against that exact tag rather than whatever `main` happens to be by the
+time the site builds.
 
-The site repo must check out `client_payload.ref`. Payloads are untrusted input:
-validate that `ref` matches `^[0-9a-f]{40}$` or `^v[0-9A-Za-z.\-]+$` before
-passing it to `git checkout`.
+The site repo must check out `cms_ref`. Payloads are untrusted input: validate
+that it matches `^[0-9a-f]{40}$` or `^v[0-9A-Za-z.\-]+$` before passing it to
+`git checkout`.
 
 ## When it fires
 
-- **Push to `main`** where a documentation path changed (`docs/**`, `guides/**`,
-  `README.md`, `CHANGELOG.md`). The path test runs inside the job rather than as a
-  workflow filter: GitHub ANDs every filter under a single `push` key, so
-  `branches` + `paths` + `tags` would require a *tag* push that also changed a
-  docs file — every release would be skipped.
-- **Push of any `v*` tag.** A release always rebuilds.
-- **Manual dispatch**, for a forced rebuild.
+The workflow is the one in **`JulioPapel/site-laiss-rails-cms` →
+`.github/cms-repo-notify-site.yml`**, copied here unchanged. It fires on:
 
-A push that touches no documentation logs `No documentation changed` and stops.
+- **A finished `CI` run on `main`** (`workflow_run`), and only when that run
+  concluded `success`. A red `main` never republishes the docs. This is why there
+  is no `paths` filter: a green main already implies a push, and filtering on
+  paths would send the notification twice.
+- **A `v*` tag push**, which publishes that tag whether or not CI has caught up.
+- **Manual dispatch**, with an optional `cms_ref` to force a specific ref.
+
+**This depends on the `CI` workflow existing and succeeding.** While GitHub
+Actions cannot run on this repository (see the CI-blocked diagnosis in the project
+store), `CI` never concludes successfully, so the `workflow_run` trigger never
+fires. Tag pushes still dispatch, because they do not depend on CI.
 
 ## The secret
 

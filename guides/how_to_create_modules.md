@@ -404,7 +404,7 @@ end
 ~~~
 
 ::: tip
-The [laiss-cms-devise](extensions#laiss-cms-devise) and [laiss-cms-solidus](extensions#laiss-cms-solidus) extensions are good examples of engine-based modules. See [Extensions](extensions) for more.
+The laiss-cms-devise and laiss-cms-solidus extensions are good examples of engine-based modules. See [Extensions](extensions) for more.
 :::
 
 ## Migrating from `register_module`

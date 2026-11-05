@@ -14,7 +14,7 @@ Ingredients are the individual content fields within an [element](elements). Eac
 LaissCms comes with a set of built-in ingredient types for common needs. You can also [create your own ingredient types](how_to_create_custom_ingredients).
 
 ::: tip
-The [laiss-cms-solidus](extensions#laiss-cms-solidus) extension is a good example of custom ingredients in action. It provides `SpreeProduct`, `SpreeTaxon` and `SpreeVariant` ingredient types that associate LaissCms elements with Solidus e-commerce models.
+The laiss-cms-solidus extension is a good example of custom ingredients in action. It provides `SpreeProduct`, `SpreeTaxon` and `SpreeVariant` ingredient types that associate LaissCms elements with Solidus e-commerce models.
 :::
 
 ## Global Settings
@@ -153,7 +153,7 @@ The editor renders a textarea with an embedded TinyMCE editor.
 ~~~
 
 ::: tip
-See the [TinyMCE customization guide](how_to_customize_tinymce#per-ingredient-customization) for all available options.
+See the TinyMCE customization guide for all available options.
 :::
 
 ### Settings
@@ -166,7 +166,7 @@ Customize the TinyMCE editor for this ingredient.
 #### sanitizer
 `Hash`
 
-Restrict which HTML tags and attributes the rendered value may contain. When set, the value is sanitized at render time; without it the value is rendered as-is. Accepts `tags` and `attributes` arrays. See the [TinyMCE customization guide](how_to_customize_tinymce#html-sanitization) for details.
+Restrict which HTML tags and attributes the rendered value may contain. When set, the value is sanitized at render time; without it the value is rendered as-is. Accepts `tags` and `attributes` arrays. See the TinyMCE customization guide for details.
 
 ## Picture
 

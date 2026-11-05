@@ -437,28 +437,6 @@ module LaissCms
         "LaissCms::Admin::LinkDialog::FileTab"
       ]
 
-      # === Update Check Service
-      #
-      # The service to use for checking for new versions.
-      #
-      # Available services:
-      # - :none (default): Disable update checks. This is the default because
-      #   laiss-rails-cms is a private fork that is not published to RubyGems,
-      #   so there is no public version to compare against and no endpoint to
-      #   ask.
-      # - :ruby_gems: RubyGems.org API. Only meaningful if someone publishes
-      #   this gem, which the project deliberately does not do.
-      #
-      option :update_check_service, :symbol, default: :none
-
-      # === Update Check Cache Duration
-      #
-      # The duration in hours for caching the result of the update check.
-      #
-      # Default is 1 hour.
-      #
-      option :update_check_cache_duration, :integer, default: 1
-
       # === The user class to be used for LaissCms
       #
       # If you don't have your own user model or don't want to provide one,

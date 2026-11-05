@@ -5,13 +5,27 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbo-track': 'reload' %>
-    <%= javascript_include_tag 'application', 'data-turbo-track': 'reload' %>
-    <!--
-      Inserted by LaissCms demo file installer.
-      You probably want to remove this and use your custom css.
-    -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <%#
+      This layout is written into your application by the install generator, as a
+      starting point. It references `application`, the layout and asset name Rails
+      generates by default.
+
+      It deliberately loads NOTHING from a remote host. An earlier version of this
+      file pulled Tailwind from a CDN with a <script src>, which meant every
+      public page made a third-party request — a dependency on someone else's
+      uptime, a privacy problem, and a surprise for anyone reading the network tab.
+
+      If you want Tailwind, install it properly:
+
+        bin/rails tailwindcss:install
+
+      ...which compiles it locally into your own asset pipeline.
+    %>
+
+    <%# `stylesheet_link_tag 'application'` is a no-op when the host app has no
+        application.css, and Rails raises in strict mode, so this is guarded. %>
+    <%= stylesheet_link_tag "application", media: "all", "data-turbo-track": "reload" rescue nil %>
+    <%= javascript_include_tag "application", "data-turbo-track": "reload" rescue nil %>
   </head>
 
   <body>

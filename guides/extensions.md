@@ -1,103 +1,54 @@
 # Extensions
 
-LaissCMS has a rich ecosystem of official and community extensions that add functionality to your application. Official extensions are maintained under the [LaissCMS GitHub organization](https://github.com/LaissCMS).
+`laiss-rails-cms` has **no third-party extension ecosystem.** This fork is
+maintained by Laiss Labs, and nothing is published to RubyGems.
 
-## Authentication
+Earlier versions of this page listed an "official" set of extensions — an
+e-commerce integration, JSON:API and GraphQL APIs, PostgreSQL search, and others
+— each linking to a GitHub organisation and installing from RubyGems. **None of
+that applies to this fork.** Those packages are not maintained here, are not
+installable through this project, and the links would not resolve.
 
-### laiss-cms-devise <Badge type="tip" text="official" />
+What actually ships in this repository:
 
-Devise-based user authentication for LaissCMS. If you don't bring your own authentication, you can use this gem to authorize users in the LaissCms admin.
+| Gem | What it is |
+| --- | --- |
+| `laiss_cms` | The engine |
+| `laiss_cms_i18n` (`i18n/`) | Translations beyond English |
+| `laiss-cms-devise` (`devise/`) | Devise-based authentication, optional |
 
-<ExtensionLinks gem="laiss-cms-devise" github="https://github.com/LaissCMS/laiss_cms/tree/main/devise" />
+All three are consumed from git at a tag. See the
+[installation section of the README](../README#installation).
 
-## E-commerce
+## Extending it yourself
 
-### laiss-cms-solidus <Badge type="tip" text="official" />
+You do not need an extension system for most customisation. In rough order of
+how often you will need them:
 
-Integrates [Solidus](https://solidus.io) e-commerce with LaissCMS. Provides shared admin navigation between both backends, ingredients for placing Solidus products, variants, and taxons on LaissCms pages, and shared admin sessions and user abilities.
+**Content definitions** — the usual answer. Page layouts, elements and their
+ingredients are YAML in `config/laiss_cms/`. Adding a content type is a config
+change, not code:
 
-<ExtensionLinks gem="laiss-cms-solidus" github="https://github.com/LaissCMS/laiss-cms-solidus" />
+- [Elements](elements)
+- [Ingredients](ingredients)
+- [Page layouts](elements#page-layouts)
 
-## API
+**Custom ingredients** — when a field needs a control that does not exist yet:
+[Creating custom ingredients](how_to_create_custom_ingredients).
 
-### laiss-cms-json_api <Badge type="tip" text="official" />
+**Admin extensions** — for a new screen inside the admin, with its own navigation
+entry and permissions: [Creating modules](how_to_create_modules) and
+[Extending the admin](how_to_extend_laiss_cms).
 
-A [JSON:API](https://jsonapi.org) compliant API for LaissCMS. Use LaissCms as a headless CMS and consume content from any frontend framework.
+**CanCan abilities** — to add your own permission rules alongside the engine's
+roles. Register your ability class with `LaissCms.config.abilities.add`.
+See [Permissions](../CONTRIBUTING.md) for the naming contract.
 
-<ExtensionLinks gem="laiss-cms-json_api" github="https://github.com/LaissCMS/laiss-cms-json_api" />
+**Authentication** — bring your own, or use `laiss-cms-devise`:
+[Custom authentication](how_to_add_custom_authentication).
 
-### laiss-cms-graphql <Badge type="warning" text="outdated" />
+## A note on installable gems
 
-[GraphQL](https://graphql.org) API for LaissCMS.
-
-<ExtensionLinks gem="laiss-cms-graphql" github="https://github.com/LaissCMS/laiss-cms-graphql" />
-
-## Search
-
-### laiss-cms-pg_search <Badge type="tip" text="official" />
-
-PostgreSQL full text search for LaissCMS. Adds search functionality using PostgreSQL's built-in full text search capabilities.
-
-<ExtensionLinks gem="laiss-cms-pg_search" github="https://github.com/LaissCMS/laiss-cms-pg_search" />
-
-## Storage
-
-### laiss-cms-dragonfly-s3 <Badge type="tip" text="official" />
-
-Store LaissCms pictures and file attachments on Amazon S3 using the [Dragonfly](https://markevans.github.io/dragonfly/) S3 datastore.
-
-<ExtensionLinks gem="laiss-cms-dragonfly-s3" github="https://github.com/LaissCMS/laiss-cms-dragonfly-s3" />
-
-### laiss_cms_cloudinary <Badge type="tip" text="official" />
-
-Render LaissCMS images directly from [Cloudinary](https://cloudinary.com) with smart resizing, cropping, and CDN delivery.
-
-<ExtensionLinks gem="laiss_cms_cloudinary" github="https://github.com/LaissCMS/laiss_cms_cloudinary" />
-
-## Internationalization
-
-### laiss_cms_i18n <Badge type="tip" text="official" />
-
-Translation files for LaissCMS. Provides admin interface translations for many languages.
-
-<ExtensionLinks gem="laiss_cms_i18n" github="https://github.com/LaissCMS/laiss_cms_i18n" />
-
-## Error Tracking
-
-### laiss-cms-sentry <Badge type="tip" text="official" />
-
-[Sentry](https://sentry.io) error reporting for LaissCMS.
-
-<ExtensionLinks gem="laiss-cms-sentry" github="https://github.com/LaissCMS/laiss-cms-sentry" />
-
-### laiss-cms-bugsnag <Badge type="tip" text="official" />
-
-[Bugsnag](https://www.bugsnag.com) error reporting for LaissCMS.
-
-<ExtensionLinks gem="laiss-cms-bugsnag" github="https://github.com/LaissCMS/laiss-cms-bugsnag" />
-
-### laiss-cms-appsignal <Badge type="tip" text="official" />
-
-[AppSignal](https://www.appsignal.com) error reporting for LaissCMS.
-
-<ExtensionLinks gem="laiss-cms-appsignal" github="https://github.com/LaissCMS/laiss-cms-appsignal" />
-
-### laiss-cms-solid_errors <Badge type="info" text="community" />
-
-Integrates [Solid Errors](https://github.com/yagudaev/solid_errors) into LaissCMS, adding a dashboard for error tracking.
-
-<ExtensionLinks gem="laiss-cms-solid_errors" github="https://github.com/sitediver/laiss-cms-solid_errors" />
-
-## Background Jobs
-
-### laiss-cms-mission_control-jobs <Badge type="info" text="community" />
-
-Integrates [Mission Control Jobs](https://github.com/rails/mission_control-jobs) into LaissCMS, adding a dashboard for Active Job.
-
-<ExtensionLinks gem="laiss-cms-mission_control-jobs" github="https://github.com/sitediver/laiss-cms-mission_control-jobs" />
-
----
-
-::: tip Created an LaissCms extension?
-If you have built an extension for LaissCMS and would like it listed here, please [open a pull request](https://github.com/LaissCMS/laiss-cms-guides/edit/main/guides/extensions.md) to add it.
-:::
+If you find a guide or a blog post referencing `laiss-cms-*` gems on RubyGems, it
+predates this fork. Installing one will either fail or pull in a different,
+unrelated codebase. The only supported source is this repository, at a tag.

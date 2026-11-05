@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Verify a checkout without GitHub.
+#
+# This is the single command to run before trusting a checkout, a release tag, or
+# a pull request. It runs all twelve gates in order and prints a table with the
+# counts, then exits non-zero if anything failed.
+#
+#   script/gates            # all twelve
+#   script/gates ruby       # only rspec + standardrb
+#   script/gates js         # only the JavaScript gates
+#   script/gates rebrand    # only the rebrand tooling
+#
+# WHY THIS EXISTS SEPARATELY FROM script/rebrand/gates
+#
+# The gate script lives under script/rebrand/ because it started as rebrand
+# tooling. Requiring contributors to remember that path was a usability problem,
+# and worse, it implied the gates were only about the rebrand. They are the whole
+# quality bar: the specs, the linters, the asset build, and the naming contract.
+#
+# This wrapper is deliberately thin. It forwards arguments and the exit code to
+# script/rebrand/gates, so there is exactly one implementation of the gates and
+# no chance of the two drifting apart.
+#
+# GitHub Actions runs the same logic in .github/workflows/ci.yml. When runners are
+# unavailable (see internal/phase-10-ci-blocked-diagnosis.md in the project store),
+# this command is the only verification that exists, so it must stay honest: it
+# fails on a count that DROPS, not just on a non-zero exit.
+set -uo pipefail
+
+cd "$(dirname "$0")/.." || exit 2
+
+if [ ! -x script/rebrand/gates ]; then
+  echo "script/rebrand/gates is missing or not executable." >&2
+  echo "A checkout without it cannot be verified." >&2
+  exit 2
+fi
+
+exec script/rebrand/gates "$@"

@@ -1,0 +1,139 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Verify every internal link, image and anchor in the documentation.
+#
+# Three separate checks, because they fail differently:
+#
+#   1. LINKS   a `[text](target)` that points at a file that does not exist
+#   2. IMAGES  a `![alt](src)` that 404s — worse than no image in a README
+#   3. ANCHORS a `[text](file#heading)` where `heading` is not a heading in that
+#              file. The docs site logs these per build; a dead anchor silently
+#              drops the reader at the top of the page.
+#
+# Runs in CI and in script/gates, so this cannot come back.
+#
+#   script/check_doc_links           # check, exit 0/1
+#   script/check_doc_links --verbose # list every link, not just failures
+
+ROOT = File.expand_path("..", __dir__)
+Dir.chdir(ROOT)
+
+VERBOSE = ARGV.include?("--verbose")
+
+# Documents that are part of the published or repository documentation.
+def documents
+  files = %w[README.md CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md CHANGELOG.md]
+  files += Dir.glob("docs/**/*.md")
+  files += Dir.glob("guides/**/*.md").reject { |f| f.include?(".vitepress") }
+  files.select { |f| File.file?(f) }.sort
+end
+
+# Heading text -> anchor id, matching GitHub and VitePress closely enough for
+# this repository. Markup that is not part of the heading text must be stripped
+# first: `### Time-Based Publishing <Badge type="tip" text="8.1+" />` has the
+# anchor `time-based-publishing`, and a naive slugger produces something else.
+def slug(text)
+  s = text.dup
+  s.gsub!(/<[^>]+>/, "")          # HTML / Vue components inside the heading
+  s.delete!("`")                    # inline code
+  s.gsub!(/\[([^\]]*)\]\([^)]*\)/, "\\1") # a link's text
+  # Emphasis only: a double marker, or a single marker wrapping text. A lone or
+  # internal underscore is part of the word (`editable_by`), and stripping it made
+  # the slug `editableby`, which then failed to match its own heading.
+  s.gsub!(/\*\*([^*]+)\*\*/, "\\1")
+  s.gsub!(/__([^_]+)__/, "\\1")
+  s.gsub!(/\*([^*]+)\*/, "\\1")
+  s.downcase!
+  s.gsub!(/[^\p{Word}\s-]/, "")   # drop punctuation
+  s.strip!
+  s.tr!(" ", "-")
+  s.gsub!(/-{2,}/, "-")
+  s.sub!(/\A-/, "")
+  s.sub!(/-$/, "")
+  s
+end
+
+ANCHORS = Hash.new do |cache, path|
+  cache[path] = if File.file?(path)
+    File.readlines(path, chomp: true)
+      .select { |l| l.start_with?("#") }
+      .map { |l| slug(l.sub(/\A#+\s*/, "")) }
+      .reject(&:empty?)
+      .each_with_object({}) { |h, acc| acc[h] = true }
+  else
+    {}
+  end
+end
+
+failures = []
+checked = 0
+
+documents.each do |doc|
+  File.readlines(doc, chomp: true).each_with_index do |line, i|
+    lineno = i + 1
+
+    # Images: must resolve on disk.
+    line.scan(/!\[[^\]]*\]\(([^)\s]+)\)/) do |(src)|
+      next if src.start_with?("http", "data:")
+      checked += 1
+      target = File.expand_path(src, File.dirname(doc))
+      next if File.exist?(target)
+
+      failures << "#{doc}:#{lineno}  image does not exist: #{src}"
+    end
+
+    # Links: file must exist; the anchor, if any, must be a heading there.
+    line.scan(/(?<!!)\[[^\]]*\]\(([^)\s]+)\)/) do |(href)|
+      next if href.start_with?("http", "mailto:", "#")
+      # Root-relative links belong to the docs site, not the filesystem.
+      next if href.start_with?("/")
+
+      checked += 1
+      path, anchor = href.split("#", 2)
+      base = File.dirname(doc)
+
+      candidate = if path.nil? || path.empty?
+        doc
+      else
+        tries = [File.expand_path(path, base),
+          File.expand_path("#{path}.md", base),
+          File.expand_path(path, "guides"),
+          File.expand_path("#{path}.md", "guides"),
+          File.expand_path(path),
+          File.expand_path("#{path}.md")]
+
+        found = tries.find { |p| File.file?(p) }
+        # A directory is a valid link target when it holds documentation: GitHub
+        # renders a directory listing, and the docs site resolves an index.
+        if found.nil?
+          dir = tries.find { |p| File.directory?(p) }
+          found = Dir.glob(File.join(dir, "*.md")).first if dir
+        end
+        found
+      end
+
+      unless candidate
+        failures << "#{doc}:#{lineno}  link target does not exist: #{href}"
+        next
+      end
+
+      if anchor && !anchor.empty?
+        unless ANCHORS[candidate].key?(anchor)
+          failures << "#{doc}:#{lineno}  anchor not found: #{href}  (in #{candidate})"
+        end
+      end
+    end
+  end
+end
+
+puts "checked #{checked} links and images across #{documents.size} documents"
+
+if failures.empty?
+  puts "OK    no broken links, images or anchors"
+  exit 0
+end
+
+puts "FAIL  #{failures.size} broken reference(s):"
+failures.each { |f| puts "  #{f}" }
+exit 1

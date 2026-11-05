@@ -16,7 +16,7 @@ bundle add laiss_cms
 bin/rails laiss_cms:install --skip-demo-files
 ~~~
 
-The installer mounts LaissCms in your routes, creates [configuration files](getting_started#what-the-installer-creates), sets up the database, and seeds the default site and language.
+The installer mounts LaissCms in your routes, creates [configuration files](getting_started#3-install-in-this-order), sets up the database, and seeds the default site and language.
 
 ## Authentication
 

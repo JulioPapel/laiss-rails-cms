@@ -23,7 +23,7 @@ permissions:
 jobs:
   release:
     name: Create GitHub Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # hosted: short, stateless, no repo secrets beyond GITHUB_TOKEN
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4

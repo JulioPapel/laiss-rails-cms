@@ -14,7 +14,6 @@ LaissCms::Engine.routes.draw do
     get "/dashboard/license", to: "admin/dashboard#license", as: :dashboard_license
     get "/dashboard/widgets/:id", to: "admin/dashboard/widgets#show", as: :admin_dashboard_widget
     get "/help", to: "admin/dashboard#help", as: :help
-    get "/update_check" => "admin/update_checks#show", :as => :update_check
     get "/leave", to: "admin/base#leave", as: :leave_admin
   end
 

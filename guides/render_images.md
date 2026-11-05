@@ -160,7 +160,7 @@ amazon:
 config.active_storage.service = :amazon
 ~~~
 
-**With Dragonfly**, use the [laiss-cms-dragonfly-s3](extensions#laiss-cms-dragonfly-s3) extension to store images on S3 compatible services.
+**With Dragonfly**, use the laiss-cms-dragonfly-s3 extension to store images on S3 compatible services.
 
 ::: tip
 See [Extensions](extensions) for all available storage add-ons.

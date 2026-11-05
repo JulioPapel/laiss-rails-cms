@@ -195,7 +195,7 @@ module LaissCms
         can [:show, :update], :laiss_cms_admin_settings
 
         # Controller actions
-        can [:info, :update_check], :laiss_cms_admin_dashboard
+        can :info, :laiss_cms_admin_dashboard
 
         # Resources
         can :manage, LaissCms::Language

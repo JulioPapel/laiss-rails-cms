@@ -5,109 +5,186 @@ next:
   link: elements
 ---
 
-# Getting Started
+# Getting started
 
-This guide walks you through installing LaissCMS into a Rails application. By the end you will have a running LaissCms instance with an admin user.
+A walkthrough that matches the current admin: create a page, add an element, edit
+an ingredient, publish.
+
+Every command below has been run against this repository at tag
+`v0.1.0.beta1`.
 
 ## Prerequisites
 
-You need a working Ruby on Rails development environment. If you are new to Rails, follow the [Install Ruby on Rails](https://guides.rubyonrails.org/install_ruby_on_rails.html) guide first.
+- **Ruby** `>= 3.1` (development pins `4.0.6`)
+- **Rails** `>= 7.2, < 8.2`
+- **A database** — SQLite, PostgreSQL or MariaDB
+- **ImageMagick or libvips** for image processing, via `image_processing`
+- **Node 24 + pnpm 11** only if you build the assets yourself
 
-- [Ruby](https://www.ruby-lang.org/en/documentation/installation/) >= 3.1
-- [Ruby on Rails](https://rubyonrails.org) >= 7.2
-- [ImageMagick](https://imagemagick.org) or [libvips](https://www.libvips.org) for image processing
-- A database: [PostgreSQL](https://www.postgresql.org), [MariaDB](https://www.mariadb.org), or [SQLite](https://sqlite.org)
+## 1. Create the application
 
-::: tip
-Use a package manager to install system dependencies. [Homebrew](https://brew.sh) on macOS, or your Linux distribution's package manager.
-:::
-
-## Create a Rails Application
-
-If you don't have an existing Rails app, create one.
-
-~~~ bash
+```bash
 gem install rails
-rails new myapp
-cd myapp
-~~~
+rails new my-site --database=sqlite3
+cd my-site
+```
 
-::: tip
-See the [Rails Getting Started guide](https://guides.rubyonrails.org/getting_started.html) for more options.
-:::
+## 2. Add the engine
 
-## Install LaissCms
+`laiss_cms` is **not on RubyGems**. Install it from git at a tag:
 
-Add the gem and run the installer. It will mount LaissCms in your routes, create configuration files, set up the database, and generate demo content.
+```ruby
+# Gemfile
+gem "laiss_cms",
+  git: "git@github.com:JulioPapel/laiss-rails-cms.git",
+  tag: "v0.1.0.beta1"
 
-~~~ bash
-bundle add laiss_cms
-bin/rails laiss_cms:install
-~~~
+# optional: authentication
+gem "laiss-cms-devise",
+  git: "git@github.com:JulioPapel/laiss-rails-cms.git",
+  tag: "v0.1.0.beta1",
+  glob: "devise/*.gemspec",
+  require: false
+gem "devise", "~> 4.9"
+```
 
-The installer asks for your site's primary language. Accept the defaults or enter your own.
+```bash
+bundle install
+```
 
-## Authentication
+## 3. Install, in this order
 
-LaissCms lets you choose your own authentication strategy.
+```bash
+bin/rails active_storage:install        # 1
+bin/rails laiss_cms:install             # 2
+bin/rails g laiss_cms:devise:install    # 3, only with laiss-cms-devise
+bin/rails db:migrate                    # 4
+bin/rails db:seed                       # 5
+```
 
-**Option A: Use laiss-cms-devise** (recommended for new projects)
+Steps **1** and **5** are easy to miss and both fail quietly:
 
-Add the gem and run its installer.
+| Step | What breaks without it |
+| --- | --- |
+| `active_storage:install` | The engine boots, but every image upload fails: there are no ActiveStorage tables. |
+| `db:seed` | The installer appends `LaissCms::Seeder.seed!` to `db/seeds.rb` but does **not** run it. Without it there is no site, no language and no root page — and because a page needs a parent, the **New page** button produces nothing. |
 
-::: tip
-See [Extensions](extensions) for all available add-ons.
-:::
+## 4. Load the engine
 
-~~~ bash
-bundle add laiss-cms-devise
-bin/rails g laiss_cms:devise:install
-~~~
+The gem's name and its require path differ (`laiss-cms-devise` vs
+`lib/laiss_cms/devise.rb`), so Bundler does not always load it. Add this to
+`config/application.rb`:
 
-**Option B: Use your existing authentication**
+```ruby
+require "laiss_cms/devise"
+```
 
-If your app already has a user model, configure LaissCms to use it. See the [custom authentication guide](how_to_add_custom_authentication) for details.
+If the admin raises `NoCurrentUserFoundError`, that line is what is missing.
 
-## Start the Server
+## 5. Create the content tree
 
-~~~ bash
+`db:seed` creates the site and the default language. It creates pages only if you
+provide them, because a fork cannot guess your structure.
+
+Create `db/seeds/laiss_cms/pages.yml`:
+
+```yaml
+- name: Index
+  urlname: index
+  page_layout: index
+  title: Welcome
+  children:
+    - name: About
+      urlname: about
+      page_layout: standard
+      title: About
+```
+
+Then re-run:
+
+```bash
+bin/rails db:seed
+```
+
+The first entry becomes the **language root**.
+
+Re-running `db:seed` is safe but **inert**: if any page already exists the seeder
+logs "There are already pages present" and skips the whole page step. So adding
+entries to `pages.yml` later does nothing — that file seeds an empty database
+only. Use `db:reset` to rebuild from scratch, or create further pages in the
+admin.
+
+Note there is no `public` attribute on a page. Visibility is set by publishing it
+(a `public_on` timestamp) from the admin, not in the YAML.
+
+## 6. Sign in
+
+```bash
 bin/rails server
-~~~
+```
 
-Open [http://localhost:3000/admin](http://localhost:3000/admin) in your browser. You will be prompted to create the first admin user.
+Visit <http://localhost:3000/admin>. On a fresh database the admin redirects to
+**sign up**, and the account you create is given the `admin` role — verified: the
+first user is created with `laiss_cms_roles = "admin"`.
 
-After signing in you can start building pages. Continue with the [Elements](elements) guide to learn how to define your content structure.
+The sign-up route stays reachable afterwards rather than returning 404, so treat
+it as a development convenience and restrict it in production at your web server
+or with your own route constraint.
 
-## Changing the Mount Point
+## 7. Create a page in the admin
 
-The installer automatically mounts LaissCms at the root of your application. If your app has its own routes and you want LaissCms to handle only a subpath, change the mount point in `config/routes.rb`.
+1. **Pages** in the sidebar.
+2. **Add a page** in the toolbar. Give it a name and pick a page layout.
+3. It appears in the sitemap tree. Click it to open the editor.
 
-~~~ ruby
-# config/routes.rb
-Rails.application.routes.draw do
-  # your app's routes
-  resources :products
+The editor has three parts: the page tree / element list on the left, a **live
+preview** in the centre, and the **element editor** on the right.
 
-  # mount LaissCms under /cms instead of /
-  mount LaissCms::Engine => "/cms"
-end
-~~~
+The sidebar collapses automatically on this screen so the canvas gets the width.
+The small chevron at the top of the rail brings it back, and the choice is
+remembered while you keep working.
 
-::: warning
-LaissCms has a catch-all route for page URLs. Mount it after your own routes so they take priority.
-:::
+## 8. Add an element
 
-## What the Installer Creates
+1. In the element panel, use **New element** (or press `alt+n`).
+2. Pick a type from your `elements.yml`.
+3. The element appears as a card and its fields open.
 
-The installer generates these files in your app.
+Each card has a header with a drag handle and a toolbar: duplicate, cut, delete,
+visibility, and publication schedule.
 
-| File | Purpose |
-|------|---------|
-| `config/laiss_cms/elements.yml` | [Element](elements) definitions |
-| `config/laiss_cms/page_layouts.yml` | [Page layout](pages) definitions |
-| `config/laiss_cms/menus.yml` | Menu definitions |
-| `config/initializers/laiss_cms.rb` | LaissCms [configuration](configuration) |
-| `app/views/layouts/application.html.erb` | Application layout with LaissCms helpers |
-| `app/views/laiss_cms/page_layouts/_standard.html.erb` | Demo [page layout](pages#page-layouts) partial |
-| `app/views/laiss_cms/elements/_article.html.erb` | Demo [element](elements#rendering) partial |
-| `app/assets/stylesheets/laiss_cms/admin/custom.css` | Custom [admin styles](configuration#admin-javascript-and-css) |
+## 9. Edit an ingredient
+
+An **ingredient** is one field on an element. Types are declared in the element
+definition, so the editor shows the right control:
+
+- **Text** — a single-line input
+- **Richtext** — the reduced editor described below
+- **Picture** — a picker into the image library, with cropping
+- **Link**, **Select**, **Boolean**, **Datetime** — the obvious controls
+
+The rich-text field is deliberately limited to **inline formatting and lists**:
+bold, italic, link, bulleted and numbered lists, blockquote, inline code, undo,
+redo, clear formatting. Headings, sizes, alignment, colours and tables are not
+available, because layout and hierarchy come from the element definition. That is
+why an author cannot break the page's structure.
+
+See [Customizing the editor](how_to_customize_tinymce) if you need to change it,
+and read the policy there first.
+
+## 10. Publish
+
+Changes are saved on the element (the **Save** button on the element's footer) and
+the page is published with **Publish changes** in the top bar.
+
+An unpublished page is only visible in the preview. Publication can also be
+scheduled — the calendar control in the toolbar sets a `public_on` time.
+
+## Where to go next
+
+- [Elements](elements) — the content model, and how page layouts fit in
+- [Ingredients](ingredients) — every field type
+- [Pages](pages) — versioning, scheduling, locking
+- [Menus](menus) — navigation separate from the page tree
+- [Configuration](configuration) — every engine option
+- [Deployment](deployment) — taking it to production

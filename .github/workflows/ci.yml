@@ -18,6 +18,9 @@ on:
   workflow_dispatch:
 
 concurrency:
+  # On a single runner an uncancelled superseded run is a wasted 10 minutes of
+  # someone's desktop. Cancel in-progress runs for branches; never for main, so a
+  # release commit always finishes.
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
@@ -36,16 +39,22 @@ jobs:
   # ---------------------------------------------------------------------------
   ruby:
     name: Ruby ${{ matrix.ruby }} / Rails ${{ matrix.rails }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, laiss-cms]
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
         include:
+          # The floor of the supported range (gemspec: ruby >= 3.1, rails >= 7.2).
           - ruby: "3.1"
             rails: "7.2"
-          - ruby: "3.4"
-            rails: "8.1"
+          # The pinned development version from .ruby-version / .tool-versions.
+          #
+          # The middle leg (3.4 / 8.1) was dropped when this moved to a single
+          # self-hosted runner: only one job executes at a time, so each extra leg
+          # adds its full runtime rather than running in parallel. These two cover
+          # the ends of the range, which is where a compatibility break would show
+          # up; 3.4 sits between them and is exercised by whoever runs locally.
           - ruby: "4.0.6"
             rails: "8.1"
     steps:
@@ -95,7 +104,7 @@ jobs:
   # ---------------------------------------------------------------------------
   javascript:
     name: JavaScript
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, laiss-cms]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -139,7 +148,7 @@ jobs:
   # ---------------------------------------------------------------------------
   leak-scan:
     name: Rebrand guard
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, laiss-cms]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -169,7 +178,7 @@ jobs:
   # ---------------------------------------------------------------------------
   counts:
     name: Spec counts
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64, laiss-cms]
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4

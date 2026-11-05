@@ -633,7 +633,7 @@ You can pass options to the ingredient view.
 ~~~
 
 ::: tip
-Instead of passing the `size` of an image inline, you should consider using static [ingredient settings](ingredients#individual-ingredient-settings) instead.
+Instead of passing the `size` of an image inline, you should consider using static [ingredient settings](ingredients#global-settings) instead.
 :::
 
 The first hash is the `options`, the second is the `html_options` passed to the ingredient's wrapper.

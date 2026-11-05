@@ -13,10 +13,20 @@ set -uo pipefail
 
 cd "$(dirname "$0")/../.." || exit 2
 
-# Phase 10: +11 for the sidebar collapse request specs.
-BASELINE_EXAMPLES=4419
+# Phase 10: +11 for the sidebar collapse request specs, then -11 for the update
+# checker removal (5 controller, 4 service, 2 ruby_gems specs). Net: unchanged from
+# the Phase 9 figure of 4408, because the two moves happened to cancel out.
+# The removal is deliberate: it fetched a 404ing rubygems.org endpoint on admin
+# page load, and the owner's policy is no upstream connections.
+BASELINE_EXAMPLES=4408
 BASELINE_DEVISE=167
-BASELINE_VITEST=851
+# Phase 10: 851 -> 846. The update checker was removed (it fetched
+# rubygems.org/api/v1/versions/laiss_cms.json, which 404s because the gem is never
+# published, and it ran on admin page load). Its 5 vitest cases went with it.
+# This is a deliberate feature removal, not lost coverage: every remaining test
+# still runs, and the core/devise floors are unchanged because their update-check
+# specs were counted in the same commit.
+BASELINE_VITEST=846
 
 failures=0
 pass() { printf '  \033[32mPASS\033[0m  %s\n' "$1"; }
@@ -69,6 +79,17 @@ run_js() {
   if pnpm run eslint > /dev/null 2>&1; then pass "eslint"; else fail "eslint"; fi
   if pnpm run lint > /dev/null 2>&1; then pass "prettier"; else fail "prettier"; fi
   if pnpm exec herb-lint > /dev/null 2>&1; then pass "herb-lint"; else fail "herb-lint"; fi
+
+  # Documentation references. A broken README image or a dead anchor in the
+  # guides is a defect a reader sees immediately, and the docs site logs dead
+  # anchors per build. Cheap enough to run every time.
+  local docs
+  if docs=$(script/check_doc_links 2>&1); then
+    pass "doc links ($(echo "$docs" | grep -oE '[0-9]+ links and images' | head -1))"
+  else
+    fail "doc links"
+    echo "$docs" | grep -E '^  ' | head -10
+  fi
   if pnpm run build > /dev/null 2>&1; then pass "build"; else fail "build"; fi
 
   # Vitest is flaky upstream (see docs/development/toolchain-pinning.md): it can

@@ -54,6 +54,55 @@ module LeakScan
   # are all the same leak.
   PATTERN = /alchemy/i
 
+  # ---------------------------------------------------------------------------
+  # CONNECTIONS, not just names.
+  #
+  # The name check above catches a reintroduced identifier. It does NOT catch the
+  # other half of the promise: that this software does not talk to upstream. A
+  # commit could remove every mention of the name and still add an analytics
+  # script, a remote feed or a badge image pointing at an upstream host, and the
+  # name check would pass.
+  #
+  # So these patterns are checked against every tracked file too. Each entry is
+  # [pattern, why], and every one of them is a real thing that was found in this
+  # repository or its inherited guides:
+  #
+  #   * the guides shipped an analytics script from the upstream host
+  #   * the guides shipped ad components linking to it
+  #   * an update checker built a request to a gems service
+  #   * a gemspec pointed its homepage at the upstream site
+  #
+  # A host is matched by DOMAIN, not by substring, so a legitimate host that
+  # merely contains the word cannot trip it.
+  # ---------------------------------------------------------------------------
+  CONNECTION_PATTERNS = [
+    # Upstream web properties. These existed as analytics, ads and doc links.
+    [/\balchemy-cms\.(com|org|net|io)\b/i, "upstream website"],
+    [/\bguides\.alchemy-cms\.com\b/i, "upstream documentation host"],
+    [/\b(alchemy-cms|alchemycms)\.slack\.com\b/i, "upstream Slack"],
+    [/\bgithub\.com\/alchemycms\b/i, "upstream GitHub organisation"],
+    [/\bdocs\.alchemy-cms\.com\b/i, "upstream docs host"],
+
+    # Upstream package identifiers. Distinct from the display name, so they catch
+    # a dependency or an install line that the name check would miss.
+    [/\bgem\s+["']alchemy_cms["']/i, "upstream gem dependency"],
+    [/\balchemy_cms\b/i, "upstream gem name"],
+    [/\balchemy-cms-devise\b/i, "upstream gem name (devise)"],
+    [/\balchemy_i18n\b/i, "upstream i18n gem"],
+
+    # Outbound calls. Anything that fetches at page-load time is a connection
+    # even when the host is not upstream, so these are listed to force a
+    # deliberate decision rather than an accidental one.
+    [/<script[^>]+src\s*=\s*["']https?:\/\//i, "remote script in a template"],
+    [/@import\s+url\(\s*["']?https?:\/\//i, "remote stylesheet import"],
+    [/Net::HTTP\.(get|post|start)\b/, "outbound HTTP from Ruby"],
+    [/\bFaraday\.(get|post|new|connection)\b/, "outbound HTTP via Faraday"],
+    [/\bRestClient\.(get|post)\b/, "outbound HTTP via RestClient"],
+    [/\bHTTParty\.(get|post)\b/, "outbound HTTP via HTTParty"],
+    [/\bURI\.open\(\s*["']https?:\/\//, "outbound HTTP via URI.open"],
+    [/\bopen\(\s*["']https?:\/\//, "outbound HTTP via Kernel#open"]
+  ].freeze
+
   class << self
     # Every file that ships. `git ls-files` rather than a filesystem walk, so
     # untracked scratch files do not create false failures and gitignored build
@@ -82,15 +131,50 @@ module LeakScan
           next
         end
 
-        next unless bytes.match?(PATTERN)
+        # Name leaks. Report line numbers where the file is line-oriented;
+        # otherwise point at the first byte offset so binary hits are actionable.
+        findings.concat(collect_hits(path, bytes)) if bytes.match?(PATTERN)
 
-        # Report line numbers where the file is line-oriented; otherwise just
-        # point at the first byte offset so binary hits are still actionable.
-        hits = collect_hits(path, bytes)
-        findings.concat(hits)
+        # Connection leaks. These are independent of the name check: a file can
+        # contain no upstream name at all and still open a socket to it.
+        findings.concat(collect_connection_hits(path, bytes))
       end
 
       findings
+    end
+
+    # Report domains, package identifiers and outbound-call primitives.
+    #
+    # Line-oriented like collect_hits, but every CONNECTION_PATTERN is tried
+    # against every line rather than short-circuiting on the first match, so one
+    # line with two problems reports both.
+    def collect_connection_hits(path, bytes)
+      return [] if bytes.include?("\x00") # binary: already covered by the name scan
+
+      hits = []
+      bytes.each_line.with_index(1) do |raw, lineno|
+        line = raw.force_encoding("UTF-8").scrub
+        stripped = line.sub(/\A\s+/, "")
+
+        # A commented-out example is documentation, not behaviour. This matters
+        # for the outbound-call patterns: `publish_targets` documents how a HOST
+        # APP might POST to its own build hook, which is the app's request, not
+        # ours. Remote script/style tags are still checked inside comments,
+        # because a commented-out CDN script is one uncomment away from shipping.
+        commented = stripped.start_with?("#", "//", "*", "<!--")
+
+        CONNECTION_PATTERNS.each do |pattern, why|
+          next if commented && why.start_with?("outbound HTTP")
+          next unless line.match?(pattern)
+
+          hits << {
+            path: path,
+            line: lineno,
+            context: "#{why}: #{line.strip[0, 120]}"
+          }
+        end
+      end
+      hits
     end
 
     def collect_hits(path, bytes)

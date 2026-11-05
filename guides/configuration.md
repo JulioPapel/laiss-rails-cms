@@ -138,7 +138,7 @@ config.link_dialog_tabs << "Acme::LinkTab"
 ~~~
 
 ::: tip
-[laiss-cms-solidus](extensions#laiss-cms-solidus) provides a tab for linking to Solidus products.
+laiss-cms-solidus provides a tab for linking to Solidus products.
 :::
 
 ## Mailer
@@ -196,12 +196,12 @@ The viewport sizes available in the preview size selector.
 ### show_page_searchable_checkbox
 `Boolean` (Default: `false`)
 
-Show a searchable checkbox in the page form. Useful with search plugins like [laiss-cms-pg_search](extensions#laiss-cms-pg_search).
+Show a searchable checkbox in the page form. Useful with search plugins like laiss-cms-pg_search.
 
 ### auto_logout_time
 `Integer` (Default: `30`)
 
-Minutes of inactivity before the admin session expires. Used by [laiss-cms-devise](extensions#laiss-cms-devise) to configure Devise's `:timeoutable` module. Disabled in development.
+Minutes of inactivity before the admin session expires. Used by laiss-cms-devise to configure Devise's `:timeoutable` module. Disabled in development.
 
 ### items_per_page
 `Integer` (Default: `15`)
@@ -286,7 +286,7 @@ LaissCms offers two ways to customize the admin's page preview.
 
 ### Preview Sources
 
-When multiple preview sources are configured, a select menu appears in the admin preview frame. This is useful when you want to preview content across different frontends, for example if you use LaissCms as a headless CMS via [laiss-cms-json_api](extensions#laiss-cms-json_api):
+When multiple preview sources are configured, a select menu appears in the admin preview frame. This is useful when you want to preview content across different frontends, for example if you use LaissCms as a headless CMS via laiss-cms-json_api:
 
 ~~~ ruby
 config.preview_sources << "MyCustom::PreviewSource"
@@ -338,21 +338,9 @@ LaissCms::ErrorTracking.notification_handler = MyErrorHandler
 Your class must respond to `call` with an exception argument.
 
 ::: tip
-Ready-made integrations exist for the most common services: [Sentry](extensions#laiss-cms-sentry), [Bugsnag](extensions#laiss-cms-bugsnag), [AppSignal](extensions#laiss-cms-appsignal), and [Airbrake](https://github.com/LaissCMS/laiss-cms-airbrake). See [Extensions](extensions) for more.
+Ready-made integrations exist for the most common services: Sentry, Bugsnag, AppSignal, and [Airbrake](https://github.com/LaissCMS/laiss-cms-airbrake). See [Extensions](extensions) for more.
 :::
 
 ## Update Check
 
-### update_check_service
-`Symbol` (Default: `:laiss_cms_app`)
 
-The service used to check for new LaissCms versions in the admin dashboard. Available options:
-
-- `:laiss_cms_app` — LaissCms's own update check endpoint. Shares minimal data about your installation (LaissCms version, Rails version, Ruby version, origin host) with maintainers of LaissCMS
-- `:ruby_gems` — RubyGems.org API. Recommended if you don't want to share any data with LaissCMS maintainers
-- `:none` — Disables update checks
-
-### update_check_cache_duration
-`Integer` (Default: `1`)
-
-How long (in hours) the update check result is cached.

@@ -11,7 +11,7 @@ LaissCms provides many [built-in ingredient types](ingredients), but you can cre
 Each custom ingredient consists of a model class, a view component for the frontend, and an editor component for the admin interface. LaissCms uses [ViewComponent](https://viewcomponent.org) for both.
 
 ::: tip
-The [laiss-cms-solidus](extensions#laiss-cms-solidus) extension is a good real-world example. It provides `SpreeProduct`, `SpreeTaxon` and `SpreeVariant` ingredient types that associate LaissCms elements with Solidus e-commerce models.
+The laiss-cms-solidus extension is a good real-world example. It provides `SpreeProduct`, `SpreeTaxon` and `SpreeVariant` ingredient types that associate LaissCms elements with Solidus e-commerce models.
 :::
 
 ## Using the Generator
@@ -198,7 +198,7 @@ Avoid loading large collections into the editor. If your `input_field` renders a
 
 Instead, use a remote select that fetches results on demand via an API endpoint. LaissCms ships a `RemoteSelect` JavaScript base class (`laiss_cms_admin/components/remote_select`) that provides paginated, searchable selects using [Custom Elements](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements). Your custom element extends `RemoteSelect`, implements `_searchQuery()` and `_parseResponse()`, and your editor component renders the custom element tag instead of a `select_tag`.
 
-The [laiss-cms-solidus](extensions#laiss-cms-solidus) extension demonstrates this pattern. It defines `<laiss-cms-product-select>`, `<laiss-cms-variant-select>` and `<laiss-cms-taxon-select>` custom elements that query the Solidus API with pagination and search, avoiding loading thousands of records into memory.
+The laiss-cms-solidus extension demonstrates this pattern. It defines `<laiss-cms-product-select>`, `<laiss-cms-variant-select>` and `<laiss-cms-taxon-select>` custom elements that query the Solidus API with pagination and search, avoiding loading thousands of records into memory.
 :::
 
 ## Associating with Models

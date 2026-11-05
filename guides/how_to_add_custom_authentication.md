@@ -1,6 +1,6 @@
 # Custom Authentication
 
-LaissCms does not ship with its own authentication. The [laiss-cms-devise](extensions#laiss-cms-devise) gem provides a ready-made solution using Devise, but you can use any authentication system.
+LaissCms does not ship with its own authentication. The laiss-cms-devise gem provides a ready-made solution using Devise, but you can use any authentication system.
 
 You only need to tell LaissCms about your user class and implement a few methods. This guide covers configuration, the required `laiss_cms_roles` method, and recommended methods for a full integration.
 
