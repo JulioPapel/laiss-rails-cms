@@ -1,9 +1,0 @@
-rubocop:
-  enabled: false
-scss:
-  enabled: false
-coffeescript:
-  enabled: false
-javascript:
-  enabled: false
-fail_on_violations: false

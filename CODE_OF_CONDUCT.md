@@ -1,13 +1,89 @@
-# Contributor Code of Conduct
+# Contributor Covenant Code of Conduct
 
-As contributors and maintainers of LaissCMS, we pledge to respect all people who contribute through reporting issues, posting feature requests, updating documentation, submitting pull requests or patches, and other activities.
+## Our Pledge
 
-We are committed to making participation in LaissCMS a harassment-free experience for everyone, regardless of level of experience, gender, gender identity and expression, sexual orientation, disability, personal appearance, body size, race, ethnicity, age, or religion.
+We as members, contributors, and leaders pledge to make participation in our
+community a harassment-free experience for everyone, regardless of age, body
+size, visible or invisible disability, ethnicity, sex characteristics, gender
+identity and expression, level of experience, education, socio-economic status,
+nationality, personal appearance, race, caste, colour, religion, or sexual
+identity and orientation.
 
-Examples of unacceptable behavior by participants include the use of sexual language or imagery, derogatory comments or personal attacks, trolling, public or private harassment, insults, or other unprofessional conduct.
+We pledge to act and interact in ways that contribute to an open, welcoming,
+diverse, inclusive, and healthy community.
 
-LaissCMS maintainers have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned to this Code of Conduct. LaissCMS maintainers who do not follow the Code of Conduct may be removed from the LaissCMS team.
+## Our Standards
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by opening an issue or contacting one or more of the LaissCMS maintainers.
+Examples of behaviour that contributes to a positive environment:
 
-This Code of Conduct is adapted from the [Contributor Covenant](http://contributor-covenant.org), version 1.0.0, available at [http://contributor-covenant.org/version/1/0/0/](http://contributor-covenant.org/version/1/0/0/)
+- Demonstrating empathy and kindness toward other people
+- Being respectful of differing opinions, viewpoints, and experiences
+- Giving and gracefully accepting constructive feedback
+- Accepting responsibility and apologising to those affected by our mistakes,
+  and learning from the experience
+- Focusing on what is best not just for us as individuals, but for the overall
+  community
+
+Examples of unacceptable behaviour:
+
+- The use of sexualised language or imagery, and sexual attention or advances of
+  any kind
+- Trolling, insulting or derogatory comments, and personal or political attacks
+- Public or private harassment
+- Publishing others' private information, such as a physical or email address,
+  without their explicit permission
+- Other conduct which could reasonably be considered inappropriate in a
+  professional setting
+
+## Enforcement Responsibilities
+
+Project maintainers are responsible for clarifying and enforcing our standards of
+acceptable behaviour and will take appropriate and fair corrective action in
+response to any behaviour that they deem inappropriate, threatening, offensive,
+or harmful.
+
+Maintainers have the right and responsibility to remove, edit, or reject comments,
+commits, code, issues, and other contributions that are not aligned to this Code
+of Conduct, and will communicate reasons for moderation decisions when
+appropriate.
+
+## Scope
+
+This Code of Conduct applies within all community spaces, and also applies when
+an individual is officially representing the community in public spaces.
+
+## Enforcement
+
+Instances of abusive, harassing, or otherwise unacceptable behaviour may be
+reported to the maintainer through the repository's **Security** tab, using the
+private advisory form, so the report is not public. All complaints will be
+reviewed and investigated promptly and fairly.
+
+All maintainers are obligated to respect the privacy and security of the reporter
+of any incident.
+
+## Enforcement Guidelines
+
+**1. Correction.** A private, written warning, with clarity about why the
+behaviour was inappropriate and an explanation of the impact.
+
+**2. Warning.** A warning with consequences for continued behaviour. No
+interaction with the people involved for a specified period.
+
+**3. Temporary ban.** A temporary ban from any interaction with the community.
+
+**4. Permanent ban.** A permanent ban from any public interaction with the
+community.
+
+## Attribution
+
+This Code of Conduct is adapted from the
+[Contributor Covenant](https://www.contributor-covenant.org), version 2.1,
+available at
+<https://www.contributor-covenant.org/version/2/1/code_of_conduct.html>.
+
+Community Impact Guidelines were inspired by Mozilla's code of conduct
+enforcement ladder.
+
+For answers to common questions about this code of conduct, see the FAQ at
+<https://www.contributor-covenant.org/faq>.

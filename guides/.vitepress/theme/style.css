@@ -167,13 +167,7 @@
   display: block;
 }
 
-.blish-logo {
-  color: rgb(28, 2, 56);
-}
 
-.dark .blish-logo {
-  color: rgb(247, 31, 85);
-}
 
 .dark .VPContent {
   --vp-c-divider: rgba(51, 59, 81);

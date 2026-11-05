@@ -309,13 +309,8 @@ export default defineConfig({
   srcExclude: ["README.md"],
   head: [
     ["link", { rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
-    [
-      "script",
-      {
-        async: "",
-        src: "https://analytics.blish.cloud/js/pa-CubCE1Mo6pmiWreeps0Sd.js",
-      },
-    ],
+    // No third-party analytics. This documentation ships with the project and
+    // must not send a reader's data anywhere.
     [
       "script",
       {},
@@ -349,9 +344,9 @@ export default defineConfig({
     // No edit-this-page link: this repository is private.
     footer: {
       message: `
-      BSD-3 Licensed &middot; Hosting sponsored by <a href="https://www.netlify.com" target="_blank">netlify</a>`,
+      BSD-3 Licensed`,
       copyright:
-        'Copyright © 2010 - present <a href="https://blish.cloud" target="_blank">Blish GmbH</a>',
+        'Copyright © Laiss Labs',
     },
     search: {
       provider: "local",

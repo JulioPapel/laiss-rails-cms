@@ -1,0 +1,85 @@
+name: Bug report
+description: Something behaves differently from how it is documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please do **not** use this form for security
+        problems — see [SECURITY.md](../SECURITY.md) for a private route.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: The smallest sequence that shows the problem. A failing spec is ideal.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: laiss-rails-cms version
+      description: The tag or commit you are running.
+      placeholder: "0.1.0.beta1"
+    validations:
+      required: true
+
+  - type: input
+    id: rails
+    attributes:
+      label: Rails version
+      placeholder: "8.1.4"
+    validations:
+      required: true
+
+  - type: input
+    id: ruby
+    attributes:
+      label: Ruby version
+      placeholder: "4.0.6"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: database
+    attributes:
+      label: Database
+      options: [SQLite, PostgreSQL, MySQL, MariaDB, other]
+    validations:
+      required: true
+
+  - type: input
+    id: storage
+    attributes:
+      label: Storage adapter
+      description: active_storage by default.
+      placeholder: "active_storage"
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or stack trace
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I am running the latest release.
+          required: true
+        - label: I searched existing issues.
+          required: true

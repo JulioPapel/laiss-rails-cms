@@ -1,4 +1,4 @@
-# Reference spec — measured from `/home/juliopapel/Pictures/ccc`
+# Reference spec — measured from the supplied design reference set
 
 This file is the durable record of the design the owner pointed at. Everything
 below was **measured** from the seven images with Python/PIL, not estimated by

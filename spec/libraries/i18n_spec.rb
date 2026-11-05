@@ -40,7 +40,7 @@ module LaissCms
       context "when locales are present in other gems" do
         before do
           expect(::I18n).to receive(:load_path) do
-            ["/Users/tvd/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"]
+            ["/opt/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"]
           end
         end
 
@@ -53,8 +53,8 @@ module LaissCms
         before do
           expect(::I18n).to receive(:load_path) do
             [
-              "/Users/tvd/gems/laiss-cms-devise/config/locales/laiss_cms.de.yml",
-              "/Users/tvd/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"
+              "/opt/gems/laiss-cms-devise/config/locales/laiss_cms.de.yml",
+              "/opt/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"
             ]
           end
         end
@@ -67,7 +67,7 @@ module LaissCms
       context "when locales have long iso format" do
         before do
           expect(::I18n).to receive(:load_path) do
-            ["/Users/tvd/gems/laiss_cms_i18n/config/locales/laiss_cms.zh-CN.yml"]
+            ["/opt/gems/laiss_cms_i18n/config/locales/laiss_cms.zh-CN.yml"]
           end
         end
 
@@ -80,8 +80,8 @@ module LaissCms
         before do
           expect(::I18n).to receive(:load_path) do
             [
-              "/Users/tvd/gems/laiss_cms_i18n/config/locales/laiss_cms.zh-CN.yml",
-              "/Users/tvd/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"
+              "/opt/gems/laiss_cms_i18n/config/locales/laiss_cms.zh-CN.yml",
+              "/opt/gems/laiss_cms_i18n/config/locales/laiss_cms.de.yml"
             ]
           end
         end

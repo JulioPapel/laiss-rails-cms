@@ -1,0 +1,221 @@
+name: CI
+
+# The gate for laiss-rails-cms. Four independent jobs:
+#
+#   ruby       the specs, across the supported Ruby/Rails range
+#   javascript lint, build and the vitest suite
+#   leak-scan  the rebrand promise: no upstream name outside the LICENSE files
+#   counts     the example counts cannot DROP
+#
+# The counts job exists because a broken `require` makes RSpec silently load
+# fewer files, still exit 0, and still print "0 failures". Without an explicit
+# floor the suite can rot while CI stays green.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  # Keep this aligned with the pinned development version in .ruby-version.
+  BUNDLE_JOBS: 4
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Specs. The gemspec allows ruby >= 3.1 and rails >= 7.2, < 8.2. This matrix
+  # covers both ends of that range plus the pinned development version, which is
+  # the combination contributors actually run.
+  # ---------------------------------------------------------------------------
+  ruby:
+    name: Ruby ${{ matrix.ruby }} / Rails ${{ matrix.rails }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ruby: "3.1"
+            rails: "7.2"
+          - ruby: "3.4"
+            rails: "8.1"
+          - ruby: "4.0.6"
+            rails: "8.1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      # The built assets are committed, but a clean checkout of a PR may not have
+      # them, and the specs render the admin.
+      - name: Build assets
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+
+      - name: Prepare the test database
+        env:
+          RAILS_ENV: test
+          RAILS_VERSION: ${{ matrix.rails }}
+        run: bundle exec rake laiss_cms:test:prepare
+
+      - name: Core specs
+        env:
+          RAILS_ENV: test
+          RAILS_VERSION: ${{ matrix.rails }}
+        run: bundle exec rspec spec
+
+      - name: Devise specs
+        env:
+          RAILS_ENV: test
+          RAILS_VERSION: ${{ matrix.rails }}
+        run: bundle exec rspec devise/spec
+
+      - name: standardrb
+        run: bundle exec standardrb
+
+  # ---------------------------------------------------------------------------
+  # JavaScript: lint, then build, then the component suite.
+  # ---------------------------------------------------------------------------
+  javascript:
+    name: JavaScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run eslint
+      - run: pnpm run lint
+      - run: pnpm exec herb-lint
+      - run: pnpm run build
+      - run: pnpm exec vitest --run
+
+      # The build artifacts are committed, so a build that changes them means the
+      # committed copies are stale.
+      - name: Build artifacts must be committed
+        run: |
+          if [ -n "$(git status --porcelain app/assets/builds vendor/javascript devise/app/assets/builds)" ]; then
+            echo "::error::Build artifacts are stale. Run 'pnpm run build' and commit the result."
+            git status --porcelain app/assets/builds vendor/javascript devise/app/assets/builds
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # The rebrand promise. This is a PUBLIC statement about how this project relates
+  # to the software it derives from:
+  #
+  #   The derivation is disclosed in LICENSE, because the BSD-3-Clause licence
+  #   requires the copyright notice to be retained. It is disclosed NOWHERE ELSE:
+  #   not in the source, not in the docs, not in a comment, not in a commit
+  #   message. Anyone reading this repository sees a project called
+  #   laiss-rails-cms that carries its upstream attribution in the one file where
+  #   the licence demands it.
+  #
+  # Both scripts exit non-zero on a violation, so this job fails the build rather
+  # than warning.
+  # ---------------------------------------------------------------------------
+  leak-scan:
+    name: Rebrand guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 4.0.6
+          bundler-cache: true
+
+      - name: Name and drift checks
+        run: script/rebrand/verify
+
+      - name: Raw-byte leak scan
+        run: script/rebrand/leak_scan
+
+      # If the tooling itself breaks, the guard above could pass vacuously.
+      - name: Tooling self-tests
+        run: |
+          script/rebrand/self_test
+          script/rebrand/leak_scan_test
+
+  # ---------------------------------------------------------------------------
+  # The example-count floor.
+  #
+  # Raise these numbers when specs are added; never lower them. A drop means specs
+  # stopped loading, which is a regression even when RSpec reports success.
+  # ---------------------------------------------------------------------------
+  counts:
+    name: Spec counts
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 4.0.6
+          bundler-cache: true
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+      - name: Prepare the test database
+        env:
+          RAILS_ENV: test
+        run: bundle exec rake laiss_cms:test:prepare
+
+      - name: Spec counts must not drop
+        env:
+          RAILS_ENV: test
+          MIN_CORE: 4419
+          MIN_DEVISE: 167
+          MIN_VITEST: 851
+        run: |
+          set -euo pipefail
+
+          core_out=$(bundle exec rspec spec --format progress 2>&1 || true)
+          core=$(echo "$core_out" | grep -oE '[0-9]+ examples' | tail -1 | grep -oE '[0-9]+' || echo 0)
+          echo "core: ${core:-0} (floor $MIN_CORE)"
+
+          devise_out=$(bundle exec rspec devise/spec --format progress 2>&1 || true)
+          devise=$(echo "$devise_out" | grep -oE '[0-9]+ examples' | tail -1 | grep -oE '[0-9]+' || echo 0)
+          echo "devise: ${devise:-0} (floor $MIN_DEVISE)"
+
+          vitest_out=$(pnpm exec vitest --run 2>&1 || true)
+          vitest=$(echo "$vitest_out" | grep -oE 'Tests +[0-9]+ passed' | grep -oE '[0-9]+' | tail -1 || echo 0)
+          echo "vitest: ${vitest:-0} (floor $MIN_VITEST)"
+
+          fail=0
+          [ "${core:-0}" -ge "$MIN_CORE" ] || { echo "::error::core specs dropped below $MIN_CORE (got ${core:-0})"; fail=1; }
+          [ "${devise:-0}" -ge "$MIN_DEVISE" ] || { echo "::error::devise specs dropped below $MIN_DEVISE (got ${devise:-0})"; fail=1; }
+          [ "${vitest:-0}" -ge "$MIN_VITEST" ] || { echo "::error::vitest dropped below $MIN_VITEST (got ${vitest:-0})"; fail=1; }
+          exit $fail

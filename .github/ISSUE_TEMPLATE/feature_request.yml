@@ -1,0 +1,63 @@
+name: Feature request
+description: Propose a change in behaviour or a new capability.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before proposing, note two deliberate constraints:
+
+        - **Body fields are intentionally limited to inline formatting and lists.**
+          Layout and hierarchy come from element definitions. A request for tables,
+          text colour or alignment in body copy will be declined — see
+          [CONTRIBUTING.md](../CONTRIBUTING.md).
+        - **There is no RubyGems publishing, ever.** Proposals that add it will be
+          declined.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you unable to do today? Describe the situation, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like
+      description: The behaviour you are asking for.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: Workarounds you have used, and why they fall short.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Admin interface
+        - Page or element editing
+        - Rich-text editor
+        - Settings and configuration
+        - Images and files
+        - Authentication and roles
+        - Public rendering
+        - Tooling, CI or docs
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and discussions.
+          required: true
+        - label: I read the editor policy in CONTRIBUTING.md.
+          required: true

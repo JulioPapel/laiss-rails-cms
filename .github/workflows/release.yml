@@ -1,0 +1,81 @@
+name: Release
+
+# Turns an annotated `v*` tag into a GitHub Release with generated notes.
+#
+# THERE IS NO RUBYGEMS PUBLISHING HERE, AND THERE MUST NEVER BE.
+#
+# laiss-rails-cms is consumed as a git dependency. It is not published, and no
+# workflow in this repository runs `gem push`, `gem release`, or anything that
+# uploads to rubygems.org. If you are editing this file, that rule still holds.
+#
+# Auth: GITHUB_TOKEN only. No personal access token is required, and nothing here
+# assumes the `gh` CLI is installed — the release is created through the API with
+# the token GitHub injects.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # required to create the Release
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history, so generated notes can see every commit
+
+      - name: Check the tag matches the version constant
+        # A tag that disagrees with lib/laiss_cms/version.rb ships a version the
+        # code does not report. Cheaper to catch here than in a consumer's Gemfile.
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          constant=$(ruby -e 'require "./lib/laiss_cms/version"; print LaissCms::VERSION')
+          echo "tag: $tag"
+          echo "constant: $constant"
+          if [ "$tag" != "$constant" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match LaissCms::VERSION ($constant). Bump the constant or fix the tag."
+            exit 1
+          fi
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          # Prefer the hand-written notes when the release has one, because they
+          # state the known limitations; fall back to generated notes otherwise.
+          notes_file="docs/releases/${TAG}.md"
+
+          if [ -f "$notes_file" ]; then
+            body_flag=(--notes-file "$notes_file")
+            echo "Using hand-written notes from $notes_file"
+          else
+            body_flag=(--generate-notes)
+            echo "No $notes_file; using generated notes"
+          fi
+
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; leaving it alone rather than overwriting."
+            exit 0
+          fi
+
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "laiss-rails-cms ${TAG}" \
+            --verify-tag \
+            "${body_flag[@]}"
+
+      # No `gem build`, no `gem push`. The tag itself is the distribution.
+      - name: Confirm nothing was published to RubyGems
+        run: |
+          echo "This workflow does not publish to RubyGems, by policy."
+          echo "Consumers install from git at tag $GITHUB_REF_NAME."

@@ -1,0 +1,115 @@
+name: Notify docs site
+
+# The documentation site at railscms.laiss.pt renders from THIS repository, but
+# it is a separate repo (`JulioPapel/site-laiss-rails-cms`). Nothing about
+# pushing here rebuilds it, so this workflow tells it to rebuild.
+#
+# Contract, agreed with the site repository:
+#
+#   event type : cms-docs-updated
+#   payload    : { ref, ref_type, sha, tag }
+#
+# The site repo listens for `repository_dispatch` of that type and builds
+# against `ref` — the tag on a release, otherwise the commit sha. Sending the
+# ref explicitly (rather than letting the site read `main`) is what lets a
+# tagged release build against the tag and not against whatever `main` is at
+# that moment.
+
+on:
+  # No `paths` filter. GitHub ANDs every filter under a single `push` key, so
+  # `branches` + `paths` + `tags` together would require a TAG push that ALSO
+  # changed a docs path — and every release would be skipped. The docs-path test
+  # is therefore done inside the job, where it can be applied only to branch
+  # pushes.
+  push:
+    branches: [main]
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    name: Tell the site to rebuild
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Decide whether the docs changed
+        id: gate
+        if: github.ref_type != 'tag'
+        env:
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          # A first push (or a force-push) has no usable `before`; rebuild then,
+          # because we cannot prove nothing changed.
+          if [ -z "${BEFORE:-}" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git fetch --quiet --depth=1 origin "$BEFORE" || true
+          changed=$(git diff --name-only "$BEFORE" "$SHA" 2>/dev/null || echo "UNKNOWN")
+          echo "Changed files:"
+          echo "$changed" | head -50
+          if [ "$changed" = "UNKNOWN" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif echo "$changed" | grep -qE '^(docs/|guides/|README\.md$|CHANGELOG\.md$)'; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No documentation changed; the site does not need a rebuild."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fire repository_dispatch
+        if: github.ref_type == 'tag' || steps.gate.outputs.run == 'true'
+        env:
+          # A PAT or GitHub App token with `contents: write` on
+          # JulioPapel/site-laiss-rails-cms. It must be created as a secret in
+          # THIS repository (JulioPapel/laiss-rails-cms), because that is where
+          # this workflow runs. See docs/site-sync.md.
+          DISPATCH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
+          EVENT_TYPE: cms-docs-updated
+          TARGET_REPO: JulioPapel/site-laiss-rails-cms
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${DISPATCH_TOKEN:-}" ]; then
+            # Skipping is deliberate. A contributor fork has no access to this
+            # secret, and a docs contribution should not fail because a
+            # deployment credential is absent. The run says so plainly instead.
+            echo "::notice::SITE_DISPATCH_TOKEN is not set; skipping the site rebuild."
+            echo "Docs changes are committed, but railscms.laiss.pt will not rebuild"
+            echo "until the secret exists. See docs/site-sync.md."
+            exit 0
+          fi
+
+          if [ "$REF_TYPE" = "tag" ]; then
+            REF="$REF_NAME"
+          else
+            REF="$SHA"
+          fi
+
+          echo "Dispatching $EVENT_TYPE to $TARGET_REPO with ref=$REF (type=$REF_TYPE)"
+
+          http=$(curl -sS -o /tmp/dispatch.json -w '%{http_code}' \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $DISPATCH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/$TARGET_REPO/dispatches" \
+            -d "{\"event_type\":\"$EVENT_TYPE\",\"client_payload\":{\"ref\":\"$REF\",\"ref_type\":\"$REF_TYPE\",\"sha\":\"$SHA\",\"tag\":\"$( [ "$REF_TYPE" = tag ] && echo "$REF_NAME" || echo "" )\"}}")
+
+          # 204 No Content is success for this endpoint.
+          if [ "$http" != "204" ]; then
+            echo "::error::Dispatch failed with HTTP $http"
+            cat /tmp/dispatch.json || true
+            exit 1
+          fi
+
+          echo "Dispatch accepted (HTTP 204). $TARGET_REPO will rebuild against $REF."
