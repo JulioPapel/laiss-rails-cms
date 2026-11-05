@@ -232,11 +232,19 @@ export class Tinymce extends HTMLElement {
   // Dark is active when <html data-theme="dark"> is set explicitly, otherwise
   // when the OS prefers dark. The explicit attribute has to win here too, or a
   // host that forces a theme gets an editor on the opposite skin.
+  // The admin ships ONE light theme, so the editor is light unless a host
+  // explicitly forces the Journal dark value set via data-theme.
+  //
+  // This used to fall through to `prefers-color-scheme`, which meant an author
+  // on a dark-mode OS got a BLACK editor inside a white admin: the chrome had
+  // no data-theme (correct for light-only) but the iframe honoured the OS and
+  // fetched skins/ui/laiss-cms-dark. Verified by emulating a dark OS: the page
+  // reported data-theme=null while the stylesheet list contained
+  // laiss-cms-dark/skin.min.css.
+  //
+  // Only an explicit opt-in now selects dark, never the OS.
   get isDark() {
-    const forced = document.documentElement.getAttribute("data-theme")
-    if (forced === "dark") return true
-    if (forced === "light") return false
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
+    return document.documentElement.getAttribute("data-theme") === "journal-dark"
   }
 
   get preferredTheme() {
