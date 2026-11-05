@@ -32,7 +32,7 @@ RSpec.describe "Page creation", type: :system do
         fill_in "Name", with: "Unique Name"
         click_button "create"
 
-        expect(page).to have_css("div.laiss-cms-dialog-body form small.error", text: "has already been taken")
+        expect(page).to have_css("div.laiss-cms-dialog-body form .invalid-feedback", text: "has already been taken")
       end
     end
   end

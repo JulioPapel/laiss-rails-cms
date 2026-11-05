@@ -108,10 +108,15 @@ module LaissCms
       end
 
       # Renders the inline validation error shown below a failing ingredient input.
+      #
+      # Bootstrap 4's validation message element: a div with .invalid-feedback,
+      # shown when the sibling input carries .is-invalid. This component builds its
+      # own markup rather than going through the simple_form wrapper, so it has to
+      # emit the same structure the wrapper does.
       def validation_error
         return if ingredient.errors[:value].empty?
 
-        tag.small(ingredient.errors[:value].to_sentence, class: "error")
+        tag.div(ingredient.errors[:value].to_sentence, class: "invalid-feedback d-block")
       end
 
       def data_attributes

@@ -53,7 +53,7 @@ gates, which is worth more than the isolation benefit of doing forms early.
 | 0 | Bootstrap + theme SCSS foundation | done |
 | 1a | Scoped CSS substrate (layout untouched) | done |
 | 1b | Shell: layout, sidebar, top bar | done |
-| 2 | Forms: simple_form wrapper + builder | pending |
+| 2 | Forms: simple_form wrapper + builder | done |
 | 3 | Settings screen | pending |
 | 4 | Styleguide screen | pending |
 | 5 | Lists: pages, attachments, pictures, users, translations | pending |
@@ -220,3 +220,66 @@ The interior of every screen still uses the old design: cards, tables, forms and
 buttons are Bootstrap-shaped underneath but styled by the old admin CSS. Steps 2–7
 convert each screen. The sidebar is the theme's container but still our navigation
 markup, which is converted with the screens.
+
+---
+
+## Step 2 — forms
+
+**Changed**
+
+One file carries almost all of it: the `:laiss_cms` wrapper in
+`config/initializers/simple_form.rb`, which controls all 71 `f.input` call sites.
+
+- Wrapper now emits `.input.form-group` → `label.form-control-label` →
+  `input.form-control` → `.invalid-feedback` / `small.form-text.text-muted`.
+- `class: [:input, :"form-group"]` — **both** classes. `input` is the historical
+  wrapper class that simple_form also uses to build the per-attribute class
+  (`ingredient_render_size` and friends); dropping it silently broke any selector
+  targeting those. `form-group` is what Bootstrap needs.
+- `lib/laiss_cms/ingredients/base_editor.rb`: the ingredient editor builds its own
+  error markup rather than using the wrapper, so its `tag.small(class: "error")`
+  became `tag.div(class: "invalid-feedback d-block")`.
+
+**Specs updated (7 assertions, 5 files)**
+
+The theme change moves the error element and the input classes. These specs asserted
+the old markup, so they were updated to assert the new markup — same behavioural
+intent, different selector:
+
+| File | Was | Now |
+|---|---|---|
+| `page_permitted_roles_select_spec` | `small.error` | `.invalid-feedback` |
+| `base_editor_spec` (×2) | `small.error` | `.invalid-feedback` |
+| `edit_elements_feature_spec` (×2) | `small.error` | `.invalid-feedback` |
+| `page_creation_feature_spec` | `... form small.error` | `... form .invalid-feedback` |
+| `languages_features_spec` | `... .error` | `... .invalid-feedback` |
+| `ingredients/edit_spec` (view) | `.input.ingredient_render_size` | `.form-group.ingredient_render_size` |
+| `forms/builder_spec` | `class: [:string, :required, type]` | `class: ["form-control", :string, :required, type]` |
+
+**Verified**
+
+- 4410 core / 167 devise / 846 vitest — counts whole.
+- All 12 gates pass.
+
+**A mistake I made and corrected**
+
+The seed script polluted the test database. The specs use **transactional
+fixtures**, which roll back their own writes but still *see* rows already committed,
+so 7 pages of seeded content broke a spec that assumed an empty starting state
+(`page_creation_feature_spec` could not find the "add child" link it expected). The
+seed now says so in its header and in its output, with the reset command. The failure
+looked like a form-conversion bug and was not.
+
+**Knowingly wrong at this point**
+
+- The **Save button on Settings sits between two cards** instead of at the end of the
+  form. Confirmed pre-existing from Step 1b, not introduced by the form work — the
+  settings screenshot is identical before and after this step. It is a layout issue in
+  the shell, and Step 3 (Settings) is where it gets fixed.
+- Every other screen still uses the old card/table styling.
+
+**Screenshots** (`media/theme-focus/wip/`)
+
+- `step2-settings-1440.png` — forms converted, Bootstrap inputs and cards.
+- `step2-page-new-1440.png`
+- `step2-pages-1440.png`
