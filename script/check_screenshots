@@ -1,0 +1,135 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Verify that a screenshot's filename matches its actual pixel dimensions.
+#
+# WHY THIS EXISTS
+#
+# Every `*-375.png` produced in this project before 2026-11-05 was 500x726. The
+# capture code called `resize_to(375, 812)`, Selenium accepted it, and the driver
+# silently kept its own minimum width — so `window.innerWidth` reported 500 and the
+# file was 500px wide while the filename claimed 375. The screenshots were reviewed,
+# approved and cited for weeks.
+#
+# A filename is a claim, not evidence. This checks the claim.
+#
+# USAGE
+#
+#   script/check_screenshots                       # every PNG under media/
+#   script/check_screenshots media/theme-focus/final
+#   script/check_screenshots --expect 375 path.png
+#
+# The expected width is read from the filename by convention: a `-<width>.png` suffix
+# (dashboard-1440.png, dashboard-375.png). `@2x` retina files are exempt and are
+# checked at twice the named width.
+#
+# Exit status: 0 all match, 1 at least one does not, 2 bad usage.
+
+require "json"
+
+PNG_MAGIC = "\x89PNG\r\n\x1a\n".b
+
+def png_dimensions(path)
+  header = File.binread(path, 24)
+  return nil unless header && header.byteslice(0, 8) == PNG_MAGIC
+
+  # IHDR is always the first chunk: 8-byte signature, 4-byte length, 4-byte type,
+  # then width and height as big-endian uint32.
+  header.byteslice(16, 8).unpack("N2")
+rescue StandardError
+  nil
+end
+
+def expected_width(path, explicit)
+  return explicit if explicit
+
+  name = File.basename(path, ".png")
+  retina = name.end_with?("@2x")
+  name = name.delete_suffix("@2x")
+  match = name.match(/-(\d+)\z/)
+  return nil unless match
+
+  width = match[1].to_i
+  retina ? width * 2 : width
+end
+
+def main(argv)
+  explicit = nil
+  targets = []
+
+  args = argv.dup
+  until args.empty?
+    arg = args.shift
+    case arg
+    when "--expect"
+      explicit = args.shift.to_i
+      abort "FAIL: --expect needs a number" if explicit.nil? || explicit.zero?
+    when "-h", "--help"
+      puts "usage: script/check_screenshots [--expect WIDTH] [PATH ...]"
+      return 0
+    when /\A-/
+      abort "FAIL: unknown option #{arg}"
+    else
+      targets << arg
+    end
+  end
+
+  targets = ["media"] if targets.empty?
+
+  files = targets.flat_map do |target|
+    if File.directory?(target)
+      Dir.glob(File.join(target, "**", "*.png"))
+    elsif File.file?(target)
+      [target]
+    else
+      abort "FAIL: no such file or directory: #{target}"
+    end
+  end.sort
+
+  abort "FAIL: no PNG files found in #{targets.join(', ')}" if files.empty?
+
+  failures = []
+  checked = 0
+  skipped = 0
+
+  files.each do |file|
+    dims = png_dimensions(file)
+    if dims.nil?
+      failures << [file, "not a readable PNG"]
+      next
+    end
+
+    width, height = dims
+    expected = expected_width(file, explicit)
+
+    if expected.nil?
+      skipped += 1
+      puts format("  SKIP  %-52s %dx%d (no -<width> suffix)", file, width, height)
+      next
+    end
+
+    checked += 1
+    if width == expected
+      puts format("  PASS  %-52s %dx%d", file, width, height)
+    else
+      failures << [file, "filename claims #{expected}px wide, file is #{width}px (#{width}x#{height})"]
+      puts format("  FAIL  %-52s %dx%d  expected width %d", file, width, height, expected)
+    end
+  end
+
+  puts
+  puts "#{checked} checked, #{skipped} skipped, #{failures.size} failed"
+
+  if failures.any?
+    puts
+    failures.each { |file, why| puts "  #{file}: #{why}" }
+    puts
+    puts "A screenshot's filename is a claim. Re-shoot it at the real size, or rename it"
+    puts "to the size it actually is. Do not cite a screenshot whose name and pixels disagree."
+    return 1
+  end
+
+  0
+end
+
+exit main(ARGV)

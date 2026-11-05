@@ -7,3 +7,5 @@ module LaissCms
     end
   end
 end
+
+require_relative "test_support/viewport_screenshots"

@@ -1,10 +1,36 @@
 laiss-cms-message {
-  display: block;
+  // WHY THESE SELECTORS ARE PREFIXED WITH body.
+  //
+  // The theme's reset is `* { padding: 0 }`, and the admin stylesheet nests the whole
+  // theme under `#laiss_cms` (the <body> id), so it ships as `#laiss_cms *`. That is
+  // specificity (1,0,0) — an id — and it beats EVERY bare-class or bare-element
+  // component rule in this file, all of which are at most (0,1,0). In the unmodified
+  // theme the reset was `*` at (0,0,0), so any class overrode it and the layering
+  // worked. Scoping it under an id inverted the cascade.
+  //
+  // The visible symptom was the icon landing on the text: this rule's padding was
+  // discarded, so the absolutely positioned icon had no gutter to sit in and the text
+  // started at x=0. Measured: computed padding 0px while every var it referenced
+  // resolved fine (0.5rem, 1rem, 2rem).
+  //
+  // `body#laiss_cms` keeps the same element scope (it only matches that same body) but
+  // scores (1,0,1), one point above the reset, so this file means what it says. Fixing
+  // the reset itself is the other option and was rejected: the theme's own `*` reset is
+  // load-bearing for the component layer, and removing it would change every screen in
+  // this migration at once.
+  //
+  // The icon is a flex child with a gap, NOT absolutely positioned. Absolute
+  // positioning needs the container's padding-left to reserve the gutter, which is
+  // exactly what the reset above was deleting. As a flex item the gutter comes from
+  // `gap`, so the two can never collide regardless of what the padding resolves to.
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
   border-width: var(--border-width_small);
   border-style: var(--border-style);
   border-radius: var(--border-radius_medium);
   position: relative;
-  padding: var(--spacing-2) var(--spacing-4) var(--spacing-2) var(--spacing-8);
+  padding: var(--spacing-2) var(--spacing-4) var(--spacing-2) var(--spacing-4);
   margin-bottom: var(--spacing-2);
   text-align: left;
   min-height: 2.6em;
@@ -53,10 +79,12 @@ laiss-cms-message {
   }
 
   laiss-cms-icon {
-    position: absolute;
-    left: var(--spacing-2);
-    top: 9px;
+    // Flex child, not absolute. See the note at the top of this rule.
+    flex: 0 0 auto;
     color: inherit;
+    // Aligns the glyph's optical centre with the first line of text rather than the
+    // box's top edge.
+    margin-top: 0.15em;
 
     .icon {
       fill: currentColor;

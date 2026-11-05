@@ -28,7 +28,12 @@ cd "$(dirname "$0")/.." || exit 2
 # 34px and an unconstrained 900x900 logo pushed the widgets below the fold. The new
 # specs measure geometry and visible text instead of asserting that markup exists.
 # All five were confirmed to fail against the pre-fix files.
-BASELINE_EXAMPLES=4415
+#
+# 4415 -> 4419. Four specs for the viewport screenshot guard: the negative case (a
+# mismatched width must raise and leave no file), a genuine 375, no horizontal
+# overflow at 375, and a genuine 1440. The helper was fixed twice while writing
+# them, both times because driven_by reused an already-registered driver.
+BASELINE_EXAMPLES=4419
 BASELINE_DEVISE=167
 # Phase 10: 851 -> 846. The update checker was removed (it fetched
 # rubygems.org/api/v1/versions/laiss_cms.json, which 404s because the gem is never
@@ -150,6 +155,19 @@ run_js() {
     fail "doc links"
     echo "$docs" | grep -E '^  ' | head -10
   fi
+
+  # Screenshot filenames are claims. Every mobile screenshot in this project was
+  # 500px wide while named 375, and nothing noticed for weeks. Checks docs/screenshots
+  # (the ones in the repo); the media/ set lives outside the repo and is checked by
+  # the same script when it is regenerated.
+  local shots
+  if shots=$(script/check_screenshots docs/screenshots 2>&1); then
+    pass "screenshot sizes ($(echo "$shots" | grep -cE '^  (PASS|SKIP)' ) files)"
+  else
+    fail "screenshot sizes"
+    echo "$shots" | grep -E '^  FAIL|claims' | head -10
+  fi
+
   if pnpm run build > /dev/null 2>&1; then pass "build"; else fail "build"; fi
 
   # Vitest is flaky upstream (see docs/development/toolchain-pinning.md): it can

@@ -608,3 +608,99 @@ dimensions and against `window.innerWidth`, and put those two numbers next to th
 image when reporting. `media/theme-focus/final/` now holds `dashboard-1440.png`
 (1440×914), `dashboard-375.png` (375×812), `settings-1440.png` (1440×814) and
 `settings-375.png` (375×812).
+
+### Now enforced, not remembered
+
+Two rules, both written because the failure already happened:
+
+**1. `script/check_screenshots`** — reads the PNG header and compares the real pixel
+width against the width in the filename (`*-1440.png`, `*-375.png`). Runs on any
+directory; `--expect WIDTH` overrides. Negative-tested against the actual old 500×726
+file named `*-375.png`: exit 1, naming both numbers.
+
+**2. `LaissCms::TestSupport::ViewportScreenshots`** — capture-time guard. `capture(path,
+width:)` refuses to write a file when `window.innerWidth` is not the requested width, and
+refuses to write one whose pixel width disagrees with the name. `driven_with_viewport(w,
+h)` registers a Chrome driver with `add_emulation(device_metrics:)`, which applies the
+viewport *before* load so media queries fire correctly.
+
+Both are covered by `spec/features/admin/viewport_screenshots_spec.rb`, including the
+negative case (a 1440 session asked for 375 must raise and must not leave a file behind).
+
+**A trap found while building it.** `driven_by` reuses the driver already registered
+under that browser, so two examples at different sizes silently shared one session — a
+375 example reported `innerWidth` 1440. The helper now registers a driver named after
+its viewport (`viewport_375x812`) so each size is its own registration. Without that,
+the guard would have been testing the wrong page and passing.
+
+---
+
+## Shared component pass — defects found in the dashboard screenshot
+
+Recorded here as they are found, fixed in the shared pass rather than screen by screen,
+because each one affects more than the screen it was spotted on.
+
+### Alerts — icon overlapping the text ("no pages")
+
+**Symptom:** in the locked-pages empty state the info icon sat on top of the word "no".
+Measured: icon at x=241, text starting at x=233, **overlap of 29px**.
+
+**Two causes, and the second one matters much more than the alert.**
+
+*Cause 1 — the layout technique.* `laiss-cms-message` positioned its icon
+`position: absolute; left: var(--spacing-2)` and relied on the container's
+`padding-left: var(--spacing-8)` to reserve the gutter. Any failure of that padding puts
+the icon straight onto the text. It is now a flex child with `gap`, so the gutter comes
+from the gap and the two cannot collide.
+
+*Cause 2 — the whole theme's cascade was inverted by scoping.* The theme's reset is
+`* { padding: 0 }`. Nesting the theme under `#laiss_cms` (the `<body>` id) emits it as
+`#laiss_cms *`, which is specificity **(1,0,0)** — an id. Every bare-class or
+bare-element rule in our component layer is at most (0,1,0) and **loses to it**.
+
+In the original theme that reset is `*` at (0,0,0), so any class rule overrode it and the
+layering worked. Scoping it under an id silently inverted the cascade for the entire
+admin.
+
+Measured, at the time of discovery:
+
+```
+laiss-cms-message   declared padding: var(--spacing-2) var(--spacing-4) … var(--spacing-8)
+                    computed padding: 0px          ← every var it referenced resolved fine
+```
+
+The vars were not the problem: `--spacing-8` read `2rem` in the browser. The declaration
+was being beaten. Forcing the same shorthand inline produced `padding-left: 32px`, which
+proved the rule was correct and simply outranked.
+
+**Why this is logged as a shared-pass item and not an alert fix:** any component rule in
+our stylesheets that relies on a bare class or element selector inherits padding,
+margin or outline from nothing. `.card-body` and `.widget-body` only looked right because
+they happen to be addressed by `#dashboard …` selectors that already outrank the reset.
+The audit of which components are actually affected belongs in the shared pass, where
+each is compared against the pre-conversion screen.
+
+The alert itself is fixed — icon right edge 254, text left 266, **gap 12px**, icon
+`position: static`.
+
+### User button — "text in a box" rather than a button
+
+**Two causes again.**
+
+1. `link_to_if(edit_user_path, …)` — when `edit_user_path` is nil, which is the default
+   configuration and the demo app's, `link_to_if` renders **no tag at all**, just the bare
+   string. There was no element to style.
+2. The only rule that would have dressed it targeted `laiss-cms-current-user-name` — an
+   element name this component has never emitted. The real class is `.current-user-name`,
+   so the rule never matched anything.
+
+Measured before: **140×21, padding 0, radius 0, transparent background**.
+After: **152×34, pill radius 999px, resting background `rgb(241,243,248)`, 8px gap**,
+and the label is always an element whether or not the user is editable.
+
+The component now documents its theme provenance: `theme/index.html`'s header profile
+control (`li.nav-item.header-profile > a.nav-link > i`). The theme's version is a dropdown
+of Profile / Inbox / Logout driven by Bootstrap's JavaScript, which this project does not
+ship — so the control's *shape* is adopted, and the dropdown itself is deferred to the
+shared pass where the menu component is settled.
+

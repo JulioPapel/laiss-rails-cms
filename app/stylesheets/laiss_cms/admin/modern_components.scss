@@ -527,23 +527,43 @@ input[type="radio"] {
   gap: var(--spacing-1);
   padding-right: var(--spacing-3);
 
+  // `.current-user-name` is the class CurrentUserName actually emits. This selector
+  // used to read `laiss-cms-current-user-name` — an element name no component has ever
+  // produced — so the user control matched nothing and rendered as bare text with no
+  // padding, no radius and no hover. Measured before: 140x21, padding 0, radius 0,
+  // transparent background. The 34px pill below is what makes it read as a button
+  // beside the locale and timezone selects, which already use it.
   a,
-  .user,
-  laiss-cms-current-user-name {
+  .current-user-name {
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-2);
     height: 34px;
-    padding: 0 var(--spacing-2);
+    padding: 0 var(--spacing-3);
     border-radius: var(--radius-pill);
     color: var(--text-color);
     font-size: var(--text-md);
     font-weight: var(--font-weight_semibold);
+    // A control surface, not a link: no underline, and a resting background so it
+    // reads as a target rather than a label sitting in the toolbar.
+    text-decoration: none;
+    background-color: var(--icon-button-hover-bg-color);
+    transition: background-color var(--transition-duration) var(--transition-easing);
 
     &:hover {
-      background-color: var(--icon-button-hover-bg-color);
+      background-color: var(--control-hover-bg-color, var(--icon-button-hover-bg-color));
       text-decoration: none;
     }
+  }
+}
+
+// Belt and braces for the reset documented in notices.scss: `#laiss_cms *` sets
+// padding 0 at specificity (1,0,0) and would otherwise strip the pill's padding.
+// `body#laiss_cms` scores (1,0,1) — the same one point above.
+body#laiss_cms #user_info {
+  a,
+  .current-user-name {
+    padding: 0 var(--spacing-3);
   }
 }
 
