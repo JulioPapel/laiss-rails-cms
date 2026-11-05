@@ -573,3 +573,38 @@ checking for on every remaining screen.
   including unused ones — pre-existing behaviour of the widget, unchanged here)
 
 Gates: all 11 pass, 4,415 core examples and 167 devise examples.
+
+---
+
+## The 375px screenshots were 500px, and had been all along
+
+Every `*-375.png` in this migration before this commit was **500×726**. The
+screenshots were named 375 because `resize_to(375, 812)` was called; the driver
+silently ignored the width, and `window.innerWidth` reported **500**. Nobody had
+compared the name against the pixels.
+
+Cause: the system specs run `headless_firefox`, and a Firefox window has a minimum
+width that `resize_to` cannot go below. Selenium's `execute_cdp_cmd` is not on the
+driver in this version (4.52), and `Selenium::WebDriver::DevTools` needs a constructor
+that is not reachable from Capybara's driver object.
+
+What works: drive Chrome with `mobileEmulation`, which the browser applies before the
+page loads so media queries fire correctly.
+
+```ruby
+driven_by(:selenium, using: :chrome, screen_size: [1440, 1000]) do |caps|
+  caps.add_argument("--headless=new")
+  caps.add_argument("--no-sandbox")
+  caps.add_argument("--disable-dev-shm-usage")
+  caps.add_emulation(device_metrics: { width: 375, height: 812, pixel_ratio: 1 })
+end
+```
+
+Measured after: `window.innerWidth=375`, `document.documentElement.scrollWidth=375`
+(no horizontal overflow), `save_screenshot` writes 375×812.
+
+**The rule:** a screenshot's filename is a claim. Verify it against the file's pixel
+dimensions and against `window.innerWidth`, and put those two numbers next to the
+image when reporting. `media/theme-focus/final/` now holds `dashboard-1440.png`
+(1440×914), `dashboard-375.png` (375×812), `settings-1440.png` (1440×814) and
+`settings-375.png` (375×812).
