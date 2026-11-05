@@ -1,104 +1,102 @@
 <% content_for :title, LaissCms.t("settings.title") %>
 
-<%# Settings screen, on the theme's components: a page header, then one Bootstrap
-    card per section, with the save action inside its own card rather than floating
-    between sections. %>
+<%# Settings, adopting the theme's form-card structure verbatim.
+    Source: theme/form-element.html — .card > .card-header > h4.card-title,
+    then .card-body > .basic-form > form > .form-group > label + .form-control.
+    Only the data and the fields are ours; the element structure is the theme's. %>
 
-<div class="settings-page">
-  <header class="mb-4">
-    <h1 class="h4 mb-1"><%= LaissCms.t("settings.title") %></h1>
-    <p class="text-muted mb-0"><%= LaissCms.t("settings.description") %></p>
-  </header>
-
-  <% if @errors.any? %>
-    <div class="alert alert-danger" role="alert">
-      <strong><%= LaissCms.t("settings.errors.heading") %></strong>
-      <ul class="mb-0 mt-2">
-        <% @errors.each do |key, message| %>
-          <li><%= LaissCms::Admin::Settings.find(key)&.key || key %>: <%= message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
-
-  <%= form_with url: laiss_cms.admin_settings_path, method: :patch, class: "settings-form", scope: :settings, local: true do |form| %>
-    <% @sections.each do |section| %>
-      <% fields = LaissCms::Admin::Settings.fields_for(section).select { |field| field.section == section } %>
-      <% next if fields.empty? %>
-
-      <div class="card settings-section mb-4" aria-labelledby="settings-section-<%= section %>">
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
         <div class="card-header">
-          <h2 class="h6 mb-0" id="settings-section-<%= section %>">
-            <%= LaissCms.t("settings.sections.#{section}") %>
-          </h2>
-          <% if section == :read_only %>
-            <small class="text-muted"><%= LaissCms.t("settings.read_only_hint") %></small>
-          <% end %>
+          <h4 class="card-title"><%= LaissCms.t("settings.title") %></h4>
+          <p class="text-muted m-b-0 f-s-12"><%= LaissCms.t("settings.description") %></p>
         </div>
+      </div>
 
-        <div class="card-body">
-          <% fields.each do |field| %>
-            <% id = "settings_#{field.key.tr('.', '_')}" %>
-            <% value = @values[field.key] %>
-            <% read_only = field.restart? %>
+      <% if @errors.any? %>
+        <div class="alert alert-danger" role="alert">
+          <strong><%= LaissCms.t("settings.errors.heading") %></strong>
+          <ul class="m-b-0">
+            <% @errors.each do |key, message| %>
+              <li><%= LaissCms::Admin::Settings.find(key)&.key || key %>: <%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
 
-            <div class="form-group row">
-              <label class="col-sm-3 col-form-label" for="<%= id %>">
-                <%= LaissCms.t("settings.fields.#{field.key.tr(".", "_")}") %>
-              </label>
+      <%= form_with url: laiss_cms.admin_settings_path, method: :patch,
+        class: "settings-form", scope: :settings, local: true do |form| %>
 
-              <div class="col-sm-7">
-                <% if read_only %>
-                  <output class="form-control-plaintext" id="<%= id %>">
-                    <%= value.presence || LaissCms.t("settings.none") %>
-                  </output>
-                <% elsif field.type == :boolean %>
-                  <div class="custom-control custom-switch">
-                    <%= hidden_field_tag "settings[#{field.key}]", "0", id: nil %>
-                    <%= check_box_tag "settings[#{field.key}]", "1", ActiveModel::Type::Boolean.new.cast(value),
-                      id: id, class: "custom-control-input" %>
-                    <label class="custom-control-label" for="<%= id %>">
-                      <%= LaissCms.t("settings.fields.#{field.key.tr(".", "_")}_hint") %>
+        <% @sections.each do |section| %>
+          <% fields = LaissCms::Admin::Settings.fields_for(section).select { |field| field.section == section } %>
+          <% next if fields.empty? %>
+
+          <div class="card settings-section" aria-labelledby="settings-section-<%= section %>">
+            <div class="card-header">
+              <h4 class="card-title"><%= LaissCms.t("settings.sections.#{section}") %></h4>
+              <% if section == :read_only %>
+                <p class="text-muted m-b-0 f-s-12"><%= LaissCms.t("settings.read_only_hint") %></p>
+              <% end %>
+            </div>
+            <div class="card-body">
+              <div class="basic-form">
+                <% fields.each do |field| %>
+                  <% id = "settings_#{field.key.tr('.', '_')}" %>
+                  <% value = @values[field.key] %>
+                  <% read_only = field.restart? %>
+
+                  <div class="form-group row">
+                    <label class="col-sm-3 col-form-label" for="<%= id %>">
+                      <%= LaissCms.t("settings.fields.#{field.key.tr(".", "_")}") %>
                     </label>
+                    <div class="col-sm-7">
+                      <% if read_only %>
+                        <output class="form-control-plaintext" id="<%= id %>">
+                          <%= value.presence || LaissCms.t("settings.none") %>
+                        </output>
+                      <% elsif field.type == :boolean %>
+                        <div class="custom-control custom-switch">
+                          <%= hidden_field_tag "settings[#{field.key}]", "0", id: nil %>
+                          <%= check_box_tag "settings[#{field.key}]", "1",
+                            ActiveModel::Type::Boolean.new.cast(value),
+                            id: id, class: "custom-control-input" %>
+                          <label class="custom-control-label" for="<%= id %>"></label>
+                        </div>
+                      <% elsif field.type == :select %>
+                        <%= select_tag "settings[#{field.key}]",
+                          options_for_select(select_choices(field), value.to_s),
+                          id: id, class: "form-control" %>
+                      <% elsif field.type == :integer %>
+                        <%= number_field_tag "settings[#{field.key}]", value, id: id,
+                          min: field.min, max: field.max, step: 1, class: "form-control" %>
+                      <% else %>
+                        <%= text_field_tag "settings[#{field.key}]", value, id: id, class: "form-control" %>
+                      <% end %>
+
+                      <p class="text-muted m-b-0 f-s-12">
+                        <%= LaissCms.t("settings.fields.#{field.key.tr(".", "_")}_hint") %>
+                      </p>
+                    </div>
+                    <div class="col-sm-2 text-right">
+                      <span class="badge badge-<%= read_only ? "secondary" : "success" %>">
+                        <%= LaissCms.t(read_only ? "settings.restart" : "settings.runtime") %>
+                      </span>
+                    </div>
                   </div>
-                <% elsif field.type == :select %>
-                  <%= select_tag "settings[#{field.key}]",
-                    options_for_select(select_choices(field), value.to_s),
-                    id: id, class: "custom-select" %>
-                <% elsif field.type == :integer %>
-                  <%= number_field_tag "settings[#{field.key}]", value, id: id,
-                    min: field.min, max: field.max, step: 1,
-                    class: "form-control" %>
-                <% else %>
-                  <%= text_field_tag "settings[#{field.key}]", value, id: id,
-                    class: "form-control" %>
                 <% end %>
-
-                <% unless field.type == :boolean %>
-                  <small class="form-text text-muted">
-                    <%= LaissCms.t("settings.fields.#{field.key.tr(".", "_")}_hint") %>
-                  </small>
-                <% end %>
-              </div>
-
-              <div class="col-sm-2 text-sm-right">
-                <span class="badge badge-<%= read_only ? "secondary" : "success" %>">
-                  <%= LaissCms.t(read_only ? "settings.restart" : "settings.runtime") %>
-                </span>
               </div>
             </div>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
+          </div>
+        <% end %>
 
-    <%# The save action lives in its own card at the end of the form. It used to
-        float between two section cards, because it was positioned by the old theme's
-        absolute layout rather than by document flow. %>
-    <div class="card">
-      <div class="card-body d-flex justify-content-end">
-        <%= form.submit LaissCms.t(:save), class: "btn btn-primary" %>
-      </div>
+        <div class="card">
+          <div class="card-body text-right">
+            <%= form.submit LaissCms.t(:save), class: "btn btn-primary" %>
+          </div>
+        </div>
+      <% end %>
     </div>
-  <% end %>
+  </div>
 </div>

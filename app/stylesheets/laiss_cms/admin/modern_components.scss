@@ -84,7 +84,6 @@ body {
 #dashboard .widget,
 #laiss_cms_elements_window,
 .element-editor,
-.settings-section,
 .empty-state,
 .resources-table-wrapper {
   background-color: var(--panel-background-color);
@@ -95,20 +94,6 @@ body {
   border-radius: var(--radius-md);
   // The soft lift: 2px of shadow, not a box.
   box-shadow: var(--elevation-card);
-}
-
-// Inside a card, a section divider is a rule, not another box.
-.settings-section {
-  padding: var(--spacing-6);
-  border-top: 1px solid var(--panel-border-color);
-
-  & + & {
-    margin-top: var(--spacing-5);
-  }
-
-  &:first-of-type {
-    border-top: 0 none;
-  }
 }
 
 .resources-table-wrapper {
@@ -771,118 +756,6 @@ dialog.laiss-cms-dialog-container,
     width: 28px;
     height: 28px;
   }
-}
-
-// ---------------------------------------------------------------------------
-// SETTINGS
-//
-// The screen this project added, styled in the new grammar: a white card with
-// ruled rows, a pill for each row's effect, and a footer action bar.
-// ---------------------------------------------------------------------------
-.settings-page__title {
-  font-size: var(--text-xl);
-  letter-spacing: -0.02em;
-}
-
-.settings-page__lede {
-  font-size: var(--text-md);
-  color: var(--text-color-muted);
-  max-width: 60ch;
-}
-
-.settings-field {
-  padding: var(--spacing-4) 0;
-  border-bottom: 1px solid var(--border-inset-color);
-
-  &:last-child {
-    border-bottom: 0 none;
-  }
-}
-
-.settings-field__label {
-  font-size: var(--text-md);
-  font-weight: var(--font-weight_semibold);
-  color: var(--form-field-label-color);
-}
-
-.settings-field__hint {
-  font-size: var(--text-sm);
-  color: var(--text-color-muted);
-  line-height: var(--leading-normal);
-}
-
-.settings-input {
-  height: var(--control-height-md);
-  max-width: 24rem;
-  border-radius: var(--radius-sm);
-  border-color: var(--form-field-border-color);
-  font-size: var(--text-md);
-}
-
-.settings-badge {
-  border-radius: var(--radius-pill);
-  padding: 2px var(--spacing-3);
-  font-size: var(--text-xs);
-  font-weight: var(--font-weight_semibold);
-  letter-spacing: 0.02em;
-
-  &--runtime {
-    border: 1px solid var(--notice-success-border-color);
-    background-color: var(--notice-success-background-color);
-    color: var(--notice-success-text-color);
-  }
-
-  &--restart {
-    border: 1px solid var(--notice-warning-border-color);
-    background-color: var(--notice-warning-background-color);
-    color: var(--notice-warning-text-color);
-  }
-}
-
-.settings-switch {
-  &__track {
-    width: 40px;
-    height: 22px;
-    border-radius: var(--radius-pill);
-    // A 1px border in the same blue as the checked fill measured 1:1 — the
-    // track had no edge at all once on. It uses the boundary tone instead.
-    border: 1px solid var(--border-color);
-    background-color: var(--grey-300);
-  }
-
-  &__thumb {
-    width: 16px;
-    height: 16px;
-    background-color: #ffffff;
-    box-shadow: 0 1px 2px rgb(16 24 40 / 20%);
-  }
-
-  &__input:checked + .settings-switch__track {
-    background-color: var(--accent-color);
-    border-color: var(--accent-color);
-  }
-
-  &__input:focus-visible + .settings-switch__track {
-    outline: var(--focus-ring-width) solid var(--focus-color);
-    outline-offset: var(--focus-ring-offset);
-  }
-
-  &__input:checked + .settings-switch__track .settings-switch__thumb {
-    transform: translateX(18px);
-    background-color: #ffffff;
-  }
-}
-
-.settings-form__actions {
-  border-top: 1px solid var(--panel-border-color);
-  background-color: var(--panel-background-color);
-  // Stays reachable on a long settings page without a floating bar.
-  position: sticky;
-  bottom: 0;
-  padding: var(--spacing-3) var(--spacing-6);
-  margin: var(--spacing-5) calc(-1 * var(--spacing-6))
-    calc(-1 * var(--spacing-6));
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
 // ---------------------------------------------------------------------------

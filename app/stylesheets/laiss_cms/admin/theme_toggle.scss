@@ -1,0 +1,139 @@
+// Theme control (light / system / dark) in the top bar and drawer.
+//
+// Extracted from settings.scss, where it lived beside the Settings screen for no
+// better reason than both being built at the same time. It is used by the header and
+// the drawer, not by Settings, so deleting that file would have silently broken the
+// theme toggle — caught by grepping for the class before deleting.
+
+@use "../mixins";
+
+// ---------------------------------------------------------------------------
+// Theme control. A three-way segmented control: light / system / dark.
+//
+// It is one bordered block with shared internal rules rather than three floating
+// buttons, so it reads as a single control with a selected state — the same
+// visual grammar as the rest of the monochrome chrome.
+// ---------------------------------------------------------------------------
+.theme-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  flex: 0 0 auto;
+  border: var(--border-default);
+  border-radius: var(--journal-radius);
+  overflow: hidden;
+  // Sits inside the top bar, whose own rule already separates it from content.
+  background-color: var(--panel-background-color);
+
+  &__option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-1);
+    min-width: var(--journal-touch-target);
+    height: calc(var(--header-height) - 10px);
+    padding: 0 var(--spacing-2);
+    margin: 0;
+    border: 0;
+    // A hairline between options only, never around the outside.
+    border-left: var(--border-default);
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-color-muted);
+    font-family: var(--font-sans);
+    font-size: var(--font-size_small);
+    font-weight: var(--font-weight_normal);
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background-color var(--journal-motion-fast) var(--journal-motion-easing),
+      color var(--journal-motion-fast) var(--journal-motion-easing);
+
+    &:first-child {
+      border-left: 0;
+    }
+
+    &:hover {
+      background-color: var(--icon-button-hover-bg-color);
+      color: var(--text-color);
+    }
+
+    &:focus-visible {
+      @include mixins.default-focus-style;
+      // The ring would be clipped by `overflow: hidden` on the group, so it is
+      // drawn inset instead.
+      outline-offset: calc(-1 * var(--focus-ring-width));
+      position: relative;
+      z-index: 1;
+    }
+
+    // Selected: inverted block, the same treatment as an active nav entry.
+    &[aria-checked="true"] {
+      background-color: var(--main-menu-active-bg-color);
+      color: var(--main-menu-active-text-color);
+      font-weight: var(--font-weight_semibold);
+
+      &:hover {
+        background-color: var(--main-menu-active-bg-color);
+        color: var(--main-menu-active-text-color);
+      }
+    }
+  }
+
+  &__icon {
+    width: var(--icon-size-sm);
+    height: var(--icon-size-sm);
+    fill: currentcolor;
+    flex: 0 0 auto;
+  }
+
+  // The label is what makes the control self-explanatory on desktop. On the
+  // narrowest screens only the icon shows, and the accessible name carries the
+  // meaning — which is why the name lives on aria-label, not on this text.
+  &__text {
+    white-space: nowrap;
+  }
+}
+
+@media screen and (max-width: 599px) {
+  .theme-toggle__text {
+    // Visually hidden, still announced.
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+// Inside the drawer the control is full width and sits with the other
+// footer actions, so it does not look pasted into a corner.
+//
+// Hidden above the desktop breakpoint: at that width the sidebar is always
+// visible AND the top bar shows the same control, so rendering both put two
+// identical theme switchers on screen at once. The drawer copy exists for the
+// phone, where the sidebar is off-canvas and the top bar's copy can scroll out
+// of reach.
+#left_menu .theme-toggle {
+  display: none;
+}
+
+@media screen and (max-width: 999px) {
+  #left_menu .theme-toggle {
+    display: flex;
+    width: 100%;
+    margin-top: var(--spacing-2);
+    border-color: var(--border-color);
+
+    .theme-toggle__option {
+      flex: 1 1 auto;
+      height: var(--journal-touch-target);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Settings screen
+// ---------------------------------------------------------------------------

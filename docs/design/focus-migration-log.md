@@ -54,7 +54,7 @@ gates, which is worth more than the isolation benefit of doing forms early.
 | 1a | Scoped CSS substrate (layout untouched) | done |
 | 1b | Shell: layout, sidebar, top bar | done |
 | 2 | Forms: simple_form wrapper + builder | done |
-| 3 | Settings screen | done |
+| 3 | Settings screen | superseded by template-first |
 | 4 | Styleguide screen | pending |
 | 5 | Lists: pages, attachments, pictures, users, translations | pending |
 | 6 | Dashboard | pending |
@@ -328,3 +328,66 @@ the form surface the wrapper does not cover — 48 call sites across the admin.
 - Only Settings has a converted interior. Every other screen still uses the old card and
   table styling, so the admin looks inconsistent between screens until Steps 4–7.
 - The seeded database is still in place; it must be reset before running specs.
+
+---
+
+## Reboot: template-first method
+
+The screen-by-screen adaptation above was the wrong method. It fitted the theme to our
+ERB markup instead of taking the theme's DOM and injecting our data into it — which is
+inventing, and the owner had explicitly ruled that out. Steps 0–3 remain as history; the
+work below replaces them.
+
+**The rule:** our markup conforms to the theme's. Where a screen has no theme
+counterpart, compose only from components the theme already demonstrates.
+
+---
+
+## Commit A — icon box artefacts (`e4c024473`)
+
+**Not tofu, and not a border.** Eight negative checks: no missing `@font-face`, the
+sprite returns 200 as `image/svg+xml`, `<use>` geometry is 11×11, zero elements with a
+box background or border. Two separate bugs instead:
+
+1. **Class collision.** The theme writes `<i class="icon icon-…">` for its font glyphs;
+   ours emitted `<svg class="icon">`, so theme rules landed on our SVG. Now
+   `class="laiss-icon"`, a name the theme does not claim. `.icon` survives as a
+   documented alias for unconverted screens only.
+2. **Twelve icons absent from the sprite.** The element appends `-line`, so
+   `translate-2` requested `ri-translate-2-line`, which remixicon has no file for. The
+   new guard found eleven more: `download`, `minus`, `times`, `info-circle`, `cog`,
+   `copy`, `info`, `angle-double-left`, `link`, `link-unlink`, `sun`, `moon`. Six are
+   Font Awesome names inherited from the old theme and are mapped explicitly.
+
+**The guard** fails the build on: a listed icon with no source file; any referenced icon
+name with no sprite symbol (printing the variants tried); an svg-sprite error. Verified by
+planting a bogus icon name — exit 1, named. 126 symbols now cover every referenced icon.
+
+---
+
+## Commit B — Settings (`template-first`)
+
+**Source:** `theme/form-element.html` — `.card > .card-header > h4.card-title`, then
+`.card-body > .basic-form > form > .form-group > label + .form-control`. Adopted
+verbatim; only the fields and values are ours.
+
+### Deletions, with grep evidence
+
+Before deleting anything, every Settings-owned selector was checked across all templates
+and components.
+
+| Deleted | Grep evidence |
+|---|---|
+| `app/stylesheets/laiss_cms/admin/settings.scss` (440 lines) | All `.settings-page*`, `.settings-section`, `.settings-field*`, `.settings-input`, `.settings-badge*`, `.settings-form__actions`, `.settings-switch*` classes return **zero** references outside `admin/settings/`. |
+| 106 lines of Settings rules in `modern_components.scss` | Same check; `.settings-*` count in that file after removal: **0**. |
+| `.settings-section` entry in the shared card selector list | Removed from the group selector; the other twelve surfaces in that list are untouched. |
+
+**One thing the grep caught before it broke a screen.** `.theme-toggle` lived inside
+`settings.scss` but is used by `_user_info.html.erb` and `_theme_toggle.html.erb` — the
+top bar and drawer. Deleting the file wholesale would have silently un-styled the theme
+control. Extracted first to `admin/theme_toggle.scss` (151 lines), verified still present
+in the built CSS (`theme-toggle`: 1 match) after the deletion.
+
+**Verified:** 18/18 settings specs; `settings-page` selector count in the built CSS is 0;
+`.laiss-icon` renders with zero empty boxes in the screenshot.
+
