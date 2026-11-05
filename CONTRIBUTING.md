@@ -1,95 +1,76 @@
-LaissCms CMS is an open source project and we encourage contributions. Please read these
-contributors guidelines and our code of conduct before contributing.
+# Contributing
 
-## Filing an issue
+laiss-rails-cms is a **private, in-house project**. It has no public issue
+tracker and no open contribution process: raise changes with the Laiss Labs team
+directly.
 
-When filing an issue on the LaissCms CMS project, please provide these details:
+## Working on the engine
 
-* A comprehensive list of steps to reproduce the issue.
-* What you're *expecting* to happen compared with what's *actually* happening.
-* The version of LaissCms *and* the version of Rails.
-* Your application's complete Gemfile, as text (*not as an image*)
-* Any relevant stack traces ("Full trace" preferred)
+```bash
+bundle install
+pnpm install --frozen-lockfile
+pnpm run build
 
-In 99% of cases, this information is enough to determine the cause and solution
-to the problem that is being described.
+RAILS_ENV=test bundle exec rake laiss_cms:test:prepare
+bin/rspec spec          # core
+bin/rspec devise/spec   # devise engine
+```
 
-Please remember to format code using triple backticks (\`\`\`) so that it is neatly
-formatted when the issue is posted.
+Gates that must be green before a change lands:
 
-## Pull requests
+```bash
+bundle exec standardrb
+pnpm run eslint && pnpm run lint && pnpm exec herb-lint
+pnpm run test
+script/rebrand/verify
+```
 
-We gladly accept pull requests to fix bugs and, in some circumstances, add new
-features to LaissCms.
+Expected counts are documented in
+[docs/development/toolchain-pinning.md](docs/development/toolchain-pinning.md).
+A **drop** in example count is a failure even at "0 failures" — it means files
+stopped loading. The only legitimate drops are recorded in `CHANGELOG.md`.
 
-NOTE: Please discuss new features at the public LaissCms Trello board
-and/or the LaissCms discussion board, before sending a pull request.
+After editing anything in `app/javascript` or `app/stylesheets`, run
+`pnpm run build` and commit the artefacts under `app/assets/builds/`: consumers
+load them without a Node toolchain.
 
-Here's a quick guide:
+## Keeping up with upstream security fixes
 
-1. Fork the repo.
+This repository carries the upstream project's full history and has an
+`upstream` remote for exactly this purpose. **Both `origin` and `upstream` have
+their push URLs disabled** so nothing can be pushed to upstream by accident.
 
-2. Set up your development environment. You can either use Docker or install
-dependencies locally:
+```bash
+# Fetch upstream changes (read-only)
+git fetch upstream
 
-**Using Docker (recommended):**
+# Find a security fix by its CVE or subject
+git log upstream/main --oneline --grep='CVE'
+git log upstream/main --oneline --since='3 months ago' -- '*security*'
 
-        $ bin/start
+# Cherry-pick it onto our branch
+git cherry-pick <sha>
+```
 
-This builds the images and starts the Rails dev server, Sass watcher, and JS bundle watcher.
+Cherry-picking will usually conflict, because every identifier in this
+codebase was renamed during the fork (namespace, engine name and database table
+prefix all differ from upstream). Resolve conflicts **towards our naming** — the
+canonical mapping lives in `script/rebrand/mapping.yml` — and then
+then confirm the mapping table still describes reality:
 
-**Local setup:**
+```bash
+script/rebrand/verify     # fails if any upstream token leaked back in
+bin/rspec spec && bin/rspec devise/spec
+```
 
-        $ bin/setup
-        $ bin/dev
+Add a `CHANGELOG.md` entry under `Unreleased` describing the fix and naming the
+upstream commit, so the provenance of a security patch is auditable without
+repeating the upstream product name in code.
 
-3. Run the tests. We only take pull requests with passing tests, and it's great
-to know that you have a clean slate:
+Do **not** merge `upstream/main` wholesale: that would reintroduce upstream
+branding, publishing automation and documentation for a different product.
 
-        $ bundle exec rake
+## Licence
 
-4. Create new branch then make changes and add tests for your changes. Only
-refactoring and documentation changes require no new tests. If you are adding
-functionality or fixing a bug, we need tests!
-
-5. Push to your fork and submit a pull request. If the changes will apply cleanly
-to the latest stable branches and main branch, you will only need to submit one
-pull request.
-
-6. If a PR does not apply cleanly to one of its targeted branches, then a separate
-PR should be created that does. For instance, if a PR applied to main & 2.7-stable but not 2.8-stable, then there should be one PR for main & 2.7-stable and another, separate PR for 2.8-stable.
-
-At this point you're waiting on us. We like to at least comment on, if not
-accept pull requests. We may suggest some changes or improvements or alternatives.
-
-Some things that will increase the chance that your pull request is accepted,
-taken straight from the Ruby on Rails guide:
-
-* Use Rails idioms and helpers
-* Include tests that fail without your code, and pass with it
-* Update the documentation, the surrounding one, examples elsewhere, guides,
-  whatever is affected by your contribution
-
-### JavaScript changes
-
-If you modify JavaScript source files under `app/javascript/laiss_cms_admin/`, you must rebuild the bundle and commit the artifact:
-
-    $ pnpm run build:admin
-
-Commit the updated `app/assets/builds/laiss_cms/laiss_cms_admin.min.js` alongside your source changes. For local development, `bin/start` (Docker) or `bin/dev` runs the watch process automatically.
-
-Please follow these syntax guides:
-
-* Two spaces, no tabs.
-* No trailing whitespace. Blank lines should not have any space.
-* Add a new line at the end of every file.
-* Prefer `&&`/`||` over `and`/`or`.
-* `MyClass.my_method(my_arg)` not `my_method( my_arg )` or `my_method my_arg`.
-* `a = b` and not `a=b`.
-* `a_method { |block| ... }` and not `a_method { | block | ... }`
-* Follow the conventions you see used in the source already.
-* `->` symbol over lambda
-* This `{a: 'b'}` is a hash, this `{ a + b }` is a block.
-* Ruby 1.9 hash syntax over Ruby 1.8 hash syntax
-
-And in case we didn't emphasize it enough: we love tests!
+BSD-3-Clause. See [LICENSE](LICENSE). The upstream copyright notices are
+retained there as the licence requires; do not remove them.
