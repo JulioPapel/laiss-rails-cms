@@ -426,6 +426,57 @@ container (`display: flex; overflow: auto`).
 **Verified:** 93 widget component specs and 9 dashboard feature specs pass; full gates
 green including the artifact check.
 
+### CORRECTION — this evidence table was wrong, and the page was broken
+
+The first row above is the one that lied. `.bar` and `.logo` were not substring
+matches; **both were real class usages**, and deleting their rules broke the screen.
+The row reads "substring matches only" for four names at once, which hides that the
+conclusion was reached per-name and was wrong for two of them:
+
+| Name | Claim | Reality |
+|---|---|---|
+| `.bar` | substring only (`country`) | **Real.** `usage_widget.html.erb` emits `.bar`, `.bar__public`, `.bar__draft`. Without the rule the span is `display: inline` at **0×0**, and the usage tables collapsed into a ragged stack. |
+| `.logo` | substring only (`logout`) | **Real.** `system_info.html.erb` emits `<div class="logo">`. Without the rule `logo.svg` rendered at its intrinsic **900×900** and pushed every widget below the fold. |
+| `.count` | substring only | True — `.count` had no live rule of its own; the widget's count is sized by `.stat-digit`. |
+| `.widget` | substring only (local var) | True for *styling*, but see below: the `.widget` **element** is real and its wrapper mattered for layout. |
+
+Two further rules were deleted that the table did not name at all:
+`td.usage-stats--bar` / `--label` / `--value` (the column proportions) and the
+`.label-with-icon > svg` size rule. The second is why element icons rendered at
+**406×406** inside a table cell.
+
+**The grep was not wrong; the reading of it was.** `class="bar"` does appear in the
+templates, but a bare `bar` substring grep returns `Menubar` and `country_code` too, so
+the list looked like noise and was dismissed whole. The lesson for every remaining
+deletion in this migration: **match `class="…\bname\b"` and read the hits one by one**,
+rather than matching the bare name and judging the result as a set.
+
+---
+
+## Verification rule for conversions (owner-mandated)
+
+**"Gates green" is not sufficient evidence for a screen conversion.**
+
+The dashboard shipped rendering only a greeting. The suite was green throughout: 93
+widget component specs and 9 dashboard feature specs all passed, because they asserted
+that the widget *markup existed*. It did. The widgets were in the DOM the whole time —
+at 34px wide, below a 990px fold, with 0×0 chart bars.
+
+So for every converted screen, verification means comparing **content** against the
+pre-conversion screen, not running the suite:
+
+1. **DOM element count** inside the content area (`document.querySelectorAll("#dashboard *").length`)
+2. **Visible text** (`innerText`, which skips anything display:none or zero-sized)
+3. **Geometry of the things that carry content** — the width of a grid column, the size
+   of an injected SVG, the height of a card
+
+Presence is not evidence. A widget can be present, styled to nothing, and off-screen.
+
+For the dashboard this check is now executable: `spec/features/admin/dashboard_layout_spec.rb`
+measures the four stat cards, the logo, the first row's height, the usage bars' height,
+and the rendered text. **All five examples were confirmed to fail against the pre-fix
+files** — a regression spec that has never failed is not known to test anything.
+
 ---
 
 ## THE ROOT CAUSE OF THE "GHOST SQUARES", AND WHY IT TOOK A TURN
@@ -461,3 +512,64 @@ The rule: **when a symptom survives its first plausible explanation, keep measur
 until the evidence is unambiguous, and expect more than one cause.** Stopping at the
 first fix would have shipped two of the three.
 
+
+---
+
+## Commit D — Dashboard, content restored (`35ea7df12`)
+
+The dashboard from Commit C rendered a greeting and empty space. What the owner saw,
+against what was actually in the page:
+
+| What he saw | What it was |
+|---|---|
+| A tall panel on the right with a large letter "L" and an abstract graphic | The Laiss logo, rendering at its intrinsic **900×900** because `logo.svg` declares `width="900px" height="900px"` and the `.logo` rule that had constrained it was deleted. Not theme demo content — our own asset, unconstrained. |
+| A huge empty area in the middle | The top row, stretched to **990px** by that logo. The stat widgets were below it, inside the same scroll container. |
+| Four stat widgets missing | Present, 304px columns rendered at **34px** — a collapsed column, so their content overflowed rather than laid out. |
+| Locked-pages and last-updated lists missing | Present, but below the fold and further down because the usage widgets had inflated to **10,277px**. |
+
+Nothing was absent. Everything was present and unreadable, which is why every presence
+assertion passed.
+
+### The four causes
+
+1. **Columns emitted inside the widget shell.** `StatWidget` rendered its own
+   `.col-lg-3.col-sm-6`, but inside `.widget > turbo-frame`, not as a direct child of
+   `.row`. Bootstrap columns size from `flex-basis` against the row, so at that depth
+   they collapsed to content width. The column now comes from the caller
+   (`_stats.html.erb`); `StatWidget` renders only the `.card`, as the theme's own
+   markup does.
+
+2. **`<turbo-frame>` is `display: inline`.** Unknown elements are inline by default.
+   An inline box does not establish a block formatting context for its child, so the
+   widget cards had no height to fill. `#dashboard .widget > turbo-frame` is `block`
+   now.
+
+3. **Unconstrained injected SVG — the logo.** Now `120×120`.
+
+4. **The usage bars.** `.bar` is `display: inline` without its rule, measuring **0×0**,
+   which turned the usage tables into a ragged stack. The rule and the column
+   proportions are restored. The bar is not fabricated: its width is each row's count
+   against the highest row, split published/draft. This is the opposite case to the
+   stat card's `.progress`, which stays omitted because our stat widgets carry no
+   proportion.
+
+**A fifth, found while measuring:** element icons were injected as raw SVG from
+`ElementDefinition#icon_file` with no size rule, rendering **406×406** inside a table
+cell and stretching every row to ~425px. `.label-with-icon > svg` now supplies the box.
+
+This is the same shape of bug as the logo, and it is the third time in this migration
+that **an injected inline SVG with no explicit size** has broken a layout. Worth
+checking for on every remaining screen.
+
+### Verified
+
+- `#dashboard *` element count: **185 → 617**
+- `innerText` length: **507 → 1,307** characters
+- Four stat cards: **230×108** each, in **304px** columns
+- Logo: **120×120**
+- Top row: **990px → 267px**
+- Usage bars: **0×0 → 249×8** and **252×8**
+- `ElementUsage` height: **10,277px → 1,386px** (it lists all 24 element definitions,
+  including unused ones — pre-existing behaviour of the widget, unchanged here)
+
+Gates: all 11 pass, 4,415 core examples and 167 devise examples.
