@@ -81,7 +81,7 @@ which would have failed on the very first run:
   because it goes through `bin/rspec`, which changes directory.
 - The `counts` job hardcoded floors of 4419/851 against real counts of 4410/846.
 
-Had billing not been locked, **beta2 and beta3 would have shipped with red CI.** The
+Had billing not been locked, **two earlier releases would have shipped with red CI.** The
 lock did not cause the broken workflow; it hid it. That is the argument for not
 publishing on local evidence alone, however thorough the local evidence is.
 
