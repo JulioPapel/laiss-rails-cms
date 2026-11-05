@@ -48,6 +48,37 @@
   --color-orange_dark: #fc8708;         /* [auth] accent */
   --color-orange_very_dark: #c65f00;    /* [derived] */
 
+  /* Sidebar (Main Menu) surfaces. [derived]
+   *
+   * WHY A TINTED NEAR-BLACK AND NOT #000
+   *
+   * #0f1218 is the brand's own hue - #00349c sits at 220deg - held at very low
+   * lightness (7.5%) and low saturation (20%). A pure neutral grey would read as
+   * "no colour chosen"; a near-black carrying the brand hue reads as deliberate and
+   * keeps the sidebar part of the same family as the rest of the palette. The
+   * workspace design rule is explicit that neutrals carry a trace of the brand hue
+   * rather than being literal greys, which is why this is derived rather than picked.
+   *
+   * It is deliberately NOT --color-grey_very_dark (#14161b): that token is the dark
+   * theme's body neutral and is meant to be neutral. The sidebar wants the brand tint.
+   *
+   * Measured against this background:
+   *   white text           18.75:1   (AA needs 4.5:1 for body text)
+   *   muted text #b9bec7   10.05:1   (AA needs 4.5:1)
+   *   accent #fc8708        7.69:1   (AA needs 3:1 for UI/graphics)
+   */
+  --color-sidebar_bg: #0f1218;              /* [derived] brand hue 220 held at L7.5% */
+  --color-sidebar_hover_bg: #272a2f;        /* [derived] base lifted 10% toward white */
+  --color-sidebar_text: #ffffff;            /* [auth] white */
+  --color-sidebar_text_muted: #b9bec7;      /* [derived] 10.05:1 on the sidebar base */
+  --color-sidebar_active_bg: var(--color-orange_dark); /* [auth] accent */
+  /* Active text sits ON the orange fill, so it must be dark. The previous value was
+   * --color-blue_dark (#00349c) at 4.37:1 against the accent - already below AA
+   * before this change. The sidebar base is darker and reaches 7.69:1, so it fixes
+   * that pre-existing failure as a side effect of using the surface colour. */
+  --color-sidebar_active_text: var(--color-sidebar_bg);
+
+
   /* Functional state colours. Not brand hues, kept recognisable. */
   --color-green_very_light: hsl(88deg, 47%, 88%);
   --color-green_light: hsl(127deg, 25%, 69%);

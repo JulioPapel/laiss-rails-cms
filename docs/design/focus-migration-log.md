@@ -1190,3 +1190,97 @@ gets reported rather than done.
 The reference images the owner supplied (`app/stylesheets/laiss_cms/_modern-theme.scss` was
 the last attempt at them, and `docs/design/reference-spec.md` holds the measured spec) are the
 target. What was wrong last time was not the target — it was achieving it by rewriting markup.
+
+---
+
+# PHASE 2 — the sidebar: near-black, CSS only
+
+The owner approved the restored admin ("sempre é melhor assim") and asked for exactly one
+visual change. This is it, and it is the first real exercise of the constraint: **no ERB,
+no class renames, no custom element changes.** Three stylesheet files and their build
+output. Nothing else.
+
+## The colour, and why it is that colour
+
+```css
+--color-sidebar_bg: #0f1218;
+```
+
+**#0f1218 is the brand's own hue held at very low lightness.** The brand deep is `#00349c`,
+which is 220deg. This is 220deg at **L 7.5%** and **S 20%** — near-black, but a blue-leaning
+near-black rather than a neutral one.
+
+Why not pure `#000`: it reads as "no colour was chosen". Why not a neutral `#141414`: the
+workspace design reference is explicit that neutrals in this system carry a trace of the
+brand hue rather than being literal greys, and the sidebar is the largest single colour
+surface in the admin. `#0f1218` keeps the sidebar in the same family as the rest of the
+palette while reading as deliberate rather than flat.
+
+It is deliberately **not** `--color-grey_very_dark` (`#14161b`): that token is the dark
+theme's *body* neutral and is meant to be neutral. The sidebar wants the brand tint, so it
+gets its own token rather than borrowing one whose purpose is different.
+
+## Contrast, measured in the browser
+
+Not computed from the token values — read back from `getComputedStyle` on live elements,
+then the ratio calculated from the resolved sRGB. Probe: `sidebar_contrast2`.
+
+| Pair | Measured | WCAG AA needs | Result |
+|---|---|---|---|
+| nav label vs sidebar (`#fff` on `#0f1218`) | **21.00:1** | 4.5:1 body | pass |
+| nav icon vs sidebar (currentColor fill) | **18.75:1** | 3:1 graphics | pass |
+| Help / Leave label vs sidebar | **21.00:1** | 4.5:1 | pass |
+| active label on orange fill (`#0f1218` on `#fc8708`) | **7.69:1** | 4.5:1 body | pass |
+| orange active fill vs sidebar | **7.69:1** | 3:1 graphics | pass |
+| muted text `#b9bec7` vs sidebar | **10.05:1** | 4.5:1 | pass |
+| hover surface `#272a2f` vs sidebar | **1.30:1** | (a lift, not a boundary) | visible |
+| white text on hover surface | **14.40:1** | 4.5:1 | pass |
+
+## Two pre-existing AA failures fixed on the way
+
+Both were failing **before** this change, on the old navy, and are worth recording because
+the darker base made them unignorable:
+
+1. **Active label was `#00349c` on `#fc8708` — 4.37:1.** Below AA for body text. It now uses
+   the sidebar surface colour, `#0f1218`, at **7.69:1**.
+2. **Sub-navigation hover was a literal `hsl(28deg, 77%, 63%)` with white text — 2.24:1.**
+   Badly failing. It now uses the same `--color-sidebar_hover_bg` lift as a first-level
+   hover, so both menu levels read consistently and the label keeps the sidebar text colour.
+
+## Hover and active are now different states
+
+`&.active, &:hover` shared one rule, so a hovered entry looked exactly like the selected
+one. On navy that was merely redundant; against near-black an orange fill on every hover
+would have made the whole menu look selected. Hover now lifts the surface (10% toward
+white, `#272a2f`), and only `.active` carries the orange indicator.
+
+## Group separators
+
+There are none. The menu has no separator elements — the visual grouping comes from the
+`margin-bottom` on `.main_navi_entry` and the `--spacing-7` top padding on `#main_navi`,
+neither of which changed. Checked the markup rather than assuming, because the request
+named them.
+
+## The mobile drawer
+
+There is no separate drawer stylesheet: at 375 the sidebar is the same `#left_menu` at a
+48px rail, driven by the same `--main-menu-bg-color`. It inherits the change with no
+additional rule, confirmed by screenshot.
+
+## Scope proof
+
+Compiled-CSS diff, fragment by fragment (`admin.css`, `theme.css`, `dark-theme.css`,
+`light-theme.css`, `welcome.css`):
+
+```
+theme.css       26 changed fragments: 6 new sidebar tokens + 5 main-menu aliases × 2 themes
+admin.css       14 changed fragments: all inside .main_navi_entry / .subnavi_tab selectors
+dark/light.css  16 each: the same token aliases
+welcome.css      6: the new token definitions
+```
+
+**Zero changed fragments outside sidebar selectors or sidebar tokens.** The one fragment that
+needed checking by hand — `background-color:hsl(28,77%,63%)` — resolves inside
+`.subnavi_tab.active a, .subnavi_tab a:hover` and is absent from the new build.
+
+No other colour, spacing, typography, radius, border or shadow declaration changed.

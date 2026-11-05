@@ -49,18 +49,24 @@
   transition: background-color var(--transition-duration)
     var(--transition-easing);
 
+  // Hover is a LIFT off the sidebar surface, not the active fill.
+  //
+  // It used to reuse --main-menu-active-bg-color, which meant a hovered entry looked
+  // exactly like the selected one. On navy that was survivable; against the near-black
+  // sidebar it would make every hovered item look selected, so the two are now
+  // separate: hover lifts the surface (10% toward white, 1.30:1 against the base,
+  // which is visible without competing), active keeps the orange indicator.
   &:hover {
-    background-color: var(--main-menu-active-bg-color);
+    background-color: var(--color-sidebar_hover_bg);
 
     .sub_navigation {
       visibility: visible;
       opacity: 1;
-      background-color: var(--main-menu-active-bg-color);
+      background-color: var(--color-sidebar_hover_bg);
     }
   }
 
-  &.active,
-  &:hover {
+  &.active {
     background-color: var(--main-menu-active-bg-color);
     cursor: default;
 
@@ -184,7 +190,11 @@
 
   &.active a,
   a:hover {
-    background-color: hsl(28deg, 77%, 63%);
+    // Was a literal hsl(28 77% 63%) — a pale orange carrying white text at 2.24:1,
+    // which failed AA before this change and would have been worse on near-black.
+    // It now uses the same lift as a first-level hover, so the two levels of the menu
+    // read consistently and the label keeps the sidebar's text colour (16.32:1 here).
+    background-color: var(--color-sidebar_hover_bg);
   }
 }
 

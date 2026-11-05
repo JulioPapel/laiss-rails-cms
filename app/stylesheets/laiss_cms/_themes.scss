@@ -120,12 +120,14 @@
   --list-filter-background-color: var(--form-field-background-color);
   --list-filter-focus-background-color: var(--form-field-background-color);
 
-  /* Main Menu */
-  --main-menu-bg-color: var(--color-blue_dark);
-  --main-menu-active-bg-color: var(--color-orange_dark);
-  --main-menu-active-text-color: var(--color-blue_dark);
-  --main-menu-text-color: var(--color-white);
-  --main-menu-icon-color: var(--color-white);
+  /* Main Menu. All five read from the sidebar tokens in _custom-properties.scss,
+     so the sidebar's near-black surface is defined once. See that file for the
+     reason behind the colour and the contrast it was measured against. */
+  --main-menu-bg-color: var(--color-sidebar_bg);
+  --main-menu-active-bg-color: var(--color-sidebar_active_bg);
+  --main-menu-active-text-color: var(--color-sidebar_active_text);
+  --main-menu-text-color: var(--color-sidebar_text);
+  --main-menu-icon-color: var(--color-sidebar_text);
 
   /* Notices */
   --notice-success-background-color: hsl(88deg, 47%, 20%);
@@ -400,12 +402,14 @@
   --list-filter-background-color: hsla(0deg, 0%, 100%, 0.25);
   --list-filter-focus-background-color: var(--color-white);
 
-  /* Main Menu */
-  --main-menu-bg-color: var(--color-blue_dark);
-  --main-menu-active-bg-color: var(--color-orange_dark);
-  --main-menu-active-text-color: var(--color-blue_dark);
-  --main-menu-text-color: var(--color-white);
-  --main-menu-icon-color: var(--color-white);
+  /* Main Menu. All five read from the sidebar tokens in _custom-properties.scss,
+     so the sidebar's near-black surface is defined once. See that file for the
+     reason behind the colour and the contrast it was measured against. */
+  --main-menu-bg-color: var(--color-sidebar_bg);
+  --main-menu-active-bg-color: var(--color-sidebar_active_bg);
+  --main-menu-active-text-color: var(--color-sidebar_active_text);
+  --main-menu-text-color: var(--color-sidebar_text);
+  --main-menu-icon-color: var(--color-sidebar_text);
 
   /* Notices */
   --notice-success-background-color: hsl(88deg, 47%, 88%);
