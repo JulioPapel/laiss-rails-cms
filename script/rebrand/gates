@@ -40,6 +40,19 @@ run_ruby() {
   echo "Ruby"
 
   local out
+
+  # The specs need the dummy app's test database to exist and be migrated. CI does
+  # this as a separate step before running rspec; without it here, `script/gates` in
+  # a fresh clone failed with "no such table: laiss_cms_attachments" — the command
+  # the release notes tell a reader to trust. Skipped when the database is already
+  # present so a repeat run does not pay for a full migration reset.
+  if ! RAILS_ENV=test bin/rails runner -e test 'ActiveRecord::Base.connection.table_exists?("laiss_cms_pages")' >/dev/null 2>&1; then
+    if ! bundle exec rake laiss_cms:test:prepare >/dev/null 2>&1; then
+      fail "test database could not be prepared (bundle exec rake laiss_cms:test:prepare)"
+      return
+    fi
+  fi
+
   out=$(bin/rspec spec --format progress 2>&1)
   local status=$?
   local count
