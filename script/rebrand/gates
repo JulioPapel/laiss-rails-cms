@@ -13,7 +13,8 @@ set -uo pipefail
 
 cd "$(dirname "$0")/../.." || exit 2
 
-BASELINE_EXAMPLES=4408
+# Phase 10: +11 for the sidebar collapse request specs.
+BASELINE_EXAMPLES=4419
 BASELINE_DEVISE=167
 BASELINE_VITEST=851
 
