@@ -61,10 +61,24 @@ p {
     box-shadow: none!important;
 }
 
+// The upstream theme sets `opacity: 0` here and relies on its jQuery entry point
+// adding `.show` on DOM ready to fade the page in. This project loads no jQuery,
+// so that class was never added and every admin page rendered blank — the header
+// was visible only because it sits outside this wrapper.
+//
+// The fade is a demo flourish, not a UI requirement, so the starting opacity is
+// simply 1. The `.show` rule is kept for compatibility: if anything ever adds the
+// class, nothing changes.
 #main-wrapper {
-    opacity: 0;
+    opacity: 1;
     transition: all 0.25s ease-in;
-    overflow: hidden;
+    // `overflow: hidden` in the upstream theme depends on its own fixed-height
+    // scroll containers, which are driven by `data-sidebar-style` and friends on
+    // <body>. This admin does not set those, so the wrapper clipped page content:
+    // tabs and dialogs inside a long page could not be scrolled into view and
+    // feature specs failed with ElementNotInteractableError. The page scrolls
+    // normally instead.
+    overflow: visible;
     position: relative;
     // background: $body-bg;
     &.show {
