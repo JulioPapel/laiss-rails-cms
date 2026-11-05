@@ -73,4 +73,44 @@ RSpec.describe "Page seeding", type: :system do
       FileUtils.rm_rf(Rails.root.join("db/seeds"))
     end
   end
+
+  # These two cases used to be silent: db:seed exited zero having created
+  # nothing, which is indistinguishable from a broken install.
+  context "when db/seeds/laiss_cms/pages.yml is absent" do
+    before do
+      FileUtils.rm_rf(Rails.root.join("db/seeds"))
+      LaissCms::Seeder.instance_variable_set(:@_page_yml, nil)
+    end
+
+    it "says which file is missing instead of failing silently", :aggregate_failures do
+      LaissCms::Shell.verbose!
+
+      expect { LaissCms::Seeder.seed! }.to output(/does not exist/).to_stdout
+      expect { LaissCms::Seeder.seed! }.to output(/pages.yml/).to_stdout
+    ensure
+      LaissCms::Shell.silence!
+    end
+  end
+
+  context "when db/seeds/laiss_cms/pages.yml exists but declares no pages" do
+    before do
+      FileUtils.mkdir_p(Rails.root.join("db/seeds/laiss_cms"))
+      # What the installer writes with --skip-demo-files: comments, no entries.
+      File.write(Rails.root.join("db/seeds/laiss_cms/pages.yml"), "# no pages yet\n")
+      LaissCms::Seeder.instance_variable_set(:@_page_yml, nil)
+    end
+
+    it "says the file declares no pages", :aggregate_failures do
+      LaissCms::Shell.verbose!
+
+      expect { LaissCms::Seeder.seed! }.to output(/declares no pages/).to_stdout
+      expect(LaissCms::Page.count).to eq(0)
+    ensure
+      LaissCms::Shell.silence!
+    end
+
+    after do
+      FileUtils.rm_rf(Rails.root.join("db/seeds"))
+    end
+  end
 end

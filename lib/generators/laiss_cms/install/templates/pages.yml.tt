@@ -1,0 +1,19 @@
+# == The pages LaissCms creates when you run `bin/rails db:seed`.
+#
+# Without this file `db:seed` creates nothing at all: no site, no language and no
+# root page. A page needs a parent, so an empty tree also means the admin's
+# "New page" button has nothing to attach to.
+#
+# The structure below is one root page. Add children under `children:` to build a
+# tree; the indentation matters.
+<%- unless @options[:skip_demo_files] -%>
+- name: <%= LaissCms.config.default_language.frontpage_name %>
+  urlname: index
+  page_layout: <%= LaissCms.config.default_language.page_layout %>
+  title: Welcome
+  children:
+    - name: About
+      urlname: about
+      page_layout: <%= LaissCms.config.default_language.page_layout %>
+      title: About
+<%- end -%>

@@ -12,7 +12,9 @@ Gem::Specification.new do |gem|
   # requires the copyright notice and contributor attribution to be preserved.
   # Laiss Labs / Júlio Papel are the maintainers of this fork; see LICENSE.
   gem.authors = ["Thomas von Deyen", "Robin Boening", "Marc Schettke", "Hendrik Mans", "Carsten Fregin", "Martin Meyerhoff", "Júlio Papel"]
-  gem.email = ["julio@laisslabs.com"]
+  # No `gem.email`. This gem is never published to RubyGems, so the field has no
+  # consumer — it would only copy a personal address into the metadata of every
+  # built .gem file. `gem build` does not require it.
   gem.summary = "A semantically structured and full-featured CMS Engine for Rails"
   gem.description = "laiss-rails-cms is a private, in-house CMS engine for Rails, " \
     "maintained by Laiss Labs. It is consumed as a path or git dependency and is " \

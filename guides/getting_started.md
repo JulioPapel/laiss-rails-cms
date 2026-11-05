@@ -82,10 +82,11 @@ If the admin raises `NoCurrentUserFoundError`, that line is what is missing.
 
 ## 5. Create the content tree
 
-`db:seed` creates the site and the default language. It creates pages only if you
-provide them, because a fork cannot guess your structure.
-
-Create `db/seeds/laiss_cms/pages.yml`:
+`db:seed` creates the site, the default language and the pages declared in
+`db/seeds/laiss_cms/pages.yml`. The installer writes a starter file with one root
+page and one child, so a fresh install has something to look at immediately. Edit
+it to describe your own structure — the indentation under `children:` is what
+builds the tree:
 
 ```yaml
 - name: Index
@@ -95,9 +96,12 @@ Create `db/seeds/laiss_cms/pages.yml`:
   children:
     - name: About
       urlname: about
-      page_layout: standard
+      page_layout: index
       title: About
 ```
+
+If you installed with `--skip-demo-files`, that file is empty on purpose and
+`db:seed` says so.
 
 Then re-run:
 

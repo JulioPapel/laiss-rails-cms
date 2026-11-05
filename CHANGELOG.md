@@ -70,6 +70,17 @@ Packaging and correctness. Nothing here changes what the admin looks like.
   asset-path initializer now checks for it, so a minimal Rails app without
   sprockets or propshaft can load the engine.
 
+- **`db:seed` created nothing, silently.** The installer told you to run it but
+  wrote no `db/seeds/laiss_cms/pages.yml`, and the seeder returned early when that
+  file was absent without printing anything. The admin then came up with no site,
+  no language and no pages, which reads as a broken install rather than an unseeded
+  one. The installer now writes a starter file with one root page and one child, so
+  a fresh install seeds a working tree. When the file is missing or declares no
+  pages, `db:seed` says exactly which file it looked for and that no pages were
+  created. A comment-only file — what `--skip-demo-files` produces — also parses to
+  nil and used to raise `NoMethodError` from inside the seeder; it now counts as an
+  empty list.
+
 - **A non-interactive install produced an app that could not seed.** The installer
   asked for the primary language's code and name with `ask`, which returns `nil`
   when stdin is not a terminal — CI, Docker, or any scripted install. The nil was

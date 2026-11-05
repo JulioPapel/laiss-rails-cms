@@ -24,12 +24,30 @@ module LaissCms
       protected
 
       def try_seed_pages
-        return unless page_seeds_file.file?
+        unless page_seeds_file.file?
+          # Silence here was the problem: `db:seed` exited zero having created
+          # nothing, and the empty admin tree looked like a broken install rather
+          # than an unseeded one. The installer writes this file by default now, so
+          # reaching this branch means it was removed or the install used
+          # --skip-demo-files. Say exactly which file is missing.
+          desc "Seeding LaissCms pages"
+          log "No pages were created because #{page_seeds_file} does not exist. " \
+              "Create it with your root page, or re-run `bin/rails laiss_cms:install` " \
+              "to get the default one. Without it there is no site, no language and no " \
+              "root page, so the admin cannot create pages.", :skip
+          return
+        end
 
         if LaissCms::Page.exists?
           desc "Seeding LaissCms pages"
           log "There are already pages present in your database. " \
               "Please use `rake db:reset' if you want to rebuild your database.", :skip
+        elsif contentpages.blank? && layoutpages.blank?
+          # The file exists but declares nothing. That is the --skip-demo-files
+          # case, and it used to be indistinguishable from a successful no-op.
+          desc "Seeding LaissCms pages"
+          log "#{page_seeds_file} exists but declares no pages, so none were created. " \
+              "Add your root page to it and run `bin/rails db:seed` again.", :skip
         else
           create_default_site! unless LaissCms::Site.first
           create_default_language! unless LaissCms::Language.default
@@ -83,9 +101,11 @@ module LaissCms
       end
 
       def page_yml
-        @_page_yml ||= load_yaml_file(
-          page_seeds_file
-        )
+        # A file containing only comments — which is what the installer writes when
+        # run with --skip-demo-files — parses to nil, and `.reject` on nil raised a
+        # NoMethodError from inside db:seed. An empty list is the honest reading:
+        # the file exists and declares no pages.
+        @_page_yml ||= Array(load_yaml_file(page_seeds_file))
       end
 
       def load_yaml_file(file)

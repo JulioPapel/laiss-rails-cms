@@ -113,9 +113,12 @@ Two steps are easy to miss and both fail quietly:
   so the admin shows an empty tree and pages cannot be created (a page needs a
   parent).
 
-To get a content tree, add `db/seeds/laiss_cms/pages.yml`:
+`laiss_cms:install` also writes a starter `db/seeds/laiss_cms/pages.yml`, so a
+fresh install seeds a two-page tree (Index with an About child) without any further
+work. Edit that file to change the structure:
 
 ```yaml
+# db/seeds/laiss_cms/pages.yml
 - name: Index
   urlname: index
   page_layout: index
@@ -123,9 +126,12 @@ To get a content tree, add `db/seeds/laiss_cms/pages.yml`:
   children:
     - name: About
       urlname: about
-      page_layout: standard
+      page_layout: index
       title: About
 ```
+
+If the file is missing, `db:seed` prints the path it looked for and creates no
+pages — it is not a silent no-op.
 
 If the admin raises `NoCurrentUserFoundError`, the authentication integration is
 not loaded. Either add `require "laiss_cms/devise"` to `config/application.rb`

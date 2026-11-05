@@ -73,6 +73,13 @@ module LaissCms
           storage_adapter: "active_storage"
         )
         template "#{__dir__}/templates/laiss_cms.rb.tt", app_config_path.join("initializers", "laiss_cms.rb")
+
+        # The seeder returns early when this file is absent, and used to do so
+        # silently — `db:seed` created nothing and the admin came up with no site
+        # and no pages, which reads as a broken install. Written here, after
+        # @default_config exists, so the --default-language-* options are honoured.
+        template "#{__dir__}/templates/pages.yml.tt",
+          app_root.join("db", "seeds", "laiss_cms", "pages.yml")
       end
 
       def install_assets
