@@ -46,7 +46,13 @@
       <p><%= LaissCms.t(:javascript_disabled_text) %></p>
     </noscript>
     <laiss-cms-overlay text="<%= LaissCms.t(:please_wait) %>"></laiss-cms-overlay>
-    <%= render "laiss_cms/admin/left_menu" %>
+    <%# Responsive shell: below the desktop breakpoint the sidebar becomes an
+        off-canvas drawer. The wrapper only toggles classes on #left_menu; the
+        menu markup itself is unchanged, and every existing custom element
+        inside it keeps working. Above the breakpoint the wrapper is inert. %>
+    <laiss-cms-drawer target="left_menu" label="<%= LaissCms.t(:menu) %>">
+      <%= render "laiss_cms/admin/left_menu" %>
+    </laiss-cms-drawer>
     <%= render 'laiss_cms/admin/partials/flash_notices' %>
     <div id="main_content">
       <%= yield %>

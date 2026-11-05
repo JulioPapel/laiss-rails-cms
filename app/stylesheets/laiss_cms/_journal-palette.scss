@@ -68,4 +68,53 @@
   --journal-radius-pill: 999px;
   --journal-letter-spacing-tight: -0.015em;
   --journal-letter-spacing-wide: 0.08em;
+
+  // -------------------------------------------------------------------------
+  // Responsive shell (Phase 8). ADDED, never renamed: every token above still
+  // resolves with the same name. These add motion/elevation consistency and the
+  // drawer geometry as one contract, so the shell and future components share
+  // the same vocabulary.
+  // -------------------------------------------------------------------------
+
+  // Motion. One duration and one easing, plus a single reduced-motion gate
+  // consumed by every transition in the shell.
+  --journal-motion-fast: 120ms;
+  --journal-motion-base: 200ms;
+  --journal-motion-easing: cubic-bezier(0.2, 0, 0, 1);
+
+  // Elevation. The journal prefers rules over shadows, so there is exactly one
+  // elevation step, used only by things that genuinely float (drawer, dialog).
+  --journal-elevation-1: 0 8px 32px rgb(0 0 0 / 18%);
+  --journal-elevation-2: 0 16px 48px rgb(0 0 0 / 28%);
+
+  // Drawer / mobile shell geometry.
+  --journal-drawer-width: min(84vw, 300px);
+  --journal-topbar-height: 48px;
+  --journal-backdrop-color: rgb(7 5 4 / 55%);
+  --journal-z-drawer: 900;
+  --journal-z-backdrop: 890;
+  --journal-z-topbar: 880;
+
+  // Minimum touch target. 44px is the WCAG 2.5.5 / Apple HIG figure.
+  --journal-touch-target: 44px;
+
+  // Safe-area insets for notched devices, with a 0 fallback where unsupported.
+  --journal-safe-top: env(safe-area-inset-top, 0px);
+  --journal-safe-right: env(safe-area-inset-right, 0px);
+  --journal-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --journal-safe-left: env(safe-area-inset-left, 0px);
+
+  // Fluid rhythm. clamp() so the journal scale compresses on narrow screens
+  // instead of wrapping or overflowing. Values stay within the existing
+  // spacing scale at the low end.
+  --journal-fluid-gutter: clamp(
+    var(--spacing-2),
+    1.5vw + var(--spacing-1),
+    var(--spacing-6)
+  );
+  --journal-fluid-section-gap: clamp(
+    var(--spacing-4),
+    2vw + var(--spacing-2),
+    var(--spacing-8)
+  );
 }

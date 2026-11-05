@@ -1,0 +1,325 @@
+@use "../variables" as vars;
+@use "../mixins";
+
+// Responsive admin shell.
+//
+// Below $large-screen-break-point the fixed sidebar becomes an off-canvas
+// drawer and a slim top bar appears carrying the drawer toggle plus the
+// existing user/language controls. Above it, everything reverts to the desktop
+// layout and this sheet is almost entirely inert.
+//
+// Nothing here redefines an existing custom element. The drawer element
+// (components/drawer.js) supplies the toggle and backdrop and toggles
+// `#left_menu.is-open`; these rules only position things.
+
+$mobile: "(max-width: #{vars.$large-screen-break-point - 1})";
+
+// ---------------------------------------------------------------------------
+// Base (all widths)
+// ---------------------------------------------------------------------------
+
+// The wrapper is layout-neutral: it exists in the DOM but occupies no space, so
+// the sidebar keeps its `position: fixed` behaviour on desktop.
+laiss-cms-drawer {
+  display: contents;
+}
+
+// Hidden until the mobile block enables them. This is what keeps the desktop
+// layout behaviourally identical.
+.drawer-toggle,
+.drawer-backdrop {
+  display: none;
+}
+
+// Fluid rhythm. clamp() so the journal scale compresses on narrow screens
+// instead of wrapping or overflowing, bottoming out at the smallest spacing step.
+//
+// Deliberately NO `#main_content > * + *` sibling margin. The content region's
+// direct children include scroll-critical wrappers (the element footer sits in
+// one), and adding margin between them pushed the Save button out of the scroll
+// viewport — Caplocked the whole feature spec with "could not be scrolled into
+// view". Section rhythm belongs on the sections themselves, so it is opt-in via
+// `.journal-section + .journal-section` rather than imposed on every sibling.
+#main_content {
+  padding-left: max(
+    calc(var(--main-menu-width) + var(--journal-fluid-gutter)),
+    calc(var(--journal-safe-left) + var(--journal-fluid-gutter))
+  );
+  padding-right: calc(
+    var(--journal-fluid-gutter) + var(--journal-safe-right)
+  );
+}
+
+.journal-section + .journal-section {
+  margin-top: var(--journal-fluid-section-gap);
+}
+
+// ---------------------------------------------------------------------------
+// Mobile shell
+// ---------------------------------------------------------------------------
+@media screen and #{$mobile} {
+  body {
+    // The sidebar no longer reserves horizontal space: #main_content is padded
+    // by --main-menu-width, which drops to zero here and the drawer overlays.
+    --main-menu-width: 0px;
+    --top-menu-height: calc(
+      var(--journal-topbar-height) + var(--journal-safe-top)
+    );
+  }
+
+  // --- Toggle ---------------------------------------------------------------
+  .drawer-toggle {
+    display: inline-flex;
+    position: fixed;
+    top: calc(var(--journal-safe-top) + 4px);
+    left: calc(var(--journal-safe-left) + 4px);
+    z-index: var(--journal-z-topbar);
+    align-items: center;
+    justify-content: center;
+    // WCAG 2.5.5 minimum touch target.
+    width: var(--journal-touch-target);
+    height: var(--journal-touch-target);
+    padding: 0;
+    border: var(--border-default);
+    border-radius: var(--journal-radius);
+    background-color: var(--panel-background-color);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color var(--journal-motion-fast)
+      var(--journal-motion-easing);
+
+    &:hover {
+      background-color: var(--icon-button-hover-bg-color);
+    }
+
+    &:focus-visible {
+      @include mixins.default-focus-style;
+    }
+  }
+
+  // Three hairlines, drawn without an icon asset.
+  .drawer-toggle-bars {
+    display: block;
+    position: relative;
+    width: 18px;
+    height: 2px;
+    background-color: currentcolor;
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: currentcolor;
+    }
+
+    &::before {
+      top: -6px;
+    }
+
+    &::after {
+      top: 6px;
+    }
+  }
+
+  // --- Backdrop -------------------------------------------------------------
+  .drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: var(--journal-z-backdrop);
+    background-color: var(--journal-backdrop-color);
+    animation: drawer-backdrop-in var(--journal-motion-base)
+      var(--journal-motion-easing);
+  }
+
+  // --- The sidebar becomes the drawer panel ---------------------------------
+  #left_menu {
+    z-index: var(--journal-z-drawer);
+    top: 0;
+    left: 0;
+    width: var(--journal-drawer-width);
+    max-width: 100%;
+    padding-top: var(--journal-safe-top);
+    padding-bottom: var(--journal-safe-bottom);
+    padding-left: var(--journal-safe-left);
+    // transform (not `left`) keeps the slide off the layout thread.
+    transform: translate3d(-100%, 0, 0);
+    transition: transform var(--journal-motion-base) var(--journal-motion-easing);
+    will-change: transform;
+
+    &.is-open {
+      transform: translate3d(0, 0, 0);
+      box-shadow: var(--journal-elevation-2);
+    }
+  }
+
+  // --- Drawer panel: restore full width and always show labels ---------------
+  // Below the desktop breakpoint the sidebar normally collapses to 48px icons
+  // with labels revealed only on :hover — a mouse-only affordance. Inside an
+  // open drawer the labels must always be visible, otherwise the drawer is a
+  // column of unlabelled icons.
+  #left_menu {
+    --main-menu-width: var(--journal-drawer-width);
+
+    .main_navi_entry label {
+      position: static;
+      visibility: visible;
+      opacity: 1;
+      display: inline-block;
+      max-width: none;
+      padding-left: var(--spacing-2);
+      background-color: transparent;
+    }
+
+    .main_navi_entry.has_sub_navigation label {
+      display: inline-block;
+    }
+
+    // Sub-navigation sits in normal flow inside the drawer rather than as a
+    // floating flyout, which would be clipped or misplaced off-canvas.
+    .sub_navigation {
+      position: static;
+      width: auto;
+      visibility: visible;
+      opacity: 1;
+      box-shadow: none;
+      transform: none;
+    }
+  }
+
+  // While the drawer is open the page behind must not scroll. The element sets
+  // `overflow: hidden` on body; this stops iOS from rubber-banding it.
+  body[data-drawer-open] {
+    overscroll-behavior: none;
+  }
+
+  // --- Slim top bar ---------------------------------------------------------
+  #top_menu {
+    margin-left: 0;
+    padding-right: 0;
+    padding-top: var(--journal-safe-top);
+    height: var(--top-menu-height);
+  }
+
+  #header {
+    // Leave room for the toggle so the user controls never sit under it.
+    padding-left: calc(var(--journal-touch-target) + var(--spacing-2));
+    padding-right: var(--journal-safe-right);
+    height: var(--journal-topbar-height);
+    align-items: center;
+  }
+
+  #main_content {
+    // Overrides the all-widths rule above: no sidebar gutter on mobile.
+    padding-left: var(--journal-fluid-gutter);
+    padding-right: calc(
+      var(--journal-fluid-gutter) + var(--journal-safe-right)
+    );
+    padding-bottom: calc(
+      var(--journal-fluid-gutter) + var(--journal-safe-bottom)
+    );
+
+    // These views previously relied on the sidebar's width; with the drawer
+    // overlaying, they must own their own horizontal space.
+    &:has(.resources-table-wrapper),
+    &:has(#filter_bar),
+    &:has(.tag-list) {
+      padding-right: calc(
+        var(--journal-fluid-gutter) + var(--journal-safe-right)
+      );
+    }
+  }
+
+  // --- Touch targets --------------------------------------------------------
+  // Additive: sets a floor, removes no existing rule.
+  #left_menu .main_navi_entry > a,
+  #left_menu .subnavi_tab > a,
+  #left_menu #logout a,
+  #main_content .icon_button,
+  #main_content .button,
+  #main_content .picture_tool,
+  #top_menu .icon_button,
+  #top_menu .button,
+  #header a {
+    min-height: var(--journal-touch-target);
+  }
+
+  #left_menu .main_navi_entry > a,
+  #left_menu .subnavi_tab > a {
+    display: flex;
+    align-items: center;
+    min-height: var(--journal-touch-target);
+  }
+
+  // Row actions in resource tables were sized for a mouse.
+  table td .icon_button,
+  table td a.button {
+    min-width: var(--journal-touch-target);
+    min-height: var(--journal-touch-target);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // Tables scroll inside their own region instead of squeezing columns.
+  //
+  // Scoped to the resource-table wrapper on purpose. A blanket
+  // `table { display: block; overflow-x: auto }` breaks nested layout: the
+  // element editor's forms live in tables, and making every table a scroll
+  // container left the Save button unreachable ("could not be scrolled into
+  // view"). Only the wide index tables need their own scroll region.
+  .resources-table-wrapper {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .resources-table-wrapper > table {
+    // The table itself keeps normal table layout inside the scroll wrapper.
+    min-width: 100%;
+    white-space: nowrap;
+  }
+
+  // No hover-only affordances: touch devices have no hover, so anything hidden
+  // until :hover would be unreachable.
+  tr:hover td .icon_button,
+  .element-header:hover .icon_button {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    .icon_button,
+    .picture_tool {
+      opacity: 1;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Motion
+// ---------------------------------------------------------------------------
+@keyframes drawer-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-toggle,
+  #left_menu {
+    transition: none;
+  }
+
+  .drawer-backdrop {
+    animation: none;
+  }
+}
