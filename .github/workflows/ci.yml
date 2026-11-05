@@ -40,9 +40,15 @@ env:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Specs. The gemspec allows ruby >= 3.1 and rails >= 7.2, < 8.2. This matrix
-  # covers both ends of that range plus the pinned development version, which is
-  # the combination contributors actually run.
+  # Specs. The gemspec requires ruby >= 3.4 and rails >= 7.2, < 8.2. Every leg here
+  # is a combination this project claims to support, so every leg must be one we
+  # can actually run.
+  #
+  # The old matrix had a 3.1 / 7.2 leg, which was a claim with no evidence behind
+  # it: Ruby 3.1 was never exercised on any machine, and the requirement has been
+  # narrowed to 3.4 to match what is tested. Dropping the leg rather than keeping a
+  # red one is the honest move — a requirement wider than the evidence is a promise
+  # the maintainers cannot keep.
   # ---------------------------------------------------------------------------
   ruby:
     name: Ruby ${{ matrix.ruby }} / Rails ${{ matrix.rails }}
@@ -52,10 +58,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # The floor of the supported range (gemspec: ruby >= 3.1, rails >= 7.2).
-          - ruby: "3.1"
+          # The floor of the supported range (gemspec: ruby >= 3.4), paired with the
+          # Rails floor. This is the oldest combination that is claimed and tested.
+          - ruby: "3.4"
             rails: "7.2"
-          # Between the floor and the pin: the combination most host apps run.
+          # The same Ruby with the newest supported Rails: the combination most
+          # host apps run today.
           - ruby: "3.4"
             rails: "8.1"
           # The pinned development version from .ruby-version / .tool-versions.

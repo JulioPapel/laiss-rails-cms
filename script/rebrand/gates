@@ -41,6 +41,20 @@ run_ruby() {
 
   local out
 
+  # A leaked PATH entry for another Ruby makes the JS specs fail with "unable to
+  # find browser binary", because Selenium resolves browsers per Ruby install. That
+  # looks exactly like a broken suite and cost real time to diagnose three times.
+  # Compare against .ruby-version and say so plainly instead.
+  local want_ruby actual_ruby
+  want_ruby=$(cat .ruby-version 2>/dev/null || echo "")
+  actual_ruby=$(ruby -e 'print RUBY_VERSION' 2>/dev/null || echo "")
+  if [ -n "$want_ruby" ] && [ "$want_ruby" != "$actual_ruby" ]; then
+    printf '  \033[33mNOTE\033[0m  ruby %s is active but .ruby-version says %s\n' \
+      "$actual_ruby" "$want_ruby"
+    printf '        A leaked PATH entry is the usual cause. JS specs may fail for\n'
+    printf '        "unable to find browser binary" — that is the environment, not the code.\n'
+  fi
+
   # The specs need the dummy app's test database to exist and be migrated. CI does
   # this as a separate step before running rspec; without it here, `script/gates` in
   # a fresh clone failed with "no such table: laiss_cms_attachments" — the command

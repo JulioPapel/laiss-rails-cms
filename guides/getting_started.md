@@ -15,7 +15,7 @@ Every command below has been run against this repository at tag
 
 ## Prerequisites
 
-- **Ruby** `>= 3.1` (development pins `4.0.6`)
+- **Ruby** `>= 3.4` (development pins `4.0.6`)
 - **Rails** `>= 7.2, < 8.2`
 - **A database** — SQLite, PostgreSQL or MariaDB
 - **ImageMagick or libvips** for image processing, via `image_processing`

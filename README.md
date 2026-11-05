@@ -54,7 +54,7 @@ Mobile: the sidebar becomes a drawer.
 
 | Requirement | Version |
 | --- | --- |
-| Ruby | `>= 3.1` (development pins 4.0.6) |
+| Ruby | `>= 3.4` (development pins 4.0.6) |
 | Rails | `>= 7.2, < 8.2` |
 | Database | SQLite, PostgreSQL, MySQL or MariaDB |
 | Node.js | 24.x — only to build assets from source |

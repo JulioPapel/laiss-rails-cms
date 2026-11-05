@@ -1,0 +1,162 @@
+#!/usr/bin/env bash
+# Regenerates the release-readiness audit with fresh evidence.
+#
+# The audit table in the project store is a reading of this repository at a moment
+# in time. This script re-establishes the cheap, mechanical claims so a future
+# release can regenerate it instead of trusting an old document.
+#
+# It does NOT run the test suites — that is `script/gates`, which is slow. Run both
+# for a full picture:
+#
+#   script/audit          # fast, deterministic facts
+#   script/gates          # the suites
+#
+# Claims that need GitHub (CI, releases, dispatch) are printed as UNVERIFIABLE from
+# here, with what would prove them, rather than guessed at.
+set -uo pipefail
+
+cd "$(dirname "$0")/.." || exit 2
+
+FAILS=0
+printf '%-44s %-12s %s\n' "CLAIM" "STATUS" "EVIDENCE"
+printf '%-44s %-12s %s\n' "--------------------------------------------" "------------" "----------------------------------------"
+
+row() {
+  local claim="$1" status="$2" evidence="$3"
+  printf '%-44s %-12s %s\n' "$claim" "$status" "$evidence"
+  if [ "$status" = "FAIL" ]; then FAILS=$((FAILS + 1)); fi
+}
+
+# --- Version and tag -------------------------------------------------------
+
+version=$(ruby -Ilib -e 'require "laiss_cms/version"; print LaissCms::VERSION' 2>/dev/null || echo "")
+if [ -n "$version" ]; then
+  row "version constant readable" "VERIFIED" "$version"
+else
+  row "version constant readable" "FAIL" "could not load lib/laiss_cms/version.rb"
+fi
+
+gemspec_version=$(ruby -e 's=Gem::Specification.load("laiss_cms.gemspec"); print s.version' 2>/dev/null || echo "")
+if [ "$gemspec_version" = "$version" ] && [ -n "$version" ]; then
+  row "gemspec reports the same version" "VERIFIED" "$gemspec_version"
+else
+  row "gemspec reports the same version" "FAIL" "gemspec=$gemspec_version constant=$version"
+fi
+
+# The released tag should be v<version>. Absent before tagging, which is fine.
+if git rev-parse -q --verify "refs/tags/v${version}" >/dev/null 2>&1; then
+  tag_commit=$(git rev-parse "v${version}^{commit}" 2>/dev/null)
+  head_commit=$(git rev-parse HEAD)
+  if [ "$tag_commit" = "$head_commit" ]; then
+    row "tag v${version} points at HEAD" "VERIFIED" "${tag_commit:0:12}"
+  else
+    row "tag v${version} points at HEAD" "NOTE" "tag ${tag_commit:0:12} head ${head_commit:0:12}"
+  fi
+else
+  row "tag v${version} exists" "NOTE" "not created yet (normal before a release)"
+fi
+
+dirty=$(git status --porcelain | wc -l | tr -d ' ')
+if [ "$dirty" = "0" ]; then
+  row "working tree is clean" "VERIFIED" "0 changes"
+else
+  row "working tree is clean" "FAIL" "$dirty uncommitted change(s)"
+fi
+
+# --- Ruby requirement ------------------------------------------------------
+
+req=$(ruby -e 's=Gem::Specification.load("laiss_cms.gemspec"); print s.required_ruby_version' 2>/dev/null || echo "")
+pin=$(cat .ruby-version 2>/dev/null || echo "")
+case "$req" in
+  *3.4*)
+    row "ruby requirement matches tested floor" "VERIFIED" "$req (pin $pin)" ;;
+  *)
+    row "ruby requirement matches tested floor" "FAIL" "$req — expected >= 3.4 to match the tested matrix" ;;
+esac
+
+# --- Licences --------------------------------------------------------------
+
+lic_ok=0
+for f in LICENSE devise/LICENSE i18n/LICENSE; do
+  if [ -f "$f" ]; then lic_ok=$((lic_ok + 1)); fi
+done
+if [ "$lic_ok" -eq 3 ]; then
+  row "all three upstream licence files present" "VERIFIED" "LICENSE, devise/LICENSE, i18n/LICENSE"
+else
+  row "all three upstream licence files present" "FAIL" "found $lic_ok of 3"
+fi
+
+# --- Leak scan -------------------------------------------------------------
+
+if script/rebrand/leak_scan > /tmp/audit-leak.log 2>&1; then
+  row "leak scan clean" "VERIFIED" "$(grep -oE '[0-9]+ files' /tmp/audit-leak.log | tail -1 || echo 'no upstream name outside LICENSE')"
+else
+  row "leak scan clean" "FAIL" "see /tmp/audit-leak.log"
+fi
+
+if script/rebrand/leak_scan_test > /tmp/audit-leak-test.log 2>&1; then
+  row "leak scan tooling itself works" "VERIFIED" "negative tests detect all probes"
+else
+  row "leak scan tooling itself works" "FAIL" "see /tmp/audit-leak-test.log"
+fi
+
+# --- Hygiene ---------------------------------------------------------------
+
+pii=$(git grep -l 'julio@laisslabs' -- . 2>/dev/null | wc -l | tr -d ' ')
+if [ "$pii" = "0" ]; then
+  row "no personal email in tracked files" "VERIFIED" "0 matches"
+else
+  row "no personal email in tracked files" "FAIL" "$pii file(s)"
+fi
+
+paths=$(git grep -lE '/home/[a-z]+/|agent-stores|/cursor/stores' -- . 2>/dev/null | wc -l | tr -d ' ')
+if [ "$paths" = "0" ]; then
+  row "no absolute local paths in tracked files" "VERIFIED" "0 matches"
+else
+  row "no absolute local paths in tracked files" "FAIL" "$paths file(s)"
+fi
+
+cov=$(git ls-files | grep -c 'coverage/' || true)
+if [ "${cov:-0}" = "0" ]; then
+  row "no coverage artifacts committed" "VERIFIED" "0 tracked"
+else
+  row "no coverage artifacts committed" "FAIL" "$cov tracked"
+fi
+
+# --- Documentation ---------------------------------------------------------
+
+if ruby script/check_doc_links > /tmp/audit-docs.log 2>&1; then
+  row "doc links, images and anchors resolve" "VERIFIED" "$(grep -oE '[0-9]+ links' /tmp/audit-docs.log | tail -1)"
+else
+  row "doc links, images and anchors resolve" "FAIL" "see /tmp/audit-docs.log"
+fi
+
+# --- Entry-point convergence ----------------------------------------------
+
+if grep -q 'script/gates' .github/workflows/ci.yml 2>/dev/null; then
+  jobs=$(python3 -c "
+import yaml
+d = yaml.safe_load(open('.github/workflows/ci.yml'))
+print(','.join(sorted(d['jobs'])))
+" 2>/dev/null || echo "?")
+  row "CI calls script/gates (one implementation)" "VERIFIED" "jobs: $jobs"
+else
+  row "CI calls script/gates (one implementation)" "FAIL" "ci.yml runs the suites directly"
+fi
+
+# --- Things that need a runner -------------------------------------------
+
+row "CI has ever run a job" "UNVERIFIED" "needs billing cleared; no job has started"
+row "GitHub Release exists" "UNVERIFIED" "needs auth; API returns 401"
+row "site auto-rebuild fires on dispatch" "UNVERIFIED" "needs SITE_DISPATCH_TOKEN + a runner"
+
+echo
+echo "Not checked here (needs script/gates): suites, lint, build, vitest, scratch app."
+echo "Not checkable here: anything requiring GitHub Actions to actually run."
+
+if [ "$FAILS" -gt 0 ]; then
+  echo
+  echo "$FAILS CLAIM(S) FAILED"
+  exit 1
+fi
+exit 0

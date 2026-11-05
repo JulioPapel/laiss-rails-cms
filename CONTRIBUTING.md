@@ -15,7 +15,7 @@ See [`docs/versioning.md`](docs/versioning.md).
 
 ### Requirements
 
-- Ruby (see `.ruby-version`; the gemspec allows `>= 3.1`)
+- Ruby (see `.ruby-version`; the gemspec requires `>= 3.4`)
 - Rails `>= 7.2, < 8.2`
 - Node 24 and pnpm 11 for the asset build
 

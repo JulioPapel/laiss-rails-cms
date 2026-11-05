@@ -19,7 +19,12 @@ Gem::Specification.new do |gem|
   gem.description = "laiss-rails-cms is a private, in-house CMS engine for Rails, " \
     "maintained by Laiss Labs. It is consumed as a path or git dependency and is " \
     "not published to RubyGems."
-  gem.required_ruby_version = ">= 3.1.0"
+  # Narrowed from ">= 3.1.0": 3.1 was never tested. A gem requirement is a promise
+  # to consumers, and 3.4 and 4.0.6 are the versions with evidence behind them (see
+  # the CI matrix). Two dependencies also exclude 3.1 at their newest versions
+  # (ransack 6.x and view_component 4.x both need >= 3.2), so the 3.1 claim only
+  # resolved by silently downgrading them.
+  gem.required_ruby_version = ">= 3.4.0"
   gem.license = "BSD-3-Clause"
   gem.files = Dir[
     "{app,config,db,lib}/**/*",
