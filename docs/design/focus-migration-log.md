@@ -54,7 +54,7 @@ gates, which is worth more than the isolation benefit of doing forms early.
 | 1a | Scoped CSS substrate (layout untouched) | done |
 | 1b | Shell: layout, sidebar, top bar | done |
 | 2 | Forms: simple_form wrapper + builder | done |
-| 3 | Settings screen | pending |
+| 3 | Settings screen | done |
 | 4 | Styleguide screen | pending |
 | 5 | Lists: pages, attachments, pictures, users, translations | pending |
 | 6 | Dashboard | pending |
@@ -283,3 +283,48 @@ looked like a form-conversion bug and was not.
 - `step2-settings-1440.png` — forms converted, Bootstrap inputs and cards.
 - `step2-page-new-1440.png`
 - `step2-pages-1440.png`
+
+---
+
+## Step 3 — Settings
+
+**Changed**
+
+`app/views/laiss_cms/admin/settings/show.html.erb` rewritten on theme components:
+
+- Page header → `h1.h4` + `p.text-muted`.
+- Each section → `.card > .card-header + .card-body`.
+- Each field → `.form-group.row` with `label.col-sm-3.col-form-label`,
+  `div.col-sm-7` (control + `small.form-text` hint) and `div.col-sm-2` for the badge.
+- Inputs → `form-control` / `custom-select` / `custom-control custom-switch`.
+- Effect badge → `.badge.badge-success` / `.badge-secondary`.
+- **Save button moved into its own card at the end of the form.** It previously sat
+  between two section cards, positioned by the old theme's absolute layout rather than
+  by document flow. That was a Step 1b defect, confirmed by screenshotting before and
+  after Step 2 and getting identical images.
+
+**Why this template needed separate work from Step 2**
+
+It uses `*_tag` helpers (`select_tag`, `number_field_tag`, `check_box_tag`) rather
+than `f.input`, so the simple_form wrapper change did not reach it. This is the half of
+the form surface the wrapper does not cover — 48 call sites across the admin.
+
+**Specs updated (2 assertions)**
+
+| File | Was | Now |
+|---|---|---|
+| `settings_spec` | `.settings-badge--runtime/-restart` | `.badge-success` / `.badge-secondary` |
+| `settings_spec` | `.settings-section` count via `.card` | `.settings-section` — new class on the section cards only, because the save card is also a `.card` and the count became 5 |
+
+**Verified**
+
+- 4410 core / 167 devise / 846 vitest — counts whole.
+- All 12 gates pass.
+- Settings screenshot: labels left, controls centred, hints below, badges right-aligned,
+  save button in its own card at the end.
+
+**Knowingly wrong at this point**
+
+- Only Settings has a converted interior. Every other screen still uses the old card and
+  table styling, so the admin looks inconsistent between screens until Steps 4–7.
+- The seeded database is still in place; it must be reset before running specs.

@@ -71,8 +71,8 @@ RSpec.describe "Admin settings", type: :request do
       get laiss_cms.admin_settings_path
       html = Nokogiri::HTML(response.body)
 
-      expect(html.css(".settings-badge--runtime")).to be_present
-      expect(html.css(".settings-badge--restart")).to be_present
+      expect(html.css(".badge-success")).to be_present
+      expect(html.css(".badge-secondary")).to be_present
     end
 
     it "is linked from the main navigation" do
