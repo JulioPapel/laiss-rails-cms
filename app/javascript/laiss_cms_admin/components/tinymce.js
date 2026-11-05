@@ -244,7 +244,9 @@ export class Tinymce extends HTMLElement {
   //
   // Only an explicit opt-in now selects dark, never the OS.
   get isDark() {
-    return document.documentElement.getAttribute("data-theme") === "journal-dark"
+    return (
+      document.documentElement.getAttribute("data-theme") === "journal-dark"
+    )
   }
 
   get preferredTheme() {
