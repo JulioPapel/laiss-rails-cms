@@ -21,7 +21,7 @@ different key is accepted by the API and then silently ignored:
 {
   "event_type": "cms-docs-updated",
   "client_payload": {
-    "cms_ref": "v0.1.0.beta1",
+    "cms_ref": "v0.1.0.beta6",
     "cms_repo": "JulioPapel/laiss-rails-cms"
   }
 }

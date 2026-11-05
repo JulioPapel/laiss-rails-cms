@@ -121,6 +121,6 @@ edit source to make a gate green. Phase 1 (which rewrites `laiss-cms-*` custom e
 tags and touches this component anyway) should fix it properly by mocking
 `laiss_cms_admin/routes` in the spec the way `link_dialog.spec.js:6` already does.
 
-**Until then:** `script/rebrand/gates` retries vitest once and only fails if tests
+**Until then:** `script/gates` retries vitest once and only fails if tests
 actually fail or the count is wrong, but you should expect a red exit and verify the
 count is 830 before treating it as real.

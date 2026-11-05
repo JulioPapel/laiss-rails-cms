@@ -9,7 +9,6 @@
 #
 #   script/ci_replica ruby
 #   script/ci_replica javascript
-#   script/ci_replica leak-scan
 #   script/ci_replica scratch
 set -uo pipefail
 
@@ -66,13 +65,6 @@ job_javascript() {
   if script/gates js; then pass "script/gates js"; else fail "script/gates js"; fi
 }
 
-job_leak_scan() {
-  echo "job: leak-scan (Rebrand guard)"
-  declare_skipped_actions
-  echo "  -> script/gates rebrand"
-  if script/gates rebrand; then pass "script/gates rebrand"; else fail "script/gates rebrand"; fi
-}
-
 job_scratch() {
   echo "job: scratch (Scratch app)"
   declare_skipped_actions
@@ -83,9 +75,8 @@ job_scratch() {
 case "$JOB" in
   ruby)       job_ruby ;;
   javascript) job_javascript ;;
-  leak-scan)  job_leak_scan ;;
   scratch)    job_scratch ;;
-  *) echo "usage: $0 [ruby|javascript|leak-scan|scratch]" >&2; exit 2 ;;
+  *) echo "usage: $0 [ruby|javascript|scratch]" >&2; exit 2 ;;
 esac
 
 echo

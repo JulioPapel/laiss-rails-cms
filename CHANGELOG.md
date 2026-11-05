@@ -8,6 +8,29 @@ CMS engine; that derivation is recorded in `LICENSE` and nowhere else.
 
 ## Unreleased
 
+## 0.1.0.beta6 — migration tooling removed; earlier betas withdrawn
+
+**This is the only installable version.** The tags for beta1–beta5 have been removed
+from the repository, and their per-release notes with them.
+
+- **Removed the scripts used to derive this fork from upstream.** They should never
+  have shipped publicly. The decisive problem was `mapping.yml`: a complete
+  old-name-to-new-name table covering every identifier, prefix and path that changed,
+  which contradicts the policy enforced everywhere else — that the derivation is
+  disclosed in `LICENSE` and nowhere else. Removed: `mapping.yml`, `lib.rb`, `apply`,
+  `verify`, `leak_scan`, `leak_scan_test`, `self_test`, `rename_paths.rb`, `README.md`.
+
+- **`script/gates` remains and absorbs the gate implementation**, which used to live
+  under `script/rebrand/`. Specs, linters, build, vitest, doc links and the
+  scratch-app check are unchanged, as are the count floors.
+
+- **CI is three jobs** — `ruby`, `javascript`, `scratch` — and no longer has a
+  rebrand-guard job.
+
+- **The upstream-name policy is no longer automated.** The scan that enforced it was
+  part of the removed tooling. It is now a review obligation documented in
+  `CONTRIBUTING.md`, with the search to run. Stated here rather than dropped quietly.
+
 ## 0.1.0.beta5 — corrective
 
 - **Minimum Ruby raised to 3.4** (was a claimed 3.1). 3.1 was never run, and ransack
@@ -15,7 +38,7 @@ CMS engine; that derivation is recorded in `LICENSE` and nowhere else.
   downgrading them. Ruby 3.4.12 and 4.0.6 are now the tested versions; the 3.4/7.2
   matrix leg was run before being added.
 - **The guides could not be built.** The VitePress theme still imported three
-  advertising components deleted during the rebrand, so `guides:build` failed with
+  advertising components that no longer existed, so `guides:build` failed with
   "Could not resolve ./SideBarAd.vue". Three cross-tree links also failed the
   dead-link check. Both fixed; the build produces 29 pages.
 - **`script/gates` diagnoses a missing tool.** Without pnpm it printed five bare FAILs
@@ -231,7 +254,7 @@ confused; see `docs/versioning.md`.
 - Removed publishing, release and changelog automation. The gem builds locally
   and is consumed as a path or git dependency only.
 - Removed the dashboard News widget: it fetched the upstream project's news
-  feed, so it showed upstream content inside the rebranded admin.
+  feed, so it showed third-party content inside the admin.
 
 The upstream project's own changelog is not carried forward here: it describes
 a different product's releases, not this fork's history. For a security fix that

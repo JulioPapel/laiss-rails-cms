@@ -11,15 +11,15 @@ Not "it looks right."
 | Document | What was checked | Date |
 | --- | --- | --- |
 | [`README.md`](../README.md) | Every command executed in a scratch Rails app installed from the git tag. Every internal link and image reference resolved programmatically. | 2026-11-05 |
-| [`CONTRIBUTING.md`](../CONTRIBUTING.md) | Commands run; gate names read from `script/rebrand/gates`; rebrand script names and arguments checked against the files. | 2026-11-05 |
+| [`CONTRIBUTING.md`](../CONTRIBUTING.md) | Commands run; gate names read from `script/gates`. | 2026-11-05 |
 | [`SECURITY.md`](../SECURITY.md) | Checked that the core raises `NoCurrentUserFoundError` rather than falling open, and that authorisation is CanCan-based (`app/models/laiss_cms/permissions.rb`). | 2026-11-05 |
 | [`CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 text, standard. | 2026-11-05 |
-| [`docs/versioning.md`](versioning.md) | `LaissCms::VERSION` is the only source; gemspec and dashboard read from it; `gem build` succeeded and reported version `0.1.0.beta1`. | 2026-11-05 |
+| [`docs/versioning.md`](versioning.md) | `LaissCms::VERSION` is the only source; gemspec and dashboard read from it; `gem build` succeeded and reported version `0.1.0.beta6`. | 2026-11-05 |
 | [`docs/release-readiness.md`](release-readiness.md) | Every claim this project makes, marked VERIFIED with how, or UNVERIFIED with what would prove it. Regenerate the mechanical rows with `script/audit`. | 2026-11-05 |
 | [`docs/site-sync.md`](site-sync.md) | Workflow file and its secret name checked against `.github/workflows/notify-site.yml`. **The dispatch itself is unverified: Actions does not run on this repo.** | 2026-11-05 |
 | [`docs/design/reference-spec.md`](design/reference-spec.md) | Measurements taken with PIL from the supplied reference set; the method is stated in the file. | 2026-11-05 |
 | [`guides/getting_started.md`](../guides/getting_started.md) | Every command executed end to end. Claims about the seeder, the first-user role and the collapse toggle each checked against behaviour. | 2026-11-05 |
-| [`guides/extensions.md`](../guides/extensions.md) | Rewritten: the previous version advertised six extensions pointing at an organisation that does not maintain this fork. What ships is verified against the gemspecs. | 2026-11-05 |
+| [`guides/extensions.md`](../guides/extensions.md) | What ships is verified against the gemspecs. | 2026-11-05 |
 | [`guides/how_to_customize_tinymce.md`](../guides/how_to_customize_tinymce.md) | Rewritten from `lib/laiss_cms/tinymce.rb` and `bundles/tinymce.js` — the toolbar string, plugin list, `valid_elements` and formats were copied from the code, not retyped. | 2026-11-05 |
 
 ## Spot-checked, not read line by line
@@ -44,7 +44,7 @@ elsewhere in the page may still be wrong.
 ## NOT verified
 
 These have **not** been read against the code. Read them with suspicion; they were
-mechanically renamed during the fork and may describe behaviour that changed.
+carried over and may describe behaviour that has since changed.
 
 `guides/render_images.md`, `guides/configuration.md`,
 `guides/how_to_create_a_blog.md`, `guides/how_to_create_a_contact_form.md`,
@@ -83,7 +83,7 @@ Called out here because losing them wastes an afternoon:
 - Change behaviour and the document in the same commit. A separate "docs pass" is
   how the drift happened here the first time.
 - Update a row only when you actually read that document against the code.
-- `script/rebrand/verify` and `script/rebrand/leak_scan` check names, not accuracy.
+- The suite checks behaviour, not prose accuracy. A guide can be wrong while its examples pass.
   CI checks that internal links resolve. Accuracy is on the reviewer.
 - Every command block in the documentation is meant to be executable. If you paste
   one and it fails, that is a documentation bug, not a user error.

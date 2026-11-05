@@ -86,19 +86,20 @@ else
   row "all three upstream licence files present" "FAIL" "found $lic_ok of 3"
 fi
 
-# --- Leak scan -------------------------------------------------------------
+# --- Upstream-name disclosure ----------------------------------------------
+#
+# The leak scan was removed with the rest of the migration tooling, by owner
+# decision: the tooling shipped a complete old-name -> new-name mapping, which
+# disclosed how the fork was performed. That mapping is not something a public
+# project should publish.
+#
+# The consequence is honest to state: the policy "upstream attribution lives in
+# LICENSE and nowhere else" is no longer enforced automatically. It is a review
+# obligation now. This row reports the removal rather than a passing check, because
+# a green row for a check that does not exist would be exactly the kind of
+# flattering claim this table is meant to avoid.
 
-if script/rebrand/leak_scan > /tmp/audit-leak.log 2>&1; then
-  row "leak scan clean" "VERIFIED" "$(grep -oE '[0-9]+ files' /tmp/audit-leak.log | tail -1 || echo 'no upstream name outside LICENSE')"
-else
-  row "leak scan clean" "FAIL" "see /tmp/audit-leak.log"
-fi
-
-if script/rebrand/leak_scan_test > /tmp/audit-leak-test.log 2>&1; then
-  row "leak scan tooling itself works" "VERIFIED" "negative tests detect all probes"
-else
-  row "leak scan tooling itself works" "FAIL" "see /tmp/audit-leak-test.log"
-fi
+row "upstream attribution confined to LICENSE" "NOT AUTOMATED" "was a leak-scan gate; tooling removed, now a review obligation"
 
 # --- Hygiene ---------------------------------------------------------------
 

@@ -1,10 +1,9 @@
 name: CI
 
-# The gate for laiss-rails-cms. Four independent jobs:
+# The gate for laiss-rails-cms. Three independent jobs:
 #
 #   ruby       the specs, across the supported Ruby/Rails range
 #   javascript lint, build and the vitest suite
-#   leak-scan  the rebrand promise: no upstream name outside the LICENSE files
 #   scratch    an app with no asset pipeline gets a named boot error
 #
 # EVERY JOB CALLS script/gates. There is one implementation of the checks, and CI
@@ -155,35 +154,6 @@ jobs:
         run: |
           bundle install
           script/gates js
-
-  # ---------------------------------------------------------------------------
-  # The rebrand promise. This is a PUBLIC statement about how this project relates
-  # to the software it derives from:
-  #
-  #   The derivation is disclosed in LICENSE, because the BSD-3-Clause licence
-  #   requires the copyright notice to be retained. It is disclosed NOWHERE ELSE:
-  #   not in the source, not in the docs, not in a comment, not in a commit
-  #   message. Anyone reading this repository sees a project called
-  #   laiss-rails-cms that carries its upstream attribution in the one file where
-  #   the licence demands it.
-  #
-  # Both scripts exit non-zero on a violation, so this job fails the build rather
-  # than warning.
-  # ---------------------------------------------------------------------------
-  leak-scan:
-    name: Rebrand guard
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4.2.2
-
-      - uses: ruby/setup-ruby@v1.336.0
-        with:
-          ruby-version: 4.0.6
-          bundler-cache: true
-
-      - name: Gates (rebrand)
-        run: script/gates rebrand
 
   # ---------------------------------------------------------------------------
   # The scratch-app gate: the one check that cannot run against the dummy app.

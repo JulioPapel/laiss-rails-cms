@@ -1,38 +1,320 @@
 #!/usr/bin/env bash
-# Verify a checkout without GitHub.
+# The quality bar for this repository, in one command.
 #
-# This is the single command to run before trusting a checkout, a release tag, or
-# a pull request. It runs all twelve gates in order and prints a table with the
-# counts, then exits non-zero if anything failed.
+# A gate passes only if it exits 0 AND the example/test count matches the
+# baseline. Counting matters: a broken `require` makes RSpec silently load fewer
+# files, which still exits 0 with "0 failures" while testing almost nothing.
 #
-#   script/gates            # all twelve
-#   script/gates ruby       # only rspec + standardrb
-#   script/gates js         # only the JavaScript gates
-#   script/gates rebrand    # only the rebrand tooling
-#
-# WHY THIS EXISTS SEPARATELY FROM script/rebrand/gates
-#
-# The gate script lives under script/rebrand/ because it started as rebrand
-# tooling. Requiring contributors to remember that path was a usability problem,
-# and worse, it implied the gates were only about the rebrand. They are the whole
-# quality bar: the specs, the linters, the asset build, and the naming contract.
-#
-# This wrapper is deliberately thin. It forwards arguments and the exit code to
-# script/rebrand/gates, so there is exactly one implementation of the gates and
-# no chance of the two drifting apart.
-#
-# GitHub Actions runs the same logic in .github/workflows/ci.yml. When runners are
-# unavailable (see internal/phase-10-ci-blocked-diagnosis.md in the project store),
-# this command is the only verification that exists, so it must stay honest: it
-# fails on a count that DROPS, not just on a non-zero exit.
+#   script/gates              # everything
+#   script/gates ruby         # rspec + standardrb
+#   script/gates js           # the node gates
+#   script/gates scratch      # a fresh Rails app with no asset pipeline
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 2
 
-if [ ! -x script/rebrand/gates ]; then
-  echo "script/rebrand/gates is missing or not executable." >&2
-  echo "A checkout without it cannot be verified." >&2
-  exit 2
-fi
+# Phase 10: +11 for the sidebar collapse request specs, then -11 for the update
+# checker removal (5 controller, 4 service, 2 ruby_gems specs). Net: unchanged from
+# the Phase 9 figure of 4408, because the two moves happened to cancel out.
+# The removal is deliberate: it fetched a 404ing rubygems.org endpoint on admin
+# page load, and the owner's policy is no upstream connections.
+#
+# beta2: 4408 -> 4410. Two regression specs for the seeder's previously silent
+# behaviour: one for a missing db/seeds/laiss_cms/pages.yml, one for a file that
+# exists but declares no pages. Both were confirmed to fail against the old code.
+BASELINE_EXAMPLES=4410
+BASELINE_DEVISE=167
+# Phase 10: 851 -> 846. The update checker was removed (it fetched
+# rubygems.org/api/v1/versions/laiss_cms.json, which 404s because the gem is never
+# published, and it ran on admin page load). Its 5 vitest cases went with it.
+# This is a deliberate feature removal, not lost coverage: every remaining test
+# still runs, and the core/devise floors are unchanged because their update-check
+# specs were counted in the same commit.
+BASELINE_VITEST=846
 
-exec script/rebrand/gates "$@"
+failures=0
+pass() { printf '  \033[32mPASS\033[0m  %s\n' "$1"; }
+fail() { printf '  \033[31mFAIL\033[0m  %s\n' "$1"; failures=$((failures + 1)); }
+
+# A missing tool used to surface as five bare "FAIL" lines with no cause: the JS
+# gates each ran a command that exited 127, and the reason was only visible by
+# re-running the command by hand. On a machine without mise that is the first thing
+# that happens. Name it once, up front, with what to install.
+require_tool() {
+  if ! command -v "$1" > /dev/null 2>&1; then
+    printf '  \033[31mFAIL\033[0m  %s is not on PATH — %s\n' "$1" "$2"
+    failures=$((failures + 1))
+    return 1
+  fi
+  return 0
+}
+
+check_prerequisites() {
+  local ok=0
+  require_tool ruby "install Ruby >= 3.4 (see .ruby-version)" || ok=1
+  require_tool bundle "gem install bundler" || ok=1
+  require_tool pnpm "install pnpm (CI does this with pnpm/action-setup@v4)" || ok=1
+  require_tool node "install Node (see .tool-versions)" || ok=1
+  require_tool git "install git" || ok=1
+  return $ok
+}
+
+run_ruby() {
+  echo "Ruby"
+
+  local out
+
+  # A leaked PATH entry for another Ruby makes the JS specs fail with "unable to
+  # find browser binary", because Selenium resolves browsers per Ruby install. That
+  # looks exactly like a broken suite and cost real time to diagnose three times.
+  # Compare against .ruby-version and say so plainly instead.
+  local want_ruby actual_ruby
+  want_ruby=$(cat .ruby-version 2>/dev/null || echo "")
+  actual_ruby=$(ruby -e 'print RUBY_VERSION' 2>/dev/null || echo "")
+  if [ -n "$want_ruby" ] && [ "$want_ruby" != "$actual_ruby" ]; then
+    printf '  \033[33mNOTE\033[0m  ruby %s is active but .ruby-version says %s\n' \
+      "$actual_ruby" "$want_ruby"
+    printf '        A leaked PATH entry is the usual cause. JS specs may fail for\n'
+    printf '        "unable to find browser binary" — that is the environment, not the code.\n'
+  fi
+
+  # The specs need the dummy app's test database to exist and be migrated. CI does
+  # this as a separate step before running rspec; without it here, `script/gates` in
+  # a fresh clone failed with "no such table: laiss_cms_attachments" — the command
+  # the release notes tell a reader to trust. Skipped when the database is already
+  # present so a repeat run does not pay for a full migration reset.
+  if ! RAILS_ENV=test bin/rails runner -e test 'ActiveRecord::Base.connection.table_exists?("laiss_cms_pages")' >/dev/null 2>&1; then
+    if ! bundle exec rake laiss_cms:test:prepare >/dev/null 2>&1; then
+      fail "test database could not be prepared (bundle exec rake laiss_cms:test:prepare)"
+      return
+    fi
+  fi
+
+  out=$(bin/rspec spec --format progress 2>&1)
+  local status=$?
+  local count
+  count=$(echo "$out" | grep -oE '[0-9]+ examples' | tail -1 | grep -oE '[0-9]+')
+  if [ "$status" -ne 0 ]; then
+    fail "core specs (exit $status)"
+    echo "$out" | grep -E '^rspec \./' | head -10
+  elif [ "${count:-0}" -ne "$BASELINE_EXAMPLES" ]; then
+    fail "core specs ran ${count:-0} examples, baseline is $BASELINE_EXAMPLES"
+  else
+    pass "core specs ($count examples)"
+  fi
+
+  out=$(bin/rspec devise/spec --format progress 2>&1)
+  status=$?
+  count=$(echo "$out" | grep -oE '[0-9]+ examples' | tail -1 | grep -oE '[0-9]+')
+  if [ "$status" -ne 0 ]; then
+    fail "devise specs (exit $status)"
+  elif [ "${count:-0}" -ne "$BASELINE_DEVISE" ]; then
+    fail "devise specs ran ${count:-0} examples, baseline is $BASELINE_DEVISE"
+  else
+    pass "devise specs ($count examples)"
+  fi
+
+  local lint
+  if lint=$(bundle exec standardrb 2>&1); then
+    pass "standardrb"
+  else
+    fail "standardrb"
+    echo "$lint" | grep -E '^  ' | head -10
+  fi
+}
+
+run_js() {
+  echo "JavaScript"
+
+  # Herb lints generated HTML too, so clear artefacts that would otherwise
+  # produce offences in files nobody wrote.
+  rm -rf coverage devise/coverage spec/dummy/tmp/capybara
+
+  if pnpm run eslint > /dev/null 2>&1; then pass "eslint"; else fail "eslint"; fi
+  if pnpm run lint > /dev/null 2>&1; then pass "prettier"; else fail "prettier"; fi
+  if pnpm exec herb-lint > /dev/null 2>&1; then pass "herb-lint"; else fail "herb-lint"; fi
+
+  # Documentation references. A broken README image or a dead anchor in the
+  # guides is a defect a reader sees immediately, and the docs site logs dead
+  # anchors per build. Cheap enough to run every time.
+  local docs
+  if docs=$(script/check_doc_links 2>&1); then
+    pass "doc links ($(echo "$docs" | grep -oE '[0-9]+ links and images' | head -1))"
+  else
+    fail "doc links"
+    echo "$docs" | grep -E '^  ' | head -10
+  fi
+  if pnpm run build > /dev/null 2>&1; then pass "build"; else fail "build"; fi
+
+  # Vitest is flaky upstream (see docs/development/toolchain-pinning.md): it can
+  # exit 1 on an unhandled rejection while every test still passes. Retry once,
+  # and keep the last count we managed to parse rather than reporting a zero.
+  #
+  # Parsing is deliberately loose: the summary line can be interleaved with the
+  # unhandled-error block, so match "Tests" then any non-digits then the count,
+  # after stripping ANSI escapes.
+  local out status count="" attempts=0
+  for attempt in 1 2; do
+    attempts=$attempt
+    out=$(pnpm run test 2>&1)
+    status=$?
+    local seen
+    seen=$(printf '%s' "$out" \
+      | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g' \
+      | grep -oE 'Tests[^0-9]{0,20}[0-9]+ passed' \
+      | tail -1 \
+      | grep -oE '[0-9]+')
+    [ -n "$seen" ] && count=$seen
+    [ "$status" -eq 0 ] && break
+  done
+
+  if [ "$status" -eq 0 ]; then
+    if [ -z "$count" ]; then
+      # Exit 0 means vitest itself is satisfied; the count just could not be
+      # read back. Warn rather than fail on an output-format detail.
+      printf '  \033[33mNOTE\033[0m  vitest passed but its test count was unreadable\n'
+    elif [ "$count" -ne "$BASELINE_VITEST" ]; then
+      fail "vitest ran $count tests, baseline is $BASELINE_VITEST"
+    else
+      pass "vitest ($count tests, attempt $attempts)"
+    fi
+  else
+    fail "vitest (exit $status after $attempts attempt(s); last parsed count ${count:-none})"
+    printf '%s' "$out" | grep -E 'Unhandled Errors|TypeError|✕|FAIL ' | head -5
+  fi
+
+  # The built assets are committed, so a build that changes them means the
+  # committed copies are stale. This check used to live only in ci.yml; moving the
+  # suites into this script would have silently dropped it.
+  local dirty
+  dirty=$(git status --porcelain app/assets/builds vendor/javascript 2>/dev/null)
+  if [ -z "$dirty" ]; then
+    pass "build artifacts are committed"
+  else
+    fail "build artifacts are stale (run pnpm run build and commit)"
+    printf '%s\n' "$dirty" | head -10
+  fi
+}
+
+
+# The one check that cannot be done from inside this repository.
+#
+# Every other gate runs against the dummy app, which is configured in whatever way
+# makes the suite work. That is exactly how the admin came to 500 on a fresh
+# install in beta2 without any gate noticing: the dummy app has propshaft, so the
+# missing-pipeline case was never exercised.
+#
+# This builds a throwaway Rails app with no asset pipeline, points it at this
+# checkout, and asserts that booting it raises LaissCms::AssetPipelineMissing —
+# the friendly error naming the fix — rather than succeeding and then failing on
+# the first admin request.
+run_scratch() {
+  echo "Scratch app"
+
+  local work
+  work=$(mktemp -d)
+  # shellcheck disable=SC2064
+  trap "rm -rf '$work'" RETURN
+
+  local root
+  root=$(pwd)
+
+  if ! command -v rails > /dev/null 2>&1; then
+    fail "scratch app (rails executable not on PATH)"
+    tail -3 /tmp/scratch-new.log 2>/dev/null
+    return
+  fi
+
+  # `rails new` refuses to run inside another Rails app, so it must be the plain
+  # executable rather than `bundle exec rails` from this repository.
+  ( cd "$work" && rails new nopipe --minimal --skip-bundle --skip-git \
+      --skip-test --skip-system-test --skip-ci --no-rc ) > /tmp/scratch-new.log 2>&1 || {
+    fail "scratch app could not be generated"
+    tail -5 /tmp/scratch-new.log
+    return
+  }
+
+  local app="$work/nopipe"
+
+  # A --minimal app has no asset pipeline and its own development.rb still
+  # references config.assets.quiet, which is the thing under test elsewhere.
+  rm -f "$app/config/initializers/assets.rb"
+  sed -i.bak 's/^  config\.assets\.quiet = true/  # removed by gates/' \
+    "$app/config/environments/development.rb"
+  rm -f "$app/config/environments/development.rb.bak"
+
+  cat > "$app/Gemfile" <<RUBY
+source "https://rubygems.org"
+
+gem "rails", "~> 8.1.4"
+gem "sqlite3"
+gem "puma"
+gem "laiss_cms", path: "$root"
+RUBY
+
+  # Enable the frameworks the engine touches, and point storage at a local disk,
+  # exactly as a host app must.
+  ruby -e '
+    path = ARGV[0] + "/config/application.rb"
+    s = File.read(path)
+    %w[active_job/railtie active_storage/engine action_mailer/railtie].each do |fw|
+      s = s.sub(%r{^# require "#{Regexp.escape(fw)}"}, %(require "#{fw}"))
+    end
+    s = s.sub("class Application < Rails::Application\n",
+              "class Application < Rails::Application\n    config.active_storage.service = :local\n")
+    unless s.include?(%(require "laiss_cms"))
+      s = s.sub("Bundler.require(*Rails.groups)", %(Bundler.require(*Rails.groups)\nrequire "laiss_cms"))
+    end
+    File.write(path, s)
+  ' "$app"
+
+  printf 'development:\n  adapter: sqlite3\n  database: db/development.sqlite3\n' > "$app/config/database.yml"
+  printf 'local:\n  service: Disk\n  root: <%%= Rails.root.join("storage") %%>\n' > "$app/config/storage.yml"
+  mkdir -p "$app/db"
+
+  if ! ( cd "$app" && bundle install --quiet ) > /tmp/scratch-bundle.log 2>&1; then
+    fail "scratch app bundle install failed"
+    tail -5 /tmp/scratch-bundle.log
+    return
+  fi
+
+  # The assertion: boot raises the named error with the fix in its message.
+  local out
+  out=$( cd "$app" && SECRET_KEY_BASE=x RAILS_ENV=development bin/rails runner 'puts "BOOTED"' 2>&1 )
+
+  if echo "$out" | grep -q "LaissCms::AssetPipelineMissing" \
+     && echo "$out" | grep -q 'gem "propshaft"'; then
+    pass "no pipeline raises a named boot error with the fix"
+  elif echo "$out" | grep -q "BOOTED"; then
+    fail "booted without an asset pipeline; the requirement is not enforced"
+  else
+    fail "unexpected failure without an asset pipeline"
+    echo "$out" | head -8
+  fi
+}
+
+echo "Prerequisites"
+if ! check_prerequisites; then
+  echo
+  echo "Missing prerequisites — the checks below cannot run. Nothing was verified."
+  echo "1 GATE FAILED"
+  exit 1
+fi
+echo "  all present"
+echo
+
+case "${1:-all}" in
+  ruby) run_ruby ;;
+  js) run_js ;;
+  scratch) run_scratch ;;
+  all) run_ruby; run_js; run_scratch ;;
+  *) echo "usage: $0 [all|ruby|js|scratch]" >&2; exit 2 ;;
+esac
+
+echo
+if [ "$failures" -eq 0 ]; then
+  echo "ALL GATES PASSED"
+  exit 0
+fi
+echo "$failures GATE(S) FAILED"
+exit 1

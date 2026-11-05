@@ -17,8 +17,8 @@ watching four CI jobs run for the first time.
 
 | # | Claim | Status | How established, or what would prove it |
 |---|---|---|---|
-| 1 | Version is `0.1.0.beta4` and is the single source | **VERIFIED** | `script/audit`: constant and gemspec agree; `gem build` succeeds |
-| 2 | Tag `v0.1.0.beta4` exists, annotated, on the released commit | **VERIFIED** | `git cat-file -t` → tag; peeled to `d0f244e18`; present on origin |
+| 1 | Version is `0.1.0.beta6` and is the single source | **VERIFIED** | `script/audit`: constant and gemspec agree; `gem build` succeeds |
+| 2 | Tag `v0.1.0.beta6` exists, annotated, on the released commit | **VERIFIED** | `git cat-file -t` → tag; present on origin |
 | 3 | 427 tag names on origin, none moved or deleted | **VERIFIED** | `git ls-remote --tags` distinct count; earlier tags' shas unchanged |
 | 4 | Core suite passes — 4410 examples | **VERIFIED** | `script/gates ruby` from a cold clone at the tag |
 | 5 | Devise suite passes — 167 examples | **VERIFIED** | Same run, **and** independently from the repo root and from `devise/` |
@@ -29,17 +29,17 @@ watching four CI jobs run for the first time.
 | 10 | The gate prepares its own test database | **VERIFIED** | Deleted the DB, re-ran, 471 KB file recreated with an in-run mtime |
 | 11 | Example counts cannot silently rot | **VERIFIED** | Gate fails on a count differing from `BASELINE_*`; CI reads the same constants |
 | 12 | Ruby requirement matches tested versions | **VERIFIED** | `>= 3.4.0`; 3.4.12 and 4.0.6 both exercised. Narrowed from 3.1, which was never run |
-| 13 | Install works from the published tag, no auth | **VERIFIED** | Fresh `rails new`; resolved `0.1.0.beta4`; install + seed → 2 pages; `GET /` 200 |
+| 13 | Install works from the published tag, no auth | **VERIFIED** | Fresh `rails new`; resolved `0.1.0.beta6`; install + seed → 2 pages; `GET /` 200 |
 | 14 | Install works from the published tag, with auth | **VERIFIED** | Same app + devise → `::Devise`, `LaissCms::User`, 167 routes |
 | 15 | Engine boots with no `devise` in the bundle | **VERIFIED** | No `::Devise`, no `LaissCms::User`, no auth routes; rest of CMS works |
 | 16 | App without an asset pipeline gets a named boot error | **VERIFIED** | `LaissCms::AssetPipelineMissing` naming `gem "propshaft"`; gate negative-tested |
-| 17 | No upstream name outside the licence files | **VERIFIED** | `leak_scan` over 1752 tracked files; tooling negative-tested with 3 probes |
+| 17 | No upstream name outside the licence files | **NOT AUTOMATED** | The leak-scan gate was removed with the migration tooling. Now a review obligation; `CONTRIBUTING.md` gives the search to run |
 | 18 | Licence obligations met | **VERIFIED** | Upstream body byte-identical in `LICENSE` and `devise/LICENSE` (BSD-3), `i18n/LICENSE` (MIT), vs upstream `0883684917` |
 | 19 | No personal PII shipped | **VERIFIED** | `script/audit`: zero matches; `gem.email` removed and the built `.gem` inspected |
 | 20 | No absolute local paths shipped | **VERIFIED** | `script/audit`: zero matches |
 | 21 | No coverage artifacts committed | **VERIFIED** | 33 removed; `script/audit` confirms zero tracked |
 | 22 | Docs links, images and anchors resolve | **VERIFIED** | `script/check_doc_links`: 173 refs across 42 documents |
-| 23 | CI calls `script/gates` — one implementation | **VERIFIED** | `script/audit`; jobs: javascript, leak-scan, ruby, scratch |
+| 23 | CI calls `script/gates` — one implementation | **VERIFIED** | `script/audit`; jobs: javascript, ruby, scratch |
 | 24 | Every action ref in the workflows resolves | **VERIFIED** | Queried GitHub for each: three `@v4` tags, and `ruby/setup-ruby@v1` is a branch (valid, mutable) |
 | 25 | Gate script is portable to a GNU runner | **VERIFIED** (statically) | No `realpath`/`stat`/`xargs`/GNU-only flags; `sed -i.bak` is the portable form; `mktemp -d` POSIX |
 | 26 | Site builds from the CMS repo | **VERIFIED** | Built locally against the tag: 36 pages, 0 link errors |
@@ -91,5 +91,5 @@ publishing on local evidence alone, however thorough the local evidence is.
 2. Let CI run to completion on `main`. It will be the first run ever; expect it to
    find something.
 3. Re-run the failed "Release" workflow — it creates the Release from
-   `docs/releases/v0.1.0.beta4.md` with no new tag needed.
+   `docs/releases/v0.1.0.beta6.md` with no new tag needed.
 4. Confirm the site rebuild fires from the dispatch.

@@ -4,11 +4,9 @@ import DefaultTheme from "vitepress/theme"
 import ExtensionLinks from "./ExtensionLinks.vue"
 import "./style.css"
 
-// The upstream theme mounted three advertising components (SideBarAd, BottomAd,
-// ServiceAd) into the layout. All three were deleted with the rest of the upstream
-// promotion during the rebrand, which left this file importing files that no longer
-// exist — so `vitepress build` failed outright and the guides could not be built at
-// all. The mounts are removed with them.
+// Advert components are not used here; the layout is the default theme. An earlier
+// version of this file imported three of them, which no longer existed, so
+// `vitepress build` failed outright.
 export default {
   extends: DefaultTheme,
   Layout: () => {

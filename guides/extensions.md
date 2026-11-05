@@ -45,7 +45,7 @@ entry and permissions: [Creating modules](how_to_create_modules) and
 
 **CanCan abilities** — to add your own permission rules alongside the engine's
 roles. Register your ability class with `LaissCms.config.abilities.add`.
-See [Permissions](../CONTRIBUTING.md) for the naming contract.
+See [Permissions](../CONTRIBUTING.md) for the naming conventions.
 
 **Authentication** — bring your own, or use the bundled integration:
 [Custom authentication](how_to_add_custom_authentication).

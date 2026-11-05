@@ -10,7 +10,7 @@ in what a writer types — so an author cannot break the structure of a page.
 > This is **not published to RubyGems** and never will be. Install it from git at
 > a tag. There is no gem on rubygems.org and no support contract.
 
-Current version: **0.1.0.beta5**. See [docs/versioning.md](docs/versioning.md) —
+Current version: **0.1.0.beta6**. See [docs/versioning.md](docs/versioning.md) —
 this project has its own version sequence, deliberately unrelated to any other
 CMS's numbering.
 
@@ -70,7 +70,7 @@ git install needs no Node toolchain.
 ```ruby
 gem "laiss_cms",
   git: "git@github.com:JulioPapel/laiss-rails-cms.git",
-  tag: "v0.1.0.beta5"
+  tag: "v0.1.0.beta6"
 
 # Optional: Devise-based authentication.
 # The integration ships inside laiss_cms; only the devise gem is separate, and it
@@ -202,7 +202,7 @@ If you extend that set, add a matching rule to
 - [Elements and page layouts](guides/elements.md), [ingredients](guides/ingredients.md)
 - [Configuration](guides/configuration.md), [i18n](guides/i18n.md),
   [deployment](guides/deployment.md)
-- [Development](docs/development/) — suites, gates, the naming contract
+- [Development](docs/development/) — suites, gates, conventions
 - [Versioning](docs/versioning.md), [site sync](docs/site-sync.md)
 
 ## Development
@@ -218,12 +218,12 @@ RAILS_ENV=test bundle exec rake laiss_cms:test:prepare
 bundle exec rspec spec
 bundle exec rspec devise/spec
 pnpm exec vitest --run
-script/rebrand/gates        # everything, with the baseline counts
+script/gates                # everything, with the baseline counts
 ```
 
 Toolchain versions are pinned in `.tool-versions`. See
-[CONTRIBUTING.md](CONTRIBUTING.md) for the naming contract, the rebrand tooling
-and the commit conventions.
+[CONTRIBUTING.md](CONTRIBUTING.md) for naming, review expectations and the commit
+conventions.
 
 ## Licence
 

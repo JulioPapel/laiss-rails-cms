@@ -91,7 +91,7 @@ GitHub Actions is unavailable. Use it before opening a pull request and before
 trusting a tag.
 
 It also takes a subset: `script/gates ruby`, `script/gates js`,
-`script/gates rebrand`.
+`script/gates scratch`.
 
 ### The counts matter
 
@@ -117,27 +117,28 @@ If `lint` or `herb-lint` lints the `coverage/` HTML and fails, clear it first:
 rm -rf coverage devise/coverage spec/dummy/tmp/capybara
 ```
 
-## The naming contract
+## Naming
 
-The rebrand is **mechanical**, from one mapping:
-[`script/rebrand/mapping.yml`](script/rebrand/mapping.yml). Do not hand-rename
-things.
-
-| Script | What it does |
-| --- | --- |
-| `script/rebrand/verify` | fails if a name appears in a forbidden casing or separator form |
-| `script/rebrand/leak_scan` | fails if the upstream name appears anywhere outside the three `LICENSE` files |
-| `script/rebrand/self_test` | tests the rebrand tooling itself |
-| `script/rebrand/leak_scan_test` | tests the leak scanner |
-| `script/rebrand/gates` | runs every gate with the baseline counts baked in |
+The project name is `laiss_cms` (gem), `LaissCms` (Ruby namespace),
+`laiss-rails-cms` (repository), and `laiss_cms_` as the database table prefix.
+Use those forms exactly; do not invent variants.
 
 ### The rule this project makes publicly
 
 The derivation from the upstream project is disclosed in `LICENSE`, because
 BSD-3-Clause requires the copyright notice to be retained. It is disclosed
 **nowhere else**: not in source, not in docs, not in comments, not in commit
-messages. `script/rebrand/leak_scan` enforces that, and CI runs it, so a leak
-fails the build.
+messages.
+
+**This is a review obligation, not an automated check.** The tooling that used to
+enforce it has been removed, because it shipped a complete old-name-to-new-name
+mapping — disclosing exactly what this policy exists to keep out of a public
+repository.
+
+A reviewer is now responsible for catching an upstream name outside the three
+`LICENSE` files. When you open a pull request, read the diff: any string that looks
+like a project name other than this one is a defect, unless it is inside a `LICENSE`
+file.
 
 ### Tokens
 
@@ -192,8 +193,8 @@ Adding a button means adding its plugin to `DEFAULT_PLUGINS` in
 - Reference the issue if there is one.
 - Do not rewrite published history on `main`. No force-push.
 
-A pull request must satisfy the checklist in the template: gates run, leak scan
-clean, counts not lowered, artifacts rebuilt.
+A pull request must satisfy the checklist in the template: gates run, no upstream
+name outside the LICENSE files, counts not lowered, artifacts rebuilt.
 
 ## Upstream security fixes
 
@@ -209,7 +210,7 @@ git cherry-pick <sha>                          # then fix up names if needed
 
 After any cherry-pick:
 
-1. Run `script/rebrand/verify` and `script/rebrand/leak_scan`. A cherry-picked
+1. Check by hand that no upstream name entered the tree. A cherry-picked
    commit can reintroduce the upstream name.
 2. Run the full gate suite.
 3. Mention the source commit in the message so the provenance is traceable
