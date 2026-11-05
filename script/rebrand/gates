@@ -145,6 +145,18 @@ run_js() {
     fail "vitest (exit $status after $attempts attempt(s); last parsed count ${count:-none})"
     printf '%s' "$out" | grep -E 'Unhandled Errors|TypeError|✕|FAIL ' | head -5
   fi
+
+  # The built assets are committed, so a build that changes them means the
+  # committed copies are stale. This check used to live only in ci.yml; moving the
+  # suites into this script would have silently dropped it.
+  local dirty
+  dirty=$(git status --porcelain app/assets/builds vendor/javascript 2>/dev/null)
+  if [ -z "$dirty" ]; then
+    pass "build artifacts are committed"
+  else
+    fail "build artifacts are stale (run pnpm run build and commit)"
+    printf '%s\n' "$dirty" | head -10
+  fi
 }
 
 run_rebrand() {
@@ -206,9 +218,12 @@ run_scratch() {
 
   if ! command -v rails > /dev/null 2>&1; then
     fail "scratch app (rails executable not on PATH)"
+    tail -3 /tmp/scratch-new.log 2>/dev/null
     return
   fi
 
+  # `rails new` refuses to run inside another Rails app, so it must be the plain
+  # executable rather than `bundle exec rails` from this repository.
   ( cd "$work" && rails new nopipe --minimal --skip-bundle --skip-git \
       --skip-test --skip-system-test --skip-ci --no-rc ) > /tmp/scratch-new.log 2>&1 || {
     fail "scratch app could not be generated"

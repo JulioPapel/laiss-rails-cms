@@ -17,6 +17,7 @@ spec/dummy/public/assets/
 spec/dummy/uploads/
 .rvmrc
 /coverage/
+/devise/coverage/
 *.gem
 /index/
 /.bundle/

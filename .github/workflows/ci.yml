@@ -5,11 +5,19 @@ name: CI
 #   ruby       the specs, across the supported Ruby/Rails range
 #   javascript lint, build and the vitest suite
 #   leak-scan  the rebrand promise: no upstream name outside the LICENSE files
-#   counts     the example counts cannot DROP
+#   scratch    an app with no asset pipeline gets a named boot error
 #
-# The counts job exists because a broken `require` makes RSpec silently load
-# fewer files, still exit 0, and still print "0 failures". Without an explicit
-# floor the suite can rot while CI stays green.
+# EVERY JOB CALLS script/gates. There is one implementation of the checks, and CI
+# runs it rather than a copy of its commands. That is not tidiness: CI used to call
+# `bundle exec rspec devise/spec` directly from the root, which loaded the core spec
+# helper and left the devise integration inactive, while `script/gates` passed
+# because it goes through bin/rspec. Two entry points meant one was broken and
+# nobody could tell.
+#
+# The example-count floors lived in a separate `counts` job with hardcoded numbers
+# (4419/851) that had gone stale against the real figures (4410/846), so that job
+# would have failed on every run. script/gates already enforces the floors from
+# BASELINE_* constants, so the job was redundant as well as wrong and was removed.
 
 on:
   push:
@@ -69,34 +77,31 @@ jobs:
 
       # The built assets are committed, but a clean checkout of a PR may not have
       # them, and the specs render the admin.
-      - name: Build assets
+      - name: Dependencies and assets
         run: |
           pnpm install --frozen-lockfile
+          bundle install
           pnpm run build
 
-      - name: Prepare the test database
+      # Runs the same implementation contributors run locally, rather than a copy
+      # of the commands. CI used to call `bundle exec rspec devise/spec` directly
+      # from the root, which loaded the CORE spec helper (a load-path lookup hits
+      # ./spec first) and left the devise integration inactive — 5 spec files died
+      # with "uninitialized constant LaissCms::Devise" while `script/gates` passed,
+      # because that goes through bin/rspec, which cd's into each lib.
+      #
+      # One implementation, so the two entry points cannot disagree again.
+      - name: Gates (ruby)
         env:
           RAILS_ENV: test
           RAILS_VERSION: ${{ matrix.rails }}
-        run: bundle exec rake laiss_cms:test:prepare
-
-      - name: Core specs
-        env:
-          RAILS_ENV: test
-          RAILS_VERSION: ${{ matrix.rails }}
-        run: bundle exec rspec spec
-
-      - name: Devise specs
-        env:
-          RAILS_ENV: test
-          RAILS_VERSION: ${{ matrix.rails }}
-        run: bundle exec rspec devise/spec
-
-      - name: standardrb
-        run: bundle exec standardrb
+        run: script/gates ruby
 
   # ---------------------------------------------------------------------------
-  # JavaScript: lint, then build, then the component suite.
+  # JavaScript: lint, build, component tests, and the committed-artifact check.
+  #
+  # Calls script/gates rather than repeating the commands. The vitest floor lives
+  # there too, so this job and the local run cannot disagree.
   # ---------------------------------------------------------------------------
   javascript:
     name: JavaScript
@@ -105,28 +110,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 4.0.6
+          bundler-cache: true
+
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run eslint
-      - run: pnpm run lint
-      - run: pnpm exec herb-lint
-      - run: pnpm run build
-      - run: pnpm exec vitest --run
-
-      # The build artifacts are committed, so a build that changes them means the
-      # committed copies are stale.
-      - name: Build artifacts must be committed
+      - name: Gates (js)
         run: |
-          if [ -n "$(git status --porcelain app/assets/builds vendor/javascript devise/app/assets/builds)" ]; then
-            echo "::error::Build artifacts are stale. Run 'pnpm run build' and commit the result."
-            git status --porcelain app/assets/builds vendor/javascript devise/app/assets/builds
-            exit 1
-          fi
+          bundle install
+          script/gates js
 
   # ---------------------------------------------------------------------------
   # The rebrand promise. This is a PUBLIC statement about how this project relates
@@ -154,28 +152,23 @@ jobs:
           ruby-version: 4.0.6
           bundler-cache: true
 
-      - name: Name and drift checks
-        run: script/rebrand/verify
-
-      - name: Raw-byte leak scan
-        run: script/rebrand/leak_scan
-
-      # If the tooling itself breaks, the guard above could pass vacuously.
-      - name: Tooling self-tests
-        run: |
-          script/rebrand/self_test
-          script/rebrand/leak_scan_test
+      - name: Gates (rebrand)
+        run: script/gates rebrand
 
   # ---------------------------------------------------------------------------
-  # The example-count floor.
+  # The scratch-app gate: the one check that cannot run against the dummy app.
   #
-  # Raise these numbers when specs are added; never lower them. A drop means specs
-  # stopped loading, which is a regression even when RSpec reports success.
+  # The dummy has propshaft, which is exactly how 0.1.0.beta2 shipped an admin that
+  # 500'd on every page in an app without an asset pipeline. This builds a
+  # throwaway app and asserts the engine refuses to boot with a named error.
+  #
+  # Separate job because it needs a plain `rails` executable, not `bundle exec
+  # rails` (which refuses to run inside another Rails app).
   # ---------------------------------------------------------------------------
-  counts:
-    name: Spec counts
+  scratch:
+    name: Scratch app
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -184,58 +177,7 @@ jobs:
           ruby-version: 4.0.6
           bundler-cache: true
 
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
-
-      - name: Prepare the test database
-        env:
-          RAILS_ENV: test
-        run: bundle exec rake laiss_cms:test:prepare
-
-      - name: Spec counts must not drop
-        env:
-          RAILS_ENV: test
+      - name: Gates (scratch)
         run: |
-          set -euo pipefail
-
-          # Read from script/rebrand/gates rather than repeating the numbers here.
-          # These floors were hardcoded at 4419/851 and had gone stale after specs
-          # were deliberately removed, so this job would have failed on every run
-          # even when the suite was healthy. One source, or they drift again.
-          MIN_CORE=$(sed -n 's/^BASELINE_EXAMPLES=//p' script/rebrand/gates)
-          MIN_DEVISE=$(sed -n 's/^BASELINE_DEVISE=//p' script/rebrand/gates)
-          MIN_VITEST=$(sed -n 's/^BASELINE_VITEST=//p' script/rebrand/gates)
-
-          for pair in "core:$MIN_CORE" "devise:$MIN_DEVISE" "vitest:$MIN_VITEST"; do
-            name="${pair%%:*}"
-            value="${pair#*:}"
-            if [ -z "$value" ]; then
-              echo "::error::Could not read the $name baseline from script/rebrand/gates."
-              exit 1
-            fi
-          done
-          echo "floors: core=$MIN_CORE devise=$MIN_DEVISE vitest=$MIN_VITEST"
-
-          core_out=$(bundle exec rspec spec --format progress 2>&1 || true)
-          core=$(echo "$core_out" | grep -oE '[0-9]+ examples' | tail -1 | grep -oE '[0-9]+' || echo 0)
-          echo "core: ${core:-0} (floor $MIN_CORE)"
-
-          devise_out=$(bundle exec rspec devise/spec --format progress 2>&1 || true)
-          devise=$(echo "$devise_out" | grep -oE '[0-9]+ examples' | tail -1 | grep -oE '[0-9]+' || echo 0)
-          echo "devise: ${devise:-0} (floor $MIN_DEVISE)"
-
-          vitest_out=$(pnpm exec vitest --run 2>&1 || true)
-          vitest=$(echo "$vitest_out" | grep -oE 'Tests +[0-9]+ passed' | grep -oE '[0-9]+' | tail -1 || echo 0)
-          echo "vitest: ${vitest:-0} (floor $MIN_VITEST)"
-
-          fail=0
-          [ "${core:-0}" -ge "$MIN_CORE" ] || { echo "::error::core specs dropped below $MIN_CORE (got ${core:-0})"; fail=1; }
-          [ "${devise:-0}" -ge "$MIN_DEVISE" ] || { echo "::error::devise specs dropped below $MIN_DEVISE (got ${devise:-0})"; fail=1; }
-          [ "${vitest:-0}" -ge "$MIN_VITEST" ] || { echo "::error::vitest dropped below $MIN_VITEST (got ${vitest:-0})"; fail=1; }
-          exit $fail
+          bundle install
+          script/gates scratch

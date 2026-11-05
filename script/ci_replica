@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-# Replicates the steps of .github/workflows/ci.yml locally, in the same order and
-# with the same environment, so the workflow logic is executed rather than read.
+# Replicates .github/workflows/ci.yml locally, verifying that each job's steps run
+# — including the fact that every job delegates to script/gates.
 #
-# Steps that cannot be replicated locally (actions/checkout, setup-ruby caching,
-# svc containers, artifact upload) are named explicitly as NOT RUN rather than
-# silently skipped.
+# Since ci.yml now calls script/gates, this script is deliberately thin: it
+# reproduces the per-job environment and the action steps it can, then invokes the
+# same gate subset the workflow does. If the two ever diverge, this is where it
+# shows.
 #
+#   script/ci_replica ruby
 #   script/ci_replica javascript
 #   script/ci_replica leak-scan
-#   script/ci_replica counts
-#   script/ci_replica ruby            # the pinned leg: ruby 4.0.6 / rails 8.1
+#   script/ci_replica scratch
 set -uo pipefail
 
 JOB="${1:-}"
@@ -20,119 +21,71 @@ fail() { printf '  \033[31mFAIL\033[0m  %s\n' "$1"; FAILS=$((FAILS + 1)); }
 skip() { printf '  \033[33mSKIP\033[0m  %s\n' "$1"; }
 FAILS=0
 
-run_step() {
-  local name="$1"; shift
-  if "$@" > /tmp/ci-replica-step.log 2>&1; then
-    pass "$name"
+# Each job in ci.yml runs these action steps first. They cannot be reproduced here,
+# so they are named rather than silently omitted.
+declare_skipped_actions() {
+  skip "actions/checkout@v4 (already on a working tree)"
+  skip "ruby/setup-ruby@v1 ruby-version ${1:-4.0.6} (running $(ruby -v | cut -d' ' -f2))"
+  skip "pnpm/action-setup@v4 + actions/setup-node@v4 (node $(node --version), pnpm $(pnpm --version))"
+}
+
+job_ruby() {
+  echo "job: ruby — matrix leg ruby ${RUBY_LEG:-4.0.6} / rails ${RAILS_LEG:-8.1}"
+  declare_skipped_actions "${RUBY_LEG:-4.0.6}"
+
+  # "Dependencies and assets", verbatim.
+  if pnpm install --frozen-lockfile > /tmp/ci-replica-step.log 2>&1; then
+    pass "pnpm install --frozen-lockfile"
   else
-    fail "$name (exit $?)"
-    tail -15 /tmp/ci-replica-step.log
+    fail "pnpm install --frozen-lockfile"; tail -5 /tmp/ci-replica-step.log
+  fi
+  if bundle install > /tmp/ci-replica-step.log 2>&1; then
+    pass "bundle install"
+  else
+    fail "bundle install"; tail -5 /tmp/ci-replica-step.log
+  fi
+  if pnpm run build > /tmp/ci-replica-step.log 2>&1; then
+    pass "pnpm run build"
+  else
+    fail "pnpm run build"; tail -5 /tmp/ci-replica-step.log
+  fi
+
+  # "Gates (ruby)" — the workflow's actual command.
+  echo "  -> script/gates ruby"
+  if RAILS_ENV=test RAILS_VERSION="${RAILS_LEG:-8.1}" script/gates ruby; then
+    pass "script/gates ruby"
+  else
+    fail "script/gates ruby"
   fi
 }
 
 job_javascript() {
   echo "job: javascript"
-  skip "actions/checkout@v4 (already on a working tree)"
-  skip "pnpm/action-setup@v4 + actions/setup-node@v4 (node $(node --version), pnpm $(pnpm --version))"
-
-  run_step "pnpm install --frozen-lockfile" pnpm install --frozen-lockfile
-  run_step "pnpm run eslint"                pnpm run eslint
-  run_step "pnpm run lint"                  pnpm run lint
-  run_step "pnpm exec herb-lint"            pnpm exec herb-lint
-  run_step "pnpm run build"                 pnpm run build
-  run_step "pnpm exec vitest --run"         pnpm exec vitest --run
-
-  # The workflow checks these paths. `devise/app/assets/builds` no longer exists
-  # after the fold, so it is dropped from the check to match reality.
-  local dirty
-  dirty=$(git status --porcelain app/assets/builds vendor/javascript 2>/dev/null)
-  if [ -z "$dirty" ]; then
-    pass "build artifacts are committed"
-  else
-    fail "build artifacts are stale"
-    echo "$dirty" | head -10
-  fi
+  declare_skipped_actions
+  echo "  -> script/gates js"
+  if script/gates js; then pass "script/gates js"; else fail "script/gates js"; fi
 }
 
 job_leak_scan() {
   echo "job: leak-scan (Rebrand guard)"
-  skip "actions/checkout@v4"
-  skip "ruby/setup-ruby@v1 ruby-version 4.0.6 (running $(ruby --version | cut -d' ' -f2))"
-  run_step "script/rebrand/verify"         script/rebrand/verify
-  run_step "script/rebrand/leak_scan"      script/rebrand/leak_scan
-  run_step "script/rebrand/self_test"      script/rebrand/self_test
-  run_step "script/rebrand/leak_scan_test" script/rebrand/leak_scan_test
+  declare_skipped_actions
+  echo "  -> script/gates rebrand"
+  if script/gates rebrand; then pass "script/gates rebrand"; else fail "script/gates rebrand"; fi
 }
 
-job_counts() {
-  echo "job: counts (Spec counts)"
-  skip "actions/checkout@v4 + ruby/setup-ruby (running $(ruby --version | cut -d' ' -f2))"
-  skip "pnpm/action-setup + setup-node (node $(node --version))"
-
-  run_step "pnpm install --frozen-lockfile" pnpm install --frozen-lockfile
-  run_step "pnpm run build"                 pnpm run build
-
-  # The workflow's own prepare step, with its own env.
-  if RAILS_ENV=test bundle exec rake laiss_cms:test:prepare > /tmp/ci-prepare.log 2>&1; then
-    pass "prepare the test database"
-  else
-    fail "prepare the test database"
-    tail -10 /tmp/ci-prepare.log
-  fi
-
-  # Verbatim from ci.yml: the floors now come from script/rebrand/gates.
-  set -euo pipefail
-  MIN_CORE=$(sed -n 's/^BASELINE_EXAMPLES=//p' script/rebrand/gates)
-  MIN_DEVISE=$(sed -n 's/^BASELINE_DEVISE=//p' script/rebrand/gates)
-  MIN_VITEST=$(sed -n 's/^BASELINE_VITEST=//p' script/rebrand/gates)
-
-  local core_out core
-  core_out=$(RAILS_ENV=test bundle exec rspec spec --format progress 2>&1 || true)
-  core=$(echo "$core_out" | grep -oE '[0-9]+ examples' | tail -1 | grep -oE '[0-9]+' || echo 0)
-  echo "  core:   ${core:-0} (floor $MIN_CORE)"
-
-  local devise_out devise
-  devise_out=$(RAILS_ENV=test bundle exec rspec devise/spec --format progress 2>&1 || true)
-  devise=$(echo "$devise_out" | grep -oE '[0-9]+ examples' | tail -1 | grep -oE '[0-9]+' || echo 0)
-  echo "  devise: ${devise:-0} (floor $MIN_DEVISE)"
-
-  local vitest_out vitest
-  vitest_out=$(pnpm exec vitest --run 2>&1 || true)
-  vitest=$(echo "$vitest_out" | grep -oE 'Tests +[0-9]+ passed' | grep -oE '[0-9]+' | tail -1 || echo 0)
-  echo "  vitest: ${vitest:-0} (floor $MIN_VITEST)"
-
-  [ "${core:-0}"   -ge "$MIN_CORE"   ] || { fail "core specs below $MIN_CORE (got ${core:-0})"; }
-  [ "${devise:-0}" -ge "$MIN_DEVISE" ] || { fail "devise specs below $MIN_DEVISE (got ${devise:-0})"; }
-  [ "${vitest:-0}" -ge "$MIN_VITEST" ] || { fail "vitest below $MIN_VITEST (got ${vitest:-0})"; }
-}
-
-job_ruby() {
-  echo "job: ruby (pinned leg — ruby 4.0.6 / rails 8.1)"
-  skip "actions/checkout@v4"
-  skip "ruby/setup-ruby@v1 bundler-cache (running $(ruby --version | cut -d' ' -f2))"
-  skip "pnpm/action-setup + setup-node (node $(node --version))"
-
-  run_step "pnpm install --frozen-lockfile" pnpm install --frozen-lockfile
-  run_step "pnpm run build"                 pnpm run build
-
-  if RAILS_ENV=test bundle exec rake laiss_cms:test:prepare > /tmp/ci-prepare.log 2>&1; then
-    pass "prepare the test database"
-  else
-    fail "prepare the test database"
-    tail -10 /tmp/ci-prepare.log
-  fi
-
-  run_step "bundle exec rspec spec"        env RAILS_ENV=test bundle exec rspec spec
-  run_step "bundle exec rspec devise/spec" env RAILS_ENV=test bundle exec rspec devise/spec
-  run_step "bundle exec standardrb"        bundle exec standardrb
+job_scratch() {
+  echo "job: scratch (Scratch app)"
+  declare_skipped_actions
+  echo "  -> script/gates scratch"
+  if script/gates scratch; then pass "script/gates scratch"; else fail "script/gates scratch"; fi
 }
 
 case "$JOB" in
+  ruby)       job_ruby ;;
   javascript) job_javascript ;;
   leak-scan)  job_leak_scan ;;
-  counts)     job_counts ;;
-  ruby)       job_ruby ;;
-  *) echo "usage: $0 [javascript|leak-scan|counts|ruby]" >&2; exit 2 ;;
+  scratch)    job_scratch ;;
+  *) echo "usage: $0 [ruby|javascript|leak-scan|scratch]" >&2; exit 2 ;;
 esac
 
 echo
