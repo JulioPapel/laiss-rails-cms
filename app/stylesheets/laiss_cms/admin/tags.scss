@@ -104,9 +104,7 @@
       border-radius: var(--border-radius_medium);
 
       &.odd {
-        // Was #eaf3f9, a literal blue that did not exist in either theme's
-        // scale and did not invert in dark mode.
-        background-color: var(--tag-alternate-background-color);
+        background-color: #eaf3f9;
       }
 
       input {

@@ -91,13 +91,13 @@ RSpec.describe LaissCms::Ingredients::BaseEditor, type: :component do
       end
 
       it "renders an inline error message" do
-        is_expected.to have_selector(".invalid-feedback", text: "can't be blank")
+        is_expected.to have_selector("small.error", text: "can't be blank")
       end
     end
 
     context "when the ingredient has no errors" do
       it "renders no inline error message" do
-        is_expected.to have_no_selector(".invalid-feedback")
+        is_expected.to have_no_selector("small.error")
       end
     end
   end

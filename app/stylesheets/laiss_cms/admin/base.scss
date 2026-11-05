@@ -1,20 +1,9 @@
 @use "../mixins";
 
-// The root font-size is deliberately NOT the admin's body size.
-//
-// It used to be `font-size: var(--font-size_medium)`, which made the root 13px —
-// so every `rem` in the sheet resolved against 13 instead of 16. That is a
-// trap: a token saying `1rem` meant 13px here and 16px anywhere else, and
-// `0.75rem` produced 9.75px instead of 12px.
-//
-// The root is now 16px, the browser default, so `rem` means what everyone
-// expects and the whole UI scales with the user's font-size preference. Body
-// text keeps its own size from --font-size_medium further down, so nothing
-// visually changes at default settings — only the meaning of rem is fixed.
 html {
   box-sizing: border-box;
   height: 100%;
-  font-size: 100%;
+  font-size: var(--font-size_medium);
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
 
@@ -56,10 +45,6 @@ body {
   color: var(--text-color);
   font: var(--font-default);
   background-color: var(--body-background-color);
-  // Native checkboxes and radios default to the browser's blue accent, which
-  // would be the only coloured control in a monochrome admin. Tie them to the
-  // ink scale so they follow the theme.
-  accent-color: var(--journal-ink-6);
   height: 100%;
   cursor: default;
 

@@ -21,7 +21,7 @@ RSpec.describe "Admin Languages Features", type: :system do
         click_button "Save"
 
         expect(page).to have_select("language_locale", options: %w[de en])
-        expect(page).to have_selector(".language_locale.field_with_errors .invalid-feedback")
+        expect(page).to have_selector(".language_locale.field_with_errors .error")
       end
     end
 

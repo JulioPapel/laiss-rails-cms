@@ -20,12 +20,8 @@ class Icon extends HTMLElement {
   }
 
   render() {
-    const sizeClass = this.size ? ` laiss-icon--${this.size}` : ""
-    // NOT `icon`. The Focus theme uses `<i class="icon icon-…">` for its own font
-    // glyphs, and `.icon` selectors aimed at those were landing on our SVG — which
-    // is what produced the "ghost square" artefacts the owner spotted. `laiss-icon`
-    // is a name the theme does not claim, so no theme rule can ever match it.
-    this.innerHTML = `<svg class="laiss-icon${sizeClass}"><use href="${this.spriteUrl}#ri-${this.iconName}${this.style}" /></svg>`
+    const sizeClass = this.size ? ` icon--${this.size}` : ""
+    this.innerHTML = `<svg class="icon${sizeClass}"><use href="${this.spriteUrl}#ri-${this.iconName}${this.style}" /></svg>`
   }
 
   set name(value) {

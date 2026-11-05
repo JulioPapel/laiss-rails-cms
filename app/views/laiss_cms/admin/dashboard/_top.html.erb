@@ -1,10 +1,7 @@
-<%# Greeting and system info, in the theme's two-column card row.
-    Source: theme/index.html — .row > .col-xl-8 + .col-xl-4, each holding a .card. %>
-<div class="row">
-  <div class="col-xl-8 col-lg-8 col-md-8">
-    <%= render LaissCms::Admin::Dashboard::Widgets::Greeting.new(user: current_laiss_cms_user) %>
-  </div>
-  <div class="col-xl-4 col-lg-4 col-md-4">
-    <%= render LaissCms::Admin::Dashboard::Widgets::SystemInfo.new %>
-  </div>
+<div class="top-row">
+  <%= render LaissCms::Admin::Dashboard::Widgets::Greeting.new(user: current_laiss_cms_user) %>
+  <%# NewsReader was removed on purpose: it fetched alchemy-cms.com/news on every
+      dashboard load, and the project policy is no outbound connections. The rest of
+      this row is the original markup, restored verbatim. %>
+  <%= render LaissCms::Admin::Dashboard::Widgets::SystemInfo.new %>
 </div>

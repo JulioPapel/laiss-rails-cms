@@ -19,7 +19,7 @@ RSpec.describe LaissCms::Forms::Builder, type: :controller do
         hash_including(
           type: :text,
           value: value,
-          class: ["form-control", :string, :required, type]
+          class: [:string, :required, type]
         )
       )
       subject
@@ -114,7 +114,7 @@ RSpec.describe LaissCms::Forms::Builder, type: :controller do
         "Ding",
         :foo,
         hash_including(
-          class: ["form-control", :text, :required]
+          class: [:text, :required]
         )
       )
       expect(template).to receive(:content_tag).with("laiss-cms-tinymce", "<laiss-cms-tinymce>")

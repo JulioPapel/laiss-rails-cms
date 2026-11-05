@@ -19,7 +19,7 @@ table {
   }
 }
 
-.div-table {
+.table {
   display: flex;
   flex-direction: column;
   row-gap: var(--spacing-1);
@@ -41,7 +41,7 @@ table {
 
 .list td,
 .list th,
-.div-table .col {
+.table .col {
   padding: var(--spacing-2) var(--spacing-3);
   vertical-align: top;
   line-height: 22px;
@@ -72,7 +72,7 @@ table {
 }
 
 th,
-.div-table header .col {
+.table header .col {
   white-space: nowrap;
   text-align: left;
   vertical-align: top;
@@ -81,17 +81,17 @@ th,
 }
 
 tr.even td,
-.div-table .row.even .col {
+.table .row.even .col {
   background-color: var(--table-row-even-background-color);
 }
 
 tr.odd td,
-.div-table .row.odd .col {
+.table .row.odd .col {
   background-color: var(--table-row-odd-background-color);
 }
 
 .list tr .tools,
-.div-table .row .col.tools {
+.table .row .col.tools {
   padding: var(--spacing-1) var(--spacing-2);
   white-space: nowrap;
   @extend .disable-user-select;
@@ -119,13 +119,13 @@ td.heading {
 }
 
 .list tr:hover td,
-.div-table .row:hover .col {
+.table .row:hover .col {
   background-color: var(--table-row-hover-color);
 }
 
 td,
 th,
-.div-table .col {
+.table .col {
   &.center,
   &.boolean {
     text-align: center;
@@ -137,7 +137,7 @@ th,
 }
 
 td,
-.div-table .col {
+.table .col {
   &.button {
     width: 40px;
     text-align: center;

@@ -33,7 +33,7 @@ RSpec.describe "laiss_cms/admin/ingredients/edit.html.erb" do
 
       render
 
-      expect(rendered).to have_selector(".form-group.ingredient_render_size")
+      expect(rendered).to have_selector(".input.ingredient_render_size")
     end
 
     it "does not display render_size selection if srcset present" do
@@ -45,7 +45,7 @@ RSpec.describe "laiss_cms/admin/ingredients/edit.html.erb" do
 
       render
 
-      expect(rendered).to_not have_selector(".form-group.ingredient_render_size")
+      expect(rendered).to_not have_selector(".input.ingredient_render_size")
     end
   end
 end

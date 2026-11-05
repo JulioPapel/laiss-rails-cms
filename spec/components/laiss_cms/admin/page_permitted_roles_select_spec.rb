@@ -41,7 +41,7 @@ RSpec.describe LaissCms::Admin::PagePermittedRolesSelect, type: :component do
     it "renders the error message" do
       render_inline component
       expect(page).to have_css(
-        ".invalid-feedback",
+        "small.error",
         text: "needs at least one role a restricted page is accessible for"
       )
     end

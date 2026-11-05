@@ -176,7 +176,7 @@ button::-moz-focus-inner {
   .accessibility-issue--warn
   .accessibility-issue__description {
   background-color: rgba(255, 165, 0, 0.1);
-  border-color: var(--border-color);
+  border-color: rgba(255, 165, 0, 0.5);
   color: #000;
 }
 
@@ -185,19 +185,19 @@ button::-moz-focus-inner {
   .accessibility-issue--warn
   .accessibility-issue__description
   > :last-child {
-  border-color: var(--border-color);
+  border-color: rgba(255, 165, 0, 0.5);
 }
 
 .tox .tox-dialog__body-content .accessibility-issue--warn .tox-form__group h2 {
-  color: var(--text-color);
+  color: var(--color-orange_very_dark);
 }
 
 .tox .tox-dialog__body-content .accessibility-issue--warn .tox-icon svg {
-  fill: var(--text-color);
+  fill: var(--color-orange_very_dark);
 }
 
 .tox .tox-dialog__body-content .accessibility-issue--warn a .tox-icon {
-  color: var(--text-color);
+  color: var(--color-orange_very_dark);
 }
 
 .tox
@@ -3150,8 +3150,8 @@ body.tox-dialog__disable-scroll {
 }
 
 .tox .tox-selector {
-  background-color: var(--text-color);
-  border-color: var(--text-color);
+  background-color: var(--color-orange_dark);
+  border-color: var(--color-orange_dark);
   border-style: solid;
   border-width: 1px;
   box-sizing: border-box;
@@ -3244,7 +3244,7 @@ body.tox-dialog__disable-scroll {
 
 .tox .tox-statusbar {
   align-items: center;
-  background-color: var(--journal-ink-7);
+  background-color: var(--a-darker-grey);
   border-top: var(--border-default);
   color: var(--text-color-muted);
   display: flex;
@@ -3286,11 +3286,7 @@ body.tox-dialog__disable-scroll {
 .tox .tox-statusbar a,
 .tox .tox-statusbar__path-item,
 .tox .tox-statusbar__wordcount {
-  // Phase 9: these resolved to --text-color, which is #e8e4df on light — in the
-  // dark skin that is near-white text on a near-white statusbar in some
-  // contexts, measured at 1.17:1. They are metadata, so they use the muted ink
-  // that is guaranteed to contrast in whichever skin is loaded.
-  color: var(--text-color-muted);
+  color: var(--text-color);
   text-decoration: none;
 }
 
@@ -3583,14 +3579,14 @@ body.tox-dialog__disable-scroll {
 }
 
 .tox .tox-toolbar-overlord {
-  background-color: var(--journal-ink-7);
+  background-color: var(--a-darker-grey);
 }
 
 .tox .tox-toolbar,
 .tox .tox-toolbar__overflow,
 .tox .tox-toolbar__primary {
   background: url("data:image/svg+xml;charset=utf8,%3Csvg height='34px' viewBox='0 0 40 39px' width='34px' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='33px' width='100' height='1' fill='rgba%280,%200,%200,%200.15%29'/%3E%3C/svg%3E")
-    left 0 top 0 var(--journal-ink-7);
+    left 0 top 0 var(--a-darker-grey);
   display: flex;
   flex: 0 0 auto;
   flex-shrink: 0;
@@ -3649,7 +3645,7 @@ body.tox-dialog__disable-scroll {
 }
 
 .tox.tox-tinymce-aux .tox-toolbar__overflow {
-  background-color: var(--journal-ink-7);
+  background-color: var(--a-darker-grey);
   border: var(--border-default);
   border-radius: var(--border-radius_medium);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);

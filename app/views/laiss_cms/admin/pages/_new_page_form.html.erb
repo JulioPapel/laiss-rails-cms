@@ -17,5 +17,5 @@
     selected: @page_layouts.length == 1 ? @page_layouts.first : @page.page_layout,
     input_html: {is: 'laiss-cms-select'} %>
   <%= f.input :name %>
-  <%= f.submit LaissCms.t(:create), class: "primary" %>
+  <%= f.submit LaissCms.t(:create) %>
 <% end %>

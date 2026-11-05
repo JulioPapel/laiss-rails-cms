@@ -16,18 +16,18 @@
   --sl-color-success-900: var(--color-green_dark);
   --sl-color-success-950: var(--color-green_dark);
 
-  /* Warning — monochrome. Severity is carried by icon and label, not hue. */
-  --sl-color-warning-50: var(--journal-paper-2);
-  --sl-color-warning-100: var(--journal-paper-3);
-  --sl-color-warning-200: var(--journal-paper-4);
-  --sl-color-warning-300: var(--journal-ink-2);
-  --sl-color-warning-400: var(--journal-ink-3);
-  --sl-color-warning-500: var(--journal-ink-4);
-  --sl-color-warning-600: var(--journal-ink-5);
-  --sl-color-warning-700: var(--journal-ink-6);
-  --sl-color-warning-800: var(--journal-ink-7);
-  --sl-color-warning-900: var(--journal-ink-8);
-  --sl-color-warning-950: var(--journal-ink-8);
+  /* Warning */
+  --sl-color-warning-50: var(--color-orange_medium);
+  --sl-color-warning-100: var(--color-orange_medium);
+  --sl-color-warning-200: var(--color-orange_medium);
+  --sl-color-warning-300: var(--color-orange_medium);
+  --sl-color-warning-400: var(--color-orange_medium);
+  --sl-color-warning-500: var(--color-orange_dark);
+  --sl-color-warning-600: var(--color-orange_dark);
+  --sl-color-warning-700: var(--color-orange_dark);
+  --sl-color-warning-800: var(--color-orange_very_dark);
+  --sl-color-warning-900: var(--color-orange_very_dark);
+  --sl-color-warning-950: var(--color-orange_very_dark);
 
   /* Danger */
   --sl-color-danger-50: var(--color-red_very_light);

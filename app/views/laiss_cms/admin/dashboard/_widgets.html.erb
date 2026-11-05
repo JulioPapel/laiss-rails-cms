@@ -1,11 +1,7 @@
-<%# Secondary widgets, two to a row as the theme does with its content cards.
-    Source: theme/index.html — .row > .col-lg-4 / .col-xl-8 combinations. %>
 <% if LaissCms.config.dashboard.widgets.any? %>
-  <div class="row">
+  <div class="widgets">
     <% LaissCms.config.dashboard.widgets.each do |widget, args| %>
-      <div class="col-lg-6">
-        <%= render widget.new(**args) %>
-      </div>
+      <%= render widget.new(**args) %>
     <% end %>
   </div>
 <% end %>

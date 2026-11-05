@@ -15,7 +15,7 @@
     ) %>
     <%= button_tag render_icon("delete-bin-2", size: '1x') + LaissCms.t("Delete"),
       'data-turbo-confirm': LaissCms.t(:confirm_to_delete_images_from_server),
-      class: 'button with_icon danger' %>
+      class: 'button with_icon' %>
     &nbsp;<%= LaissCms.t(:or) %>&nbsp;
     <%= link_to(
       render_icon(:close) + LaissCms.t("Clear selection"),

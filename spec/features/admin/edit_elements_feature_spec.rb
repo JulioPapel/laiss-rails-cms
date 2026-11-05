@@ -147,7 +147,7 @@ RSpec.describe "The edit elements feature", type: :system do
       # Submitting without choosing an element fails the name validation
       within ".laiss-cms-dialog" do
         click_button("Add")
-        expect(page).to have_css(".invalid-feedback", text: "can't be blank")
+        expect(page).to have_css("small.error", text: "can't be blank")
         # The re-rendered form still lets us add a nested element and does not
         # widen the list to every element allowed on the page.
         tom_select("Text", from: "Element")
@@ -237,7 +237,7 @@ RSpec.describe "The edit elements feature", type: :system do
         within ".element-footer" do
           click_button("Save")
         end
-        expect(page).to have_css(".ingredient-editor.validation_failed .invalid-feedback")
+        expect(page).to have_css(".ingredient-editor.validation_failed small.error")
       end
     end
   end

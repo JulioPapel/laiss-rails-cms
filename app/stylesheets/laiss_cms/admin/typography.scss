@@ -12,9 +12,6 @@ h5,
   margin: 1em 0;
 }
 
-// Journal heading hierarchy: size, weight and tracking carry the level. No
-// colour blocks, no rules under headings — the page structure comes from
-// whitespace and the hairline rules between sections.
 h1,
 .h1,
 h2,
@@ -23,48 +20,38 @@ h3,
 .h3,
 h4,
 .h4 {
-  font-weight: 700;
-  letter-spacing: var(--journal-letter-spacing-tight);
-  line-height: 1.15;
+  font-weight: bold;
 }
 
 h1,
 .h1 {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
 }
 
 h2,
 .h2 {
-  font-size: 1.3rem;
+  font-size: 1.25rem;
 }
 
 h3,
 .h3 {
-  font-size: 1.1rem;
+  font-size: 1.125rem;
 }
 
-// Small caps eyebrows: used above sections to label them without a colour band.
 h4,
-.h4 {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: var(--journal-letter-spacing-wide);
-  text-transform: uppercase;
-  color: var(--text-color-muted);
+.h4,
+h5,
+.h5 {
+  font-size: 1rem;
 }
 
 h5,
 .h5 {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: normal;
 }
 
-// Body copy keeps a comfortable measure; long admin text should not run the
-// full width of a wide screen.
 p {
-  max-width: 68ch;
   margin: 0 0 var(--spacing-2) 0;
-  line-height: 1.6;
   white-space: normal;
 
   a {

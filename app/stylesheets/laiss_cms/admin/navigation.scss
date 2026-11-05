@@ -125,22 +125,14 @@
     transition: fill var(--transition-duration) var(--transition-easing);
   }
 
-  // Navigation icons are larger than the default icon size, so the HOST sets the
-  // size and the SVG fills it. Sizing the SVG directly as well overrode the base
-  // `.laiss-icon` rule (which sets --icon-size-md) and, because the icon art does not
-  // fill its viewBox, the leftover space read as a faint square around the glyph.
   img,
+  svg,
   laiss-cms-icon {
     display: inline-flex;
     width: var(--icon-size-xxl);
     height: var(--icon-size-xxl);
     align-items: center;
     justify-content: center;
-  }
-
-  svg {
-    width: 100%;
-    height: 100%;
   }
 
   img {
@@ -190,14 +182,9 @@
       var(--transition-easing);
   }
 
-  // Journal: the active tab is marked by a paper-on-ink inversion and a heavier
-  // weight, not by a colour band. (This was a hardcoded upstream orange, which
-  // the hex sweep could not see because it was written as hsl().)
   &.active a,
   a:hover {
-    background-color: var(--main-menu-active-bg-color);
-    color: var(--main-menu-active-text-color);
-    font-weight: var(--font-weight_semibold);
+    background-color: hsl(28deg, 77%, 63%);
   }
 }
 

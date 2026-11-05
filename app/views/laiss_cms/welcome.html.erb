@@ -17,7 +17,12 @@
         <%= link_to LaissCms.t("Create admin user"), LaissCms.config.signup_path, class: "button" %>
       </p>
       <h4><%= LaissCms.t("More resources") %></h4>
-      <p><%= LaissCms.t("The guides ship with the engine under guides/.") %></p>
+      <ul>
+        <li>
+          <%= link_to LaissCms.t("Read the guidelines"),
+            "https://guides.alchemy-cms.com/", target: "_blank", rel: "noopener" %>
+        </li>
+      </ul>
     </div>
   </body>
 </html>

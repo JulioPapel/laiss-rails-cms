@@ -1,10 +1,4 @@
 <!DOCTYPE html>
-<%# No data-theme attribute is rendered.
-    The product ships a single theme (see theme.scss), so there is nothing to
-    pin and nothing to flash. The light/dark preference machinery is still in the
-    engine — LaissCms::Admin::ThemePreferenceHelper and the theme endpoint — so a
-    host that wants to offer the choice again can, but the default rendering is
-    deliberately one theme. %>
 <html lang="<%= ::I18n.locale %>" class="no-js">
   <head>
     <meta charset="utf-8">
@@ -18,7 +12,6 @@
     <meta name="robots" content="noindex">
     <meta name="turbo-prefetch" content="false">
     <meta name="turbo-cache-control" content="no-cache">
-    <%= stylesheet_link_tag('laiss_cms/focus', media: 'screen', 'data-turbo-track' => true) %>
     <%= stylesheet_link_tag('laiss_cms/theme', media: 'screen', 'data-turbo-track' => true) %>
     <%= stylesheet_link_tag('laiss_cms/admin', media: 'screen', 'data-turbo-track' => true) %>
     <%= stylesheet_link_tag('laiss_cms/admin/print', media: 'print', 'data-turbo-track' => true) %>
@@ -50,33 +43,10 @@
       <p><%= LaissCms.t(:javascript_disabled_text) %></p>
     </noscript>
     <laiss-cms-overlay text="<%= LaissCms.t(:please_wait) %>"></laiss-cms-overlay>
-    <%# Responsive shell: below the desktop breakpoint the sidebar becomes an
-        off-canvas drawer. The wrapper only toggles classes on #left_menu; the
-        menu markup itself is unchanged, and every existing custom element
-        inside it keeps working. Above the breakpoint the wrapper is inert. %>
-    <div id="main-wrapper">
-    <laiss-cms-drawer target="left_menu" label="<%= LaissCms.t(:menu) %>">
-      <% if sidebar_collapsible? %>
-        <%# Sidebar collapse toggle. A plain link: the state is server-rendered and
-            flipped by a session value, so no custom element or JS is involved.
-            aria-expanded describes the NAVIGATION (true = rail open). %>
-        <%= link_to sidebar_toggle_path,
-          class: "sidebar-collapse-toggle",
-          "aria-controls": "left_menu",
-          "aria-expanded": (!sidebar_collapsed?).to_s,
-          "aria-label": LaissCms.t(!sidebar_collapsed? ? :collapse_sidebar : :expand_sidebar,
-            default: !sidebar_collapsed? ? "Collapse sidebar" : "Expand sidebar"),
-          title: LaissCms.t(!sidebar_collapsed? ? :collapse_sidebar : :expand_sidebar,
-            default: !sidebar_collapsed? ? "Collapse sidebar" : "Expand sidebar") do %>
-          <span class="sidebar-collapse-toggle__bars" aria-hidden="true"></span>
-        <% end %>
-      <% end %>
-      <%= render "laiss_cms/admin/left_menu" %>
-    </laiss-cms-drawer>
+    <%= render "laiss_cms/admin/left_menu" %>
     <%= render 'laiss_cms/admin/partials/flash_notices' %>
     <div id="main_content">
       <%= yield %>
-    </div>
     </div>
     <% if current_laiss_cms_user %>
       <%= render "laiss_cms/admin/top_menu", locked_pages: @locked_pages %>

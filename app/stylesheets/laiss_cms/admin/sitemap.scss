@@ -174,7 +174,7 @@ laiss-cms-sitemap {
     overflow: hidden;
 
     &.inactive {
-      color: var(--text-color-muted);
+      color: #656565;
     }
   }
 }
@@ -243,19 +243,7 @@ laiss-cms-sitemap {
   }
 }
 
-// Page status, rendered as the theme's badges (see
-// app/components/laiss_cms/admin/page_status_indicators.html.erb).
-//
-// The theme's `.badge` is `#laiss_cms .badge` at specificity (1,1,0), because the whole
-// theme is nested under the body id. A bare `.page_status` is (0,1,0) and loses, so this
-// rule's `display: inline-flex` was being overwritten by the badge's `inline-block` —
-// and `gap` does nothing on an inline-block, which is why the icon sat flush against its
-// label (measured gap 0px).
-//
-// Stating it as `body#laiss_cms` scores (1,0,1), one point above the theme's rule, and
-// keeps the same element scope. Same pattern and same reason as
-// app/stylesheets/laiss_cms/admin/notices.scss.
-body#laiss_cms .page_status {
+.page_status {
   display: inline-flex;
   justify-content: center;
   align-items: center;

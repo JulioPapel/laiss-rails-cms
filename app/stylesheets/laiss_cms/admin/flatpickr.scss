@@ -732,8 +732,7 @@ span.flatpickr-weekday {
   height: inherit;
   float: left;
   line-height: inherit;
-  // Was a literal #393939, which stayed dark in dark mode.
-  color: var(--datepicker-text-color);
+  color: #393939;
   font-weight: bold;
   width: 2%;
   -webkit-user-select: none;

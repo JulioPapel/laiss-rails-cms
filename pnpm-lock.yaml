@@ -51,12 +51,6 @@ importers:
       '@rollup/plugin-terser':
         specifier: ^1.0.2
         version: 1.0.2(rollup@4.65.0)
-      bootstrap:
-        specifier: 4.3.1
-        version: 4.3.1(jquery@3.7.1)(popper.js@1.16.1)
-      bootstrap-icons:
-        specifier: ^1.13.2
-        version: 1.13.2
       consola:
         specifier: ^3.4.2
         version: 3.4.2
@@ -871,17 +865,6 @@ packages:
   boolbase@1.0.0:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
 
-  bootstrap-icons@1.13.2:
-    resolution: {integrity: sha512-fAU1Ly3dH7hwRg+CB8EZ0Vl0fF80zgXHeUVJyfUOKzoURr+TbwISbCW5tKUoQLERaWYG2emTCybcPbD96hdD1A==}
-
-  bootstrap@4.3.1:
-    resolution: {integrity: sha512-rXqOmH1VilAt2DyPzluTi2blhk17bO7ef+zLLPlWvG494pDxcM234pJ8wTc/6R40UWizAIIMgxjvxZg5kmsbag==}
-    engines: {node: '>=6'}
-    deprecated: This version of Bootstrap is no longer supported. Please upgrade to the latest version.
-    peerDependencies:
-      jquery: 1.9.1 - 3
-      popper.js: ^1.14.7
-
   brace-expansion@1.1.15:
     resolution: {integrity: sha512-EwOCDEex4quD37XhqM3omwtMoJjr//isUZz1JopUNWms+4Z2ViyM/k1YIRePpoVNnQhENnxtFjLaxNHrT7xIUg==}
 
@@ -1283,9 +1266,6 @@ packages:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
 
-  jquery@3.7.1:
-    resolution: {integrity: sha512-m4avr8yL8kmFN8psrbFFFmB/If14iN5o9nw/NgnnM+kybDJpRsAynV2BsfpTYrTRysYUdADVD7CkUUizgkpLfg==}
-
   js-yaml@4.1.1:
     resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
     hasBin: true
@@ -1525,10 +1505,6 @@ packages:
   pify@2.3.0:
     resolution: {integrity: sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog==}
     engines: {node: '>=0.10.0'}
-
-  popper.js@1.16.1:
-    resolution: {integrity: sha512-Wb4p1J4zyFTbM+u6WuO4XstYx4Ky9Cewe4DWrel7B0w6VVICvPwdOpotjzcf6eD8TsckVnIMNONQyPIUFOUbCQ==}
-    deprecated: You can find the new Popper v2 at @popperjs/core, this package is dedicated to the legacy v1
 
   postcss-import@16.1.1:
     resolution: {integrity: sha512-2xVS1NCZAfjtVdvXiyegxzJ447GyqCeEI5V7ApgQVOWnros1p5lGNovJNapwPpMombyFBfqDwt7AD3n2l0KOfQ==}
@@ -2559,13 +2535,6 @@ snapshots:
 
   boolbase@1.0.0: {}
 
-  bootstrap-icons@1.13.2: {}
-
-  bootstrap@4.3.1(jquery@3.7.1)(popper.js@1.16.1):
-    dependencies:
-      jquery: 3.7.1
-      popper.js: 1.16.1
-
   brace-expansion@1.1.15:
     dependencies:
       balanced-match: 1.0.2
@@ -2954,8 +2923,6 @@ snapshots:
 
   jiti@2.7.0: {}
 
-  jquery@3.7.1: {}
-
   js-yaml@4.1.1:
     dependencies:
       argparse: 2.0.1
@@ -3179,8 +3146,6 @@ snapshots:
   picomatch@4.0.7: {}
 
   pify@2.3.0: {}
-
-  popper.js@1.16.1: {}
 
   postcss-import@16.1.1(postcss@8.5.31):
     dependencies:
