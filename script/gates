@@ -44,7 +44,14 @@ cd "$(dirname "$0")/.." || exit 2
 # controls must keep their own padding. Two of the three were confirmed to fail with the
 # plain `#laiss_cms *` restored, which is what makes them regression tests rather than
 # decoration.
-BASELINE_EXAMPLES=4426
+# PHASE 1 RESTORE: back to the original admin.
+#
+# 4426 -> 4399. The theme-era specs are gone with the theme they tested:
+# cascade_reset (3), dashboard_layout (5), pages_index_layout (4),
+# viewport_screenshots (4), sidebar_collapse (5), plus the 11 collapse specs and
+# others that only existed for the modern-theme markup. This is the original
+# suite's own count, and it is green against the original markup.
+BASELINE_EXAMPLES=4399
 BASELINE_DEVISE=167
 # Phase 10: 851 -> 846. The update checker was removed (it fetched
 # rubygems.org/api/v1/versions/laiss_cms.json, which 404s because the gem is never
@@ -52,7 +59,9 @@ BASELINE_DEVISE=167
 # This is a deliberate feature removal, not lost coverage: every remaining test
 # still runs, and the core/devise floors are unchanged because their update-check
 # specs were counted in the same commit.
-BASELINE_VITEST=846
+# PHASE 1 RESTORE: 846 -> 823. theme_toggle.spec.js went with the theme toggle,
+# and icon.spec.js reverted to asserting class="icon" instead of laiss-icon.
+BASELINE_VITEST=823
 
 failures=0
 pass() { printf '  \033[32mPASS\033[0m  %s\n' "$1"; }
@@ -181,20 +190,25 @@ run_js() {
 
   if pnpm run build > /dev/null 2>&1; then pass "build"; else fail "build"; fi
 
-  # The migration log is the single source of truth for what each screen adopted, and it
-  # is committed WITH the screen, not at the end. A session that dies mid-migration must
-  # leave the next person knowing where the work stopped. Audited when this gate was
-  # added: four historical commits had already slipped, two of them real screen changes.
+  # RETIRED — the theme migration this gate served has been stopped.
   #
-  # Checks commits that are not yet on main, so it guards new work rather than failing on
-  # history that predates the rule.
-  local logcheck
-  if logcheck=$(script/check_migration_log 2>&1); then
-    pass "migration log ($(echo "$logcheck" | grep -oE '[0-9]+ screen commit' | head -1))"
-  else
-    fail "migration log updated with each screen"
-    echo "$logcheck" | grep -E '^    [0-9a-f]{9}' | head -6
-  fi
+  # The rule it enforced (each converted screen commits its own migration-log entry) was
+  # right for a screen-by-screen markup conversion. That method was abandoned: the admin
+  # is being restored to its original UI and uplifted with CSS alone, which touches no
+  # per-screen markup and therefore has no per-screen log entry to commit.
+  #
+  # `script/check_migration_log` and `docs/design/focus-migration-log.md` are both kept —
+  # the log is the historical record of what was attempted and why it was reversed, and
+  # the script documents the rule if a per-screen process ever returns. Re-enable by
+  # restoring the block below.
+  #
+  # local logcheck
+  # if logcheck=$(script/check_migration_log 2>&1); then
+  #   pass "migration log ($(echo "$logcheck" | grep -oE '[0-9]+ screen commit' | head -1))"
+  # else
+  #   fail "migration log updated with each screen"
+  #   echo "$logcheck" | grep -E '^    [0-9a-f]{9}' | head -6
+  # fi
 
   # Vitest is flaky upstream (see docs/development/toolchain-pinning.md): it can
   # exit 1 on an unhandled rejection while every test still passes. Retry once,
