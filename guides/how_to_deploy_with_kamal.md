@@ -9,11 +9,6 @@ next: false
 
 This guide walks through deploying an LaissCms app with Kamal, based on a real production setup.
 
-<ServiceAd href="https://blish.cloud/en/solutions/alchemycms">
-<template #before>Don't want to manage your own infrastructure? Our sponsor</template>
-<template #after>offers <a href="https://blish.cloud/en/solutions/alchemycms" target="_blank">managed LaissCms hosting</a>.</template>
-</ServiceAd>
-
 ### Prerequisites
 
 - A server with SSH access (e.g. Hetzner, DigitalOcean, AWS EC2)

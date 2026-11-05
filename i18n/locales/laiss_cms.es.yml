@@ -94,14 +94,14 @@ es:
     ingredient_hints:
       headline: "Esta es una sencilla línea de texto sin formato"
       picture: "Las imágenes se almacenan en la librería. Puede asignar una imagen varias veces en su sitio. LaissCms tiene una herramienta de recorte de imagen integrada."
-      text: "Este es un bloque de texto enriquecido mediante el editor TinyMCE. Puede cambiar la configuración del editor. Ver https://guides.alchemy-cms.com/how_to_customize_tinymce"
+      text: "Este es un bloque de texto enriquecido mediante el editor TinyMCE. Puede cambiar la configuración del editor"
 
     # Default texts for new ingredients created
     default_ingredient_texts:
       article_headline: "Bienvenido a su primera página de LaissCms CMS"
       article_text: |
         <p><strong>Cómo empezar.</strong></p>
-        <p>Lo primero de todo debería leer sobre LaissCms y su arquitectura en las <a class="external" href="https://guides.alchemy-cms.com/about" target="_blank" data-link-target="blank">guías</a>.</p>
+        <p>Lo primero de todo debería leer sobre LaissCms y su arquitectura en las guías.</p>
         <p>Las cosas más importantes que debe saber sobre LaissCms son elementos (<i>elements</i>) y disposiciones de página (<i>page layouts</i>).</p><p><span style="text-decoration: underline;"><strong>Elementos:</strong></span></p>
         <p>Con LaissCms puede dividir las páginas en partes de contenido, elementos. Estos elementos se pueden definir mediante varios tipos de contenido básicos: ingredientes (<i>ingredients</i>). Las esencias básicas son:</p>
         <ul>
@@ -113,11 +113,11 @@ es:
           <li>Boolean - <em>Una casilla de verificación</em></li>
         </ul>
         <p>Los elementos se definen en el fichero YAML <strong>config/laiss_cms/elements.yml</strong></p>
-        <p><a class="external" href="https://guides.alchemy-cms.com/elements" target="_blank" data-link-target="blank">Lea más sobre elementos y cómo definirlos en las guías.</a></p>
+        <p>Lea más sobre elementos y cómo definirlos en las guías.</p>
         <p><span style="text-decoration: underline;"><strong>Tipos de página:</strong></span></p>
         <p>Puede definir varios tipos de páginas, llamados disposiciones de páginas (<i>page layouts</i>). Puede asignar elementos a las disposiciones de páginas y controlar cómo se comportan los elementos y una página con una disposición concreta.</p>
         <p>Las disposiciones de páginas se definen en el fichero YAML <strong>config/laiss_cms/page_layouts.yml</strong></p>
-        <p><a class="external" href="https://guides.alchemy-cms.com/pages" target="_blank" data-link-target="blank">Lea más sobre definir disposiciones de páginas en las guías.</a></p>
+        <p>Lea más sobre definir disposiciones de páginas en las guías.</p>
       lorem: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
       corporate_lorem: "Appropriately enable sustainable growth strategies vis-a-vis holistic materials. Energistically orchestrate open-source e-tailers vis-a-vis plug-and-play best practices. Uniquely plagiarize client-centric opportunities whereas plug-and-play ideas. Distinctively reconceptualize backward-compatible partnerships vis-a-vis reliable total linkage. Interactively fabricate highly efficient networks for clicks-and-mortar content. Collaboratively reconceptualize holistic markets via 2.0 architectures."
 
@@ -321,9 +321,6 @@ es:
             published: "Publicadas"
           user_counts:
             online: "En línea"
-          news_reader:
-            widget_title: "Noticias"
-            no_news: "sin noticias"
       elements:
         toolbar:
           hide: "Ocultar"
@@ -893,7 +890,7 @@ es:
     this_picture_is_used_on_these_pages: "Esta imagen se usa en las siguientes páginas"
     timezone: "Zona horaria"
     title: "Título"
-    to_alchemy: "Ir a LaissCms"
+    to_laiss_cms: "Ir a LaissCms"
     "trash element": "Poner el elemento en la papelera"
     unknown: "desconocido"
     unlink: "Eliminar enlace de esta imagen."

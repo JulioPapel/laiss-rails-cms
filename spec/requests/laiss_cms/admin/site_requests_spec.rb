@@ -8,7 +8,7 @@ RSpec.describe "Admin site requests" do
   end
 
   context "a site with host" do
-    let!(:site) { create(:laiss_cms_site, :public, host: "alchemy-cms.com") }
+    let!(:site) { create(:laiss_cms_site, :public, host: "example.com") }
     let(:another_site) { LaissCms::Site.first }
 
     context "in params" do

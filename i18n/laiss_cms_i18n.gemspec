@@ -8,11 +8,12 @@ require "laiss_cms_i18n/version"
 Gem::Specification.new do |s|
   s.name = "laiss_cms_i18n"
   s.version = LaissCmsI18n::VERSION
-  s.authors = ["Thomas von Deyen"]
-  s.email = ["thomas@vondeyen.com"]
-  s.homepage = "https://alchemy-cms.com"
-  s.summary = "LaissCMS translation files"
-  s.description = "Translation files for LaissCMS"
+  # Upstream author retained: the MIT licence in i18n/LICENSE requires the
+  # copyright notice and author attribution to be preserved.
+  s.authors = ["Thomas von Deyen", "Júlio Papel"]
+  s.email = ["julio@laisslabs.com"]
+  s.summary = "laiss-rails-cms translation files"
+  s.description = "Translation files for laiss-rails-cms, a private in-house fork maintained by Laiss Labs."
   s.license = "MIT"
 
   s.files = Dir[
@@ -23,9 +24,7 @@ Gem::Specification.new do |s|
     "README.md"
   ]
 
-  s.metadata["homepage_uri"] = s.homepage
-  s.metadata["source_code_uri"] = "https://github.com/LaissCMS/laiss_cms/tree/main/i18n"
-  s.metadata["changelog_uri"] = "https://github.com/LaissCMS/laiss_cms/blob/main/CHANGELOG.md"
+  # No public metadata: this gem is never published.
 
   s.add_dependency "laiss_cms", LaissCmsI18n::VERSION
   s.add_dependency "rails-i18n"

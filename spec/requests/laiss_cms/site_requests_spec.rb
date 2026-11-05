@@ -12,7 +12,7 @@ RSpec.describe "Site requests" do
   end
 
   context "a site with host" do
-    let!(:site) { create(:laiss_cms_site, :public, host: "alchemy-cms.com") }
+    let!(:site) { create(:laiss_cms_site, :public, host: "example.com") }
 
     it "loads this site by host" do
       get "http://#{site.host}/#{page.urlname}"
@@ -26,14 +26,14 @@ RSpec.describe "Site requests" do
         :laiss_cms_site,
         :public,
         host: "real.example.com",
-        aliases: "something.alchemy-cms.com",
+        aliases: "something.example.com",
         redirect_to_primary_host: true
       )
     end
 
     context "requested by alias host" do
       it "redirects to primary host" do
-        get "http://something.alchemy-cms.com/#{page.urlname}"
+        get "http://something.example.com/#{page.urlname}"
         expect(response).to redirect_to("http://real.example.com/#{page.urlname}")
       end
     end

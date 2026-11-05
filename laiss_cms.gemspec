@@ -8,11 +8,15 @@ Gem::Specification.new do |gem|
   gem.name = "laiss_cms"
   gem.version = LaissCms::VERSION
   gem.platform = Gem::Platform::RUBY
-  gem.authors = ["Thomas von Deyen", "Robin Boening", "Marc Schettke", "Hendrik Mans", "Carsten Fregin", "Martin Meyerhoff"]
-  gem.email = ["laiss_cms@blish.cloud"]
-  gem.homepage = "https://alchemy-cms.com"
+  # The authors are the upstream contributors, retained because BSD-3-Clause
+  # requires the copyright notice and contributor attribution to be preserved.
+  # Laiss Labs / Júlio Papel are the maintainers of this fork; see LICENSE.
+  gem.authors = ["Thomas von Deyen", "Robin Boening", "Marc Schettke", "Hendrik Mans", "Carsten Fregin", "Martin Meyerhoff", "Júlio Papel"]
+  gem.email = ["julio@laisslabs.com"]
   gem.summary = "A semantically structured and full-featured CMS Engine for Rails"
-  gem.description = "LaissCms is a semantically structured and full-featured Rails CMS Engine."
+  gem.description = "laiss-rails-cms is a private, in-house CMS engine for Rails, " \
+    "maintained by Laiss Labs. It is consumed as a path or git dependency and is " \
+    "not published to RubyGems."
   gem.required_ruby_version = ">= 3.1.0"
   gem.license = "BSD-3-Clause"
   gem.files = Dir[
@@ -23,9 +27,9 @@ Gem::Specification.new do |gem|
   ]
   gem.require_paths = ["lib"]
 
-  gem.metadata["homepage_uri"] = gem.homepage
-  gem.metadata["source_code_uri"] = "https://github.com/LaissCMS/laiss_cms"
-  gem.metadata["changelog_uri"] = "https://github.com/LaissCMS/laiss_cms/blob/main/CHANGELOG.md"
+  # Deliberately no homepage_uri / source_code_uri / changelog_uri: this gem is
+  # never published, so public metadata would only be misleading. There is no
+  # public repository URL to point at.
 
   %w[
     actionmailer
@@ -73,23 +77,21 @@ Gem::Specification.new do |gem|
 
   gem.post_install_message = <<~MSG
     -------------------------------------------------------------
-                Thank you for installing LaissCms CMS
+                Thank you for installing laiss-rails-cms
     -------------------------------------------------------------
 
     - Complete the installation in an existing Rails application:
 
       $ bin/rails laiss_cms:install
 
-    - Complete the upgrade of an existing LaissCms installation:
+    - Complete the upgrade of an existing laiss-rails-cms installation:
 
       $ bin/rails laiss_cms:upgrade
 
     and follow the onscreen instructions.
 
-    Need help? Try:
-
-    * https://stackoverflow.com/questions/tagged/alchemy-cms
-    * https://alchemy-cms.slack.com
+    This is a private, in-house fork maintained by Laiss Labs.
+    It is not published to RubyGems and has no public support channels.
     -------------------------------------------------------------
 
   MSG

@@ -79,49 +79,9 @@ namespace :laiss_cms do
     task all: [:core, :devise]
   end
 
-  namespace :changelog do
-    desc "Update CHANGELOG from GitHub (Set GITHUB_ACCESS_TOKEN and PREVIOUS_VERSION to a version you want to write changelog changes for)"
-    task :update do
-      original_file = "./CHANGELOG.md"
-      new_file = original_file + ".new"
-      backup = original_file + ".old"
-      changes = `git rev-list v#{ENV["PREVIOUS_VERSION"]}..HEAD | bundle exec github_fast_changelog LaissCMS/laiss_cms`.split("\n")
-      changelog = File.read(original_file)
-      File.open(new_file, "w") do |file|
-        file.puts "# Changelog"
-        file.puts ""
-        file.puts "## Unreleased"
-        file.puts ""
-        changes.each do |change|
-          next if changelog.include?(change)
-          file.puts change
-        end
-        File.foreach(original_file) do |line|
-          next if line.include?("# Changelog")
-          file.puts line
-        end
-        file.puts ""
-      end
-      File.rename(original_file, backup)
-      File.rename(new_file, original_file)
-      File.delete(backup)
-    end
-  end
-
-  desc "Release a new version of LaissCms to rubygems.org"
-  task :release do
-    require_relative "lib/laiss_cms/version"
-    ENV["PREVIOUS_VERSION"] = LaissCms::VERSION
-    system("bundle exec gem bump --version #{ENV.fetch("VERSION", "patch")}")
-    load "./lib/laiss_cms/version.rb"
-    new_version = LaissCms::VERSION
-    Rake::Task["laiss_cms:changelog:update"].invoke
-    changelog = File.read("CHANGELOG.md").gsub(/(##) Unreleased/, "## #{new_version} (#{Time.now.strftime("%Y-%m-%d")})")
-    File.open("CHANGELOG.md", "w") { |file| file.puts changelog }
-    system("git add CHANGELOG.md")
-    system("git commit --amend --no-edit")
-    system("gem tag")
-    Rake::Task["release"].invoke
-    system("git push --follow-tags")
-  end
+  # Release and changelog automation deliberately removed. This gem is a
+  # private in-house fork: it is never published to RubyGems, so there is no
+  # version bumping, tagging, gem pushing or changelog-from-git tooling.
+  # Version lives in lib/laiss_cms/version.rb and is bumped by hand when a
+  # consumer needs it.
 end

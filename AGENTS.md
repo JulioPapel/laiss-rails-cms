@@ -377,12 +377,10 @@ This runs automated upgrade tasks. Read the output carefully for manual steps.
 - **Lib**: `lib/laiss_cms/` (core engine code)
 - **Config**: `config/laiss_cms/` (YAML definitions)
 - **Generators**: `lib/generators/laiss_cms/`
-- **Translations**: `i18n/` (the `laiss_cms_i18n` gem, released together with `laiss_cms` under the same version; see `i18n/CLAUDE.md`)
-- **Authentication**: `devise/` (the `laiss-cms-devise` gem, released together with `laiss_cms` under the same version; it shares the root bundle and `spec/dummy`, which only loads it for the devise specs, so `bin/rspec` runs them separately from inside `devise/`)
+- **Translations**: `i18n/` (the `laiss_cms_i18n` gem, versioned together with `laiss_cms`; see `i18n/CLAUDE.md`)
+- **Authentication**: `devise/` (the `laiss-cms-devise` gem, versioned together with `laiss_cms`; it shares the root bundle and `spec/dummy`, which only loads it for the devise specs, so `bin/rspec` runs them separately from inside `devise/`)
 
 ## Resources
 
-- Documentation: https://guides.alchemy-cms.com
-- API Docs: https://www.rubydoc.info/github/LaissCMS/laiss_cms
-- Issues: https://github.com/LaissCMS/laiss_cms/issues
-- Slack: https://alchemy-cms.slack.com
+- Documentation: the `guides/` directory in this repository
+- API Docs: generate locally with `bundle exec rake rdoc`

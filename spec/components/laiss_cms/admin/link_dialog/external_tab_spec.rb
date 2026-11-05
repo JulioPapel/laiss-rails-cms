@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe LaissCms::Admin::LinkDialog::ExternalTab, type: :component do
-  let(:url) { "https://guides.alchemy-cms.com" }
+  let(:url) { "https://example.com/guides" }
   let(:is_selected) { false }
   let(:link_title) { "foo" }
   let(:link_target) { nil }

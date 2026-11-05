@@ -42,14 +42,10 @@ group :development, :test do
   else
     gem "launchy"
     gem "annotaterb"
-    gem "bumpy"
     gem "yard"
     gem "redcarpet"
     gem "debug"
     gem "listen"
-    gem "localeapp", "~> 3.0", require: false
-    gem "dotenv", "~> 3.0"
-    gem "github_fast_changelog", require: false
     gem "active_record_query_trace", require: false
     gem "rack-mini-profiler", require: false
     gem "ruby-lsp-rspec", require: false
@@ -70,8 +66,6 @@ gem "rails_live_reload", "~> 0.5.0"
 gem "dartsass-rails", "~> 0.5.0"
 
 gem "propshaft", "~> 1.0"
-
-gem "gem-release", "~> 2.2"
 
 gem "i18n-debug", "~> 1.2", require: false # Set to `"i18n/debug"` if you want to debug missing translations
 

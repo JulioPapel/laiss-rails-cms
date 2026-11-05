@@ -109,9 +109,12 @@ def main(argv)
   problems = 0
 
   # --- check 1: leftovers ---------------------------------------------------
-  # Protected upstream domains are masked first: they legitimately contain the
-  # upstream token and are deliberately left verbatim (see Rebrand::PROTECTED).
-  tally = Rebrand.tally(Rebrand.tracked_files.to_h { |path| [path, Rebrand.mask_protected(Rebrand.read(path))] })
+  # Nothing is masked. The upstream name may appear ONLY in the three LICENSE
+  # files: PROTECTED exists to stop `apply` mangling URLs mid-run, not to permit
+  # keeping them. Masking them here previously made verify pass while 25 files
+  # still carried the upstream name, which is exactly the bug this check exists
+  # to catch.
+  tally = Rebrand.tally
   leftovers = tally.reject { |_, entry| entry[:count].zero? }
 
   if leftovers.any?
@@ -120,7 +123,7 @@ def main(argv)
       row = Rebrand.row_by_id(id)
       printf("\n  [%s] %s -> %s: %d occurrence(s) in %d file(s)\n",
         id, row.from, row.to, entry[:count], entry[:files].size)
-      entry[:files].first(5).each { |path| puts "    #{path}" }
+      entry[:files].first(8).each { |path| puts "    #{path}" }
     end
     puts
     problems += leftovers.size

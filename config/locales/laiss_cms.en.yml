@@ -241,9 +241,6 @@ en:
             published: "published"
           user_counts:
             online: "online"
-          news_reader:
-            widget_title: "News"
-            no_news: "no news"
       elements:
         toolbar:
           hide: Hide
@@ -712,7 +709,7 @@ en:
       attachment: "This file is not in use yet."
       picture: "This picture is not in use yet."
     title: "Title"
-    to_alchemy: "To LaissCms"
+    to_laiss_cms: "To LaissCms"
     unknown: "unknown"
     unlink: "Remove link"
     unlock_page: "Leave page"

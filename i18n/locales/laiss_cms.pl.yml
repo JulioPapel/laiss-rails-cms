@@ -271,9 +271,6 @@ pl:
             published: "opublikowane"
           user_counts:
             online: "online"
-          news_reader:
-            widget_title: "Aktualności"
-            no_news: "brak aktualności"
       elements:
         toolbar:
           hide: Ukryj
@@ -836,7 +833,7 @@ pl:
       picture: "Ten obraz nie jest jeszcze w użyciu."
     timezone: "Strefa czasowa"
     title: "Tytuł"
-    to_alchemy: "Do LaissCms"
+    to_laiss_cms: "Do LaissCms"
     "trash element": "Przenieś element do kosza"
     unknown: "nieznany"
     unlink: "Usuń link"

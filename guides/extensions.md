@@ -2,11 +2,6 @@
 
 LaissCMS has a rich ecosystem of official and community extensions that add functionality to your application. Official extensions are maintained under the [LaissCMS GitHub organization](https://github.com/LaissCMS).
 
-<ServiceAd href="https://blish.cloud/en/solutions/alchemycms">
-<template #before>Need a custom extension? Our sponsor</template>
-<template #after>offers professional <a href="https://blish.cloud/en/solutions/alchemycms" target="_blank">LaissCms development services</a>.</template>
-</ServiceAd>
-
 ## Authentication
 
 ### laiss-cms-devise <Badge type="tip" text="official" />

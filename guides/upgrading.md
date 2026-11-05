@@ -9,11 +9,6 @@ next: false
 
 This guide describes how to update LaissCMS to a new version.
 
-<ServiceAd href="https://blish.cloud/en/solutions/alchemycms">
-<template #before>Need help upgrading? Our sponsor</template>
-<template #after>offers professional <a href="https://blish.cloud/en/solutions/alchemycms" target="_blank">LaissCms upgrade services</a>.</template>
-</ServiceAd>
-
 ## Update the Gem
 
 Update the version constraint in your `Gemfile` and run bundler.

@@ -24,11 +24,11 @@ module LaissCms
 
     def update_check_service
       case LaissCms.config.update_check_service
-      when :laiss_cms_app
-        UpdateChecks::LaissCmsApp
       when :ruby_gems
         UpdateChecks::RubyGems
       else
+        # :none (the default) — a private fork has no public version to
+        # compare against, so report the running version and no update.
         Struct.new(:origin) do
           def latest_version
             LaissCms.gem_version

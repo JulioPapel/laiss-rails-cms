@@ -13,11 +13,6 @@ LaissCms is a standard Rails application. It works on any platform that runs Rai
 
 For general Rails deployment guidance, see [Deploying to Production](https://guides.rubyonrails.org/getting_started.html#deploying-to-production) in the official Rails guides.
 
-<ServiceAd href="https://blish.cloud/en/solutions/alchemycms">
-<template #before>Don't want to manage your own infrastructure? Our sponsor</template>
-<template #after>offers <a href="https://blish.cloud/en/solutions/alchemycms" target="_blank">managed LaissCms hosting</a>.</template>
-</ServiceAd>
-
 For a step-by-step example, see the [Deploy with Kamal](how_to_deploy_with_kamal) guide.
 
 ## Production Checklist

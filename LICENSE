@@ -1,3 +1,4 @@
+Copyright (c) 2026 Laiss Labs — Júlio Papel
 Copyright (c) Blish GmbH, Hamburg Germany
 All rights reserved.
 
@@ -25,3 +26,9 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---
+
+laiss-rails-cms is a derivative work of AlchemyCMS, Copyright (c) Blish GmbH.
+Developed and maintained by Júlio Papel for Laiss Labs.
+The upstream BSD-3-Clause notice above is retained as the licence requires.

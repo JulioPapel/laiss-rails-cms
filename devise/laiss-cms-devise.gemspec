@@ -8,11 +8,13 @@ require "laiss_cms/devise/version"
 Gem::Specification.new do |s|
   s.name = "laiss-cms-devise"
   s.version = LaissCms::Devise::VERSION
-  s.authors = ["Thomas von Deyen"]
-  s.email = ["thomas@vondeyen.com"]
-  s.homepage = "https://alchemy-cms.com"
-  s.summary = "Devise based user authentication for LaissCMS."
-  s.description = "Devise based user authentication for LaissCMS."
+  # Upstream author retained: devise/LICENSE (BSD-3-Clause) requires the
+  # copyright notice and contributor attribution to be preserved.
+  s.authors = ["Thomas von Deyen", "Júlio Papel"]
+  s.email = ["julio@laisslabs.com"]
+  s.summary = "Devise based user authentication for laiss-rails-cms."
+  s.description = "Devise based user authentication for laiss-rails-cms, a private in-house fork maintained by Laiss Labs."
+  s.license = "BSD-3-Clause"
 
   s.files = Dir["{app,config,db,lib}/**/*", "LICENSE", "CHANGELOG.md", "README.md"]
 

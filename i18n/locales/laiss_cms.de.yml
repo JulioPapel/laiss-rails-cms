@@ -94,13 +94,13 @@ de:
     ingredient_hints:
       headline: "Dies ist ein einzeiliger unformatierter Text"
       picture: "Bilder werden in der Bibliothek gespeichert. Ein Bild kann mehrfach einem Element zugewiesen werden. Auch ein Bildauswahlwerkzeug ist in LaissCms integriert."
-      text: "Dies ist ein formatierbarer Textblock. Die Einstellungen des Editors können angepasst werden. Siehe https://guides.alchemy-cms.com/how_to_customize_tinymce"
+      text: "Dies ist ein formatierbarer Textblock. Die Einstellungen des Editors können angepasst werden"
 
     # Default texts for new ingredients created
     default_ingredient_texts:
       article_headline: "Willkommen auf Ihrer LaissCms Seite"
       article_text: |
-        <p>Als erstes sollte man sich mit der Struktur von LaissCms vertraut machen. <a class="external" href="https://guides.alchemy-cms.com/about" target="_blank">Mehr dazu in den Guidelines</a>.</p>
+        <p>Als erstes sollte man sich mit der Struktur von LaissCms vertraut machen. Mehr dazu in den Guidelines.</p>
         <p>Die wichtigsten beiden Dinge die man über LaissCms wissen muss sind Elemente und Seitentypen.</p>
         <p><span style="text-decoration: underline;"><strong>Elemente:</strong></span></p>
         <p>Mit LaissCms kann man eine Seite in Inhaltsbereiche aufteilen, Elemente. Diese Elemente werden aus verschiedenen Grundtypen (Ingredients) zusammengesetzt. Die Ingredients sind:</p>
@@ -113,11 +113,11 @@ de:
           <li>Boolean - <em>Eine Checkbox</em></li>
         </ul>
         <p>Elemente werden in einer YAML Datei definiert: <strong>config/laiss_cms/elements.yml</strong></p>
-        <p><a class="external" href="https://guides.alchemy-cms.com/elements" target="_blank">Mehr über Elemente und wie sie definiert werden, kann in den Guidelines nachgelesen werden.</a></p>
+        <p>Mehr über Elemente und wie sie definiert werden, kann in den Guidelines nachgelesen werden.</p>
         <p><span style="text-decoration: underline;"><strong>Seitentypen:</strong></span></p>
         <p>Es können verschiedene Seitentypen definiert werden. Diesen können Elemente zugewiesen und ihr Verhalten definiert werden.</p>
         <p>Seitentypen werden ein einer YAML Datei definiert: <strong>config/laiss_cms/page_layouts.yml</strong></p>
-        <p><a class="external" href="https://guides.alchemy-cms.com/pages" target="_blank">Mehr über das Erstellen von Seitentypen kann in den Guidelines nachgelesen werden.</a></p>
+        <p>Mehr über das Erstellen von Seitentypen kann in den Guidelines nachgelesen werden.</p>
       lorem: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
       corporate_lorem: "Appropriately enable sustainable growth strategies vis-a-vis holistic materials. Energistically orchestrate open-source e-tailers vis-a-vis plug-and-play best practices. Uniquely plagiarize client-centric opportunities whereas plug-and-play ideas. Distinctively reconceptualize backward-compatible partnerships vis-a-vis reliable total linkage. Interactively fabricate highly efficient networks for clicks-and-mortar content. Collaboratively reconceptualize holistic markets via 2.0 architectures."
 
@@ -321,9 +321,6 @@ de:
             published: "Veröffentlicht"
           user_counts:
             online: "Online"
-          news_reader:
-            widget_title: "News"
-            no_news: "Keine Neuigkeiten"
       elements:
         toolbar:
           hide: ausblenden
@@ -903,7 +900,7 @@ de:
       picture: "Dieses Bild wird bisher nicht verwendet."
     timezone: "Zeitzone"
     title: "Titel"
-    to_alchemy: "Zu LaissCms"
+    to_laiss_cms: "Zu LaissCms"
     "trash element": "Element in den Papierkorb legen"
     unknown: "unbekannt"
     unlink: "Link entfernen"

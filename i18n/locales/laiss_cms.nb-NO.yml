@@ -271,9 +271,6 @@ nb-NO:
             published: "publisert"
           user_counts:
             online: "online"
-          news_reader:
-            widget_title: "Nyheter"
-            no_news: "ingen nyheter"
       elements:
         toolbar:
           hide: Skjul
@@ -836,7 +833,7 @@ nb-NO:
       picture: "Dette bildet er ikke i bruk ennå."
     timezone: "Tidssone"
     title: "Tittel"
-    to_alchemy: "Til LaissCms"
+    to_laiss_cms: "Til LaissCms"
     "trash element": "Legg element i papirkurv"
     unknown: "ukjent"
     unlink: "Fjern lenke"

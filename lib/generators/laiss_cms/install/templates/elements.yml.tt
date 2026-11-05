@@ -1,7 +1,5 @@
 # == In this configuration, you set up LaissCms's element layouts.
 #
-# For further information please see http://guides.alchemy-cms.com/elements.html
-
 <%- unless @options[:skip_demo_files] -%>
 - name: article
   hint: true

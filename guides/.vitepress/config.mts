@@ -75,7 +75,7 @@ const VERSION_NAVITEMS = {
         },
         {
           text: "Extend LaissCms",
-          link: "/v6/how_to_extend_alchemy",
+          link: "/v6/how_to_extend_laiss_cms",
         },
       ],
     },
@@ -153,7 +153,7 @@ const VERSION_NAVITEMS = {
         },
         {
           text: "Extend LaissCms",
-          link: "/v7/how_to_extend_alchemy",
+          link: "/v7/how_to_extend_laiss_cms",
         },
       ],
     },
@@ -279,7 +279,7 @@ const VERSION_NAVITEMS = {
         },
         {
           text: "Extend LaissCms",
-          link: "/how_to_extend_alchemy",
+          link: "/how_to_extend_laiss_cms",
         },
       ],
     },
@@ -331,7 +331,7 @@ export default defineConfig({
     nav: [
       {
         text: "Home",
-        link: "https://www.alchemy-cms.com",
+        link: "/",
       },
       {
         text: "Extensions",
@@ -342,17 +342,11 @@ export default defineConfig({
         items: navItems,
       },
     ],
-    socialLinks: [
-      { icon: "github", link: "https://github.com/LaissCMS/" },
-      { icon: "mastodon", link: "https://ruby.social/@laiss_cms" },
-      { icon: "bluesky", link: "https://bsky.app/profile/alchemy-cms.com" },
-      { icon: "slack", link: "https://alchemy-cms.slack.com" },
-    ],
+    // This is a private, in-house project: there is no public repository,
+    // Mastodon, Bluesky or Slack to point at, so no social links are shown.
+    socialLinks: [],
     sidebar,
-    editLink: {
-      pattern:
-        "https://github.com/LaissCMS/laiss_cms/edit/main/guides/:path",
-    },
+    // No edit-this-page link: this repository is private.
     footer: {
       message: `
       BSD-3 Licensed &middot; Hosting sponsored by <a href="https://www.netlify.com" target="_blank">netlify</a>`,

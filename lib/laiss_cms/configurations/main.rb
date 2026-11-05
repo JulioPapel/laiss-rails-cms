@@ -425,17 +425,17 @@ module LaissCms
 
       # === Update Check Service
       #
-      # The service to use for checking for new LaissCms versions.
+      # The service to use for checking for new versions.
       #
       # Available services:
-      # - :laiss_cms_app (default): LaissCms's own update check endpoint
-      #   shares minimal data about your installation (LaissCms version, Rails version, Ruby version, Origin host)
-      #   with maintainers of LaissCMS.
-      # - :ruby_gems: RubyGems.org API
-      #   recommeded if you don't want to share any data with LaissCMS maintainers.
-      # - :none: Disable update checks (not recommended).
+      # - :none (default): Disable update checks. This is the default because
+      #   laiss-rails-cms is a private fork that is not published to RubyGems,
+      #   so there is no public version to compare against and no endpoint to
+      #   ask.
+      # - :ruby_gems: RubyGems.org API. Only meaningful if someone publishes
+      #   this gem, which the project deliberately does not do.
       #
-      option :update_check_service, :symbol, default: :laiss_cms_app
+      option :update_check_service, :symbol, default: :none
 
       # === Update Check Cache Duration
       #

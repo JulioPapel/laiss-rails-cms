@@ -24,9 +24,10 @@ module Rebrand
 
   # Upstream names that must survive verbatim because they are not product
   # names: upstream's own domain names and Slack workspace. Rewriting these
-  # produces nonsense like `laiss-cms-cms.com`, and they are external URLs, not
-  # identifiers. They are matched before any replacement row runs and restored
-  # afterwards.
+  # produces nonsense like `laiss-cms-cms.com`.
+  #
+  # NOTE: this list exists so `apply` does not mangle them mid-run. It is NOT a
+  # licence to keep them: verify() fails on any of these outside a LICENSE file.
   PROTECTED = [
     "alchemy-cms.com",
     "alchemy-cms.slack.com",

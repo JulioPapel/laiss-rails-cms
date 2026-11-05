@@ -108,17 +108,14 @@ $ bin/rspec devise/spec
 Getting Help
 ------------
 
-* If you have bugs, please use the [issue tracker on Github](https://github.com/LaissCMS/laiss_cms/issues).
-* For Q&A and general usage, please use the [Slack](https://slackin.alchemy-cms.com)
+This is a private, in-house gem. It has no public issue tracker, demo site or
+chat channel. Raise problems with the Laiss Labs team directly.
 
 Resources
 ---------
 
-* Homepage: <https://alchemy-cms.com>
-* Live-Demo: <https://laiss-cms-demo.herokuapp.com> (user: demo, password: demo123)
-* Issue-Tracker: <https://github.com/LaissCMS/laiss_cms/issues>
-* Sourcecode: <https://github.com/LaissCMS/laiss_cms/tree/main/devise>
-* Slack: <https://slackin.alchemy-cms.com>
+* Sourcecode: `devise/` in the laiss-rails-cms repository
+* Documentation: the `guides/` directory in the same repository
 
 License
 -------

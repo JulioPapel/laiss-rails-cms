@@ -151,7 +151,7 @@ RSpec.describe LaissCms::Configurations::MenuItem do
     end
 
     context "with a url to another site" do
-      let(:item) { described_class.new(url: -> { "https://guides.alchemy-cms.com" }) }
+      let(:item) { described_class.new(url: -> { "https://example.com/guides" }) }
 
       it { expect(item.current?(view_context)).to be(false) }
     end

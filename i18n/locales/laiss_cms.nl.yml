@@ -271,9 +271,6 @@ nl:
             published: "gepubliceerd"
           user_counts:
             online: "online"
-          news_reader:
-            widget_title: "Nieuws"
-            no_news: "geen nieuws"
       elements:
         toolbar:
           hide: Verbergen
@@ -836,7 +833,7 @@ nl:
       picture: "Deze afbeelding is nog niet in gebruik."
     timezone: "Tijdzone"
     title: "Titel"
-    to_alchemy: "Naar LaissCms"
+    to_laiss_cms: "Naar LaissCms"
     "trash element": "Element naar de prullenbak verplaatsen"
     unknown: "onbekend"
     unlink: "Link verwijderen"
