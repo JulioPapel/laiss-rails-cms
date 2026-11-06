@@ -21,16 +21,35 @@ Regenerate the mechanical rows with `script/audit`; run the suites with
 > | 4 | Core suite — 4410 examples | **4399** | the restored original suite's own count |
 > | 7 | JavaScript suite — 846 tests | **823** | theme-toggle tests removed with the toggle |
 > | 9 | All 15 gates pass | **12 gates** | the per-screen migration-log gate was retired |
-> | 13–15 | install checks against the beta6 tag | **not re-run for beta7** | see below |
+> | 13–15 | install checks against the beta6 tag | **re-verified against beta7** | see below |
 >
-> **Rows 13–15 are the ones to be careful about.** They are install checks performed
-> against the *beta6 tag*, and beta7 changes the admin's stylesheets and build output
-> substantially (the Focus theme removed, the sidebar changed). A green beta6 install
-> is not evidence that a beta7 install works. **These three rows should be re-run
-> against `v0.1.0.beta7` before treating this document as a beta7 release gate.**
-> Nothing has indicated they would fail — the gem builds, the constant is single-source
-> and the suite is green — but an untested claim is not a verified one, and this table
-> exists precisely to keep that distinction.
+> **Rows 13–15 were re-run against `v0.1.0.beta7` on 2026-11-06.** Both proofs were
+> performed from scratch with `stdin` closed, installing from the remote tag exactly as
+> the release notes instruct:
+>
+> **No-auth app** — `gem "laiss_cms"` + `propshaft` only.
+> `bundle install` resolved `laiss_cms (0.1.0.beta7 b7d33c9)`. `active_storage:install`,
+> `laiss_cms:install`, `db:migrate`, `db:seed` all exit 0; the seed created 2 pages
+> (Index + About). `GET /` → **200**. `GET /admin` → 301 → `/admin/dashboard` → **500
+> `LaissCms::NoCurrentUserFoundError`**, which is the documented behaviour for an app
+> with no `current_user`: it fails closed, with no admin markup in the response body
+> (`id="laiss_cms"` appears zero times). No `::Devise`, no `LaissCms::User`.
+>
+> **Devise app** — the same plus `gem "devise"`.
+> `bundle install` resolved `laiss_cms (0.1.0.beta7 b7d33c9)` and `devise (4.9.4)`.
+> `active_storage:install`, `laiss_cms:install`, `g laiss_cms:devise:install`,
+> `db:migrate`, `db:seed` all exit 0; 2 pages seeded. `::Devise` and `LaissCms::User`
+> defined, 39 routes. `GET /` → 200; `/admin/login` → 302 → `/admin/signup`, which
+> renders **200** with a password field (the first-user flow).
+>
+> **One defect found by these proofs, now documented in the release notes and README:**
+> the release notes listed no `require "laiss_cms/devise"` step. An app with `devise` in
+> its Gemfile and no such require **does not boot at all** —
+> `uninitialized constant LaissCms::Devise`, from `lib/laiss_cms/engine.rb:41`.
+> Reproduced from a clean app, and fixed by adding the require after `Bundler.require`.
+> An app without the `devise` gem boots fine either way. The docs are corrected; **the
+> artefact is unchanged**, so this is a documentation defect, not a code regression
+> introduced by beta7 — the initializer predates the restore point (`d612ce798`).
 >
 > Row 22 (173 refs, 42 documents) was re-checked and **is still accurate**.
 >

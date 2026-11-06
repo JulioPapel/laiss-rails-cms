@@ -90,7 +90,10 @@ require "laiss_cms/devise"   # only if using the bundled sign-in
 ```
 
 Without that line there is no `LaissCms::User`, no sign-in routes and no admin
-user screen — and the rest of the CMS works normally.
+user screen — and the rest of the CMS works normally, **provided `devise` is not in your
+Gemfile**. If it is in the Gemfile but this line is missing, the app does not boot:
+`uninitialized constant LaissCms::Devise`, raised from `lib/laiss_cms/engine.rb`. Either
+add the line, or drop `devise` from the Gemfile if you are bringing your own sign-in.
 
 Your app also needs an asset pipeline — `propshaft` (Rails' default) or
 `sprockets`. Skip this if you already have one; Rails' `--minimal` template has
