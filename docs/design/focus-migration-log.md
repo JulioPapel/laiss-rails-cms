@@ -1,8 +1,39 @@
-# Focus theme migration log
+# Focus theme migration log — **REVERTED, NOT CURRENT GUIDANCE**
+
+> ## ⚠ This migration was abandoned and reversed.
+>
+> **The admin is NOT built with the Focus theme.** Between 2026-11-05 and the same day's
+> `0.1.0.beta7` release, the admin was being restyled by adopting an external Bootstrap
+> theme, page by page. That rewrote the admin's markup — views, components, partials, the
+> icon class and the `simple_form` wrapper — which is not what a UI lift is. It was
+> stopped and **reverted in full**; the admin is back on its original design.
+>
+> **Nothing in this file describes how the software behaves.** Every entry below is a
+> historical record of work that no longer exists in the codebase. Do not follow it, do
+> not copy rules from it, and do not treat its conclusions as current.
+>
+> **The reversal is documented at line ~1014**, "THE METHOD WAS WRONG". Read that section
+> first if you are here to understand what happened.
+>
+> Current state: see [`../../README.md`](../../README.md),
+> [`../release-readiness.md`](../release-readiness.md) and
+> [`../releases/v0.1.0.beta7.md`](../releases/v0.1.0.beta7.md).
+>
+> **Why this file is kept rather than deleted:** the failures recorded here are real and
+> cost real time — a vendored rule that assumed it owned the viewport blanked every page;
+> scoping a `*` reset under an id inverted the cascade for the whole admin; twenty-four
+> component rules silently lost their padding. Those are mistakes worth not repeating, and
+> the diagnostic method in them (measure, do not read) survived the revert intact. The
+> file is kept as evidence and as a warning, filed under `design/` and marked reverted, so
+> it cannot be mistaken for guidance.
+
+---
 
 One entry per step. What changed, what was verified, and **what is knowingly wrong at
 that point** — because during a migration of this size something usually is, and a log
 that only records successes is useless when something breaks four steps later.
+
+> Everything from here down describes the **reverted** migration. See the notice above.
 
 ## THE RULE THIS MIGRATION KEEPS RELEARNING
 
@@ -1284,3 +1315,36 @@ needed checking by hand — `background-color:hsl(28,77%,63%)` — resolves insi
 `.subnavi_tab.active a, .subnavi_tab a:hover` and is absent from the new build.
 
 No other colour, spacing, typography, radius, border or shadow declaration changed.
+
+---
+
+# ARCHIVE DECISION (2026-11-05, post-revert)
+
+**This file was kept in place with a reversal header rather than moved under an
+`archive/` path.** Reasons:
+
+1. **Moving it breaks nothing and fixes nothing.** There is exactly one inbound reference
+   to it in the docs tree, so relocating it would rename one link and leave the same
+   problem: a 1,300-line document that reads like guidance. The header is what stops it
+   being mistaken for guidance; a path does not.
+2. **A path is a weaker signal than a banner.** `docs/design/focus-migration-log.md` is
+   found by search and by link. Someone who lands mid-file — from a search hit on
+   "cascade" or "viewport" — never sees a directory name. They do see the header only if
+   they scroll up, which is why the title line itself now carries **REVERTED, NOT CURRENT
+   GUIDANCE**.
+3. **`design/` is already the right shelf.** It holds `reference-spec.md`, which is a
+   measurement of the owner's target design and is *not* reverted. Creating
+   `design/archive/` for a single file would imply the rest of `design/` is current, which
+   is a claim about `reference-spec.md` that needs its own justification.
+
+If a second reverted document ever appears, that is the moment to make
+`docs/design/archive/` and move both. One file does not justify the folder.
+
+**What the file is for now:** evidence and warning. The three defects it records — a
+vendored rule blanking every page, a `*` reset inverted by id-scoping, and 24 component
+rules silently losing padding — are exactly the kind of thing that gets rediscovered
+costing a day each. The diagnostic habit it argues for (measure, never read) survived the
+revert and applies to the CSS-only uplift now in progress.
+
+**What it must never be used for:** copying rules into the current admin. None of the
+Focus selectors exist any more.

@@ -23,6 +23,18 @@
 # (dashboard-1440.png, dashboard-375.png). `@2x` retina files are exempt and are
 # checked at twice the named width.
 #
+# DOCUMENTATION IMAGES are the exception. Files under docs/screenshots/ have semantic
+# names (dashboard.png, mobile-drawer.png) with no width in them, so the suffix rule
+# cannot apply — and SKIPPING them made this gate vacuous for the only images that
+# actually ship in the repo. They are checked against the widths the capture script
+# produces instead:
+#
+#   *-mobile*.png, mobile-*.png   375px   (the real mobile viewport)
+#   everything else               1440px  (the desktop viewport)
+#
+# A file at any other width is a screenshot taken at the wrong viewport, which is the
+# exact defect this script exists to catch. Pass --allow-wide to disable the rule.
+#
 # Exit status: 0 all match, 1 at least one does not, 2 bad usage.
 
 require "json"
@@ -47,10 +59,19 @@ def expected_width(path, explicit)
   retina = name.end_with?("@2x")
   name = name.delete_suffix("@2x")
   match = name.match(/-(\d+)\z/)
-  return nil unless match
+  if match
+    width = match[1].to_i
+    return retina ? width * 2 : width
+  end
 
-  width = match[1].to_i
-  retina ? width * 2 : width
+  # Documentation images carry no width in the name. They are captured at one of two
+  # fixed viewports, so the expected width comes from the name's meaning instead. Without
+  # this branch the gate SKIPPED every image that ships in the repo, which meant it
+  # passed without checking anything.
+  return nil unless path.include?("docs/screenshots")
+  return nil if @allow_wide
+
+  name.include?("mobile") ? 375 : 1440
 end
 
 def main(argv)
@@ -65,8 +86,10 @@ def main(argv)
       explicit = args.shift.to_i
       abort "FAIL: --expect needs a number" if explicit.nil? || explicit.zero?
     when "-h", "--help"
-      puts "usage: script/check_screenshots [--expect WIDTH] [PATH ...]"
+      puts "usage: script/check_screenshots [--expect WIDTH] [--allow-wide] [PATH ...]"
       return 0
+    when "--allow-wide"
+      @allow_wide = true
     when /\A-/
       abort "FAIL: unknown option #{arg}"
     else

@@ -44,11 +44,11 @@ toggle brings it back:
 | --- | --- |
 | ![Element editor with the rich-text field](docs/screenshots/element-editor.png) | ![Settings screen](docs/screenshots/settings.png) |
 
-Mobile: the sidebar becomes a drawer.
+Narrow screens: the sidebar collapses to a 48px icon rail rather than becoming a drawer.
 
-| Dashboard | Drawer open |
+| Dashboard | Pages |
 | --- | --- |
-| ![Dashboard at 375px](docs/screenshots/mobile-dashboard.png) | ![Navigation drawer at 375px](docs/screenshots/mobile-drawer.png) |
+| ![Dashboard at 375px](docs/screenshots/mobile-dashboard.png) | ![Pages index at 375px](docs/screenshots/mobile-drawer.png) |
 
 ## Requirements
 
@@ -192,7 +192,9 @@ view are removed, and `valid_elements` strips anything outside the allowed set e
 on paste. Paste is plain text.
 
 If you extend that set, add a matching rule to
-`app/stylesheets/laiss_cms/body-copy.scss` so published content is styled.
+`app/stylesheets/tinymce/skins/content/laiss_cms/content.scss` so the editor renders it.
+The engine ships no published-page stylesheet — body copy on your public site is styled by
+your application.
 
 ## Guides
 

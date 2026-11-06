@@ -71,7 +71,8 @@ Three things, or the button will not work:
    silently.
 2. **The toolbar entry**, in the `toolbar:` string.
 3. **The elements it produces**, in `valid_elements`, plus a matching rule in
-   `app/stylesheets/laiss_cms/body-copy.scss` so the published page is styled.
+   `app/stylesheets/tinymce/skins/content/laiss_cms/content.scss` so the editor and the
+   published page render it.
 
 Then rebuild and commit the artifacts:
 
@@ -106,8 +107,9 @@ valid_elements: "...,table,thead,tbody,tr,th,td"
 import "tinymce/plugins/table"
 ```
 
-Then add `table` and its children to `body-copy.scss`. Without that rule the
-editor shows a table and the published page shows an unstyled one.
+Then add `table` and its children to
+`app/stylesheets/tinymce/skins/content/laiss_cms/content.scss`. Without that rule the
+editor has no styling to apply to the table.
 
 This is a real trade against the policy above. If you add tables, say why in the
 commit message: the policy exists so a writer cannot change a page's structure, and
@@ -131,15 +133,18 @@ back to a string.
 
 ## Styling the content
 
-Two stylesheets, and they must agree:
+One stylesheet, used in one place:
 
 | File | Where it applies |
 | --- | --- |
-| `app/stylesheets/tinymce/skins/content/laiss_cms/content.scss` | inside the editor iframe |
-| `app/stylesheets/laiss_cms/body-copy.scss` | the published page |
+| `app/stylesheets/tinymce/skins/content/laiss_cms/content.scss` | inside the TinyMCE editor iframe only |
 
-If they disagree, a writer sees one thing and publishes another. The published
-stylesheet is the one that matters; the editor's job is to imitate it.
+The engine ships **no** published-page stylesheet. Body copy on the public site is
+styled by the host application; the only references to `content.min.css` in the engine
+are the admin's editor setup (`app/views/laiss_cms/admin/tinymce/_setup.html.erb`). If
+published content looks unstyled, the stylesheet to look at is the host app's — the
+engine does not supply one, and adding rules to `content.scss` styles the editor, not
+the published page.
 
 ## Configuration reference
 

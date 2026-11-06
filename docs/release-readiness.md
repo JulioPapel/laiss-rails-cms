@@ -7,13 +7,35 @@ Regenerate the mechanical rows with `script/audit`; run the suites with
 `script/gates`. This document is a reading of the repository on 2026-11-05 at
 `5b2223d3e`, and the two scripts are how to check whether it is still true.
 
-> **Superseded for 0.1.0.beta7 (2026-11-05).** The rows below were established at
-> `5b2223d3e` for beta6 and are kept as that record. Several numbers moved since:
-> the version constant and tag are now `0.1.0.beta7` (rows 1, 2), the core suite is
-> 4,399 examples (row 4), the JS suite is 823 tests (row 7), and the install checks
-> were run against the beta6 tag (rows 13–15). The beta7 figures are in
-> `docs/releases/v0.1.0.beta7.md` and in the gate output at
-> `v0.1.0.beta7`. Re-run `script/gates` at the tag to re-establish these rows.
+> ## Superseded by 0.1.0.beta7 (2026-11-05)
+>
+> The rows below were established at `5b2223d3e` for **beta6** and are kept as that
+> record. They are correct as a statement about that commit; several are no longer
+> correct about the current release. **Verified against HEAD at `852664b85`:**
+>
+> | Row | Says | Actually, at beta7 | Why it moved |
+> |---|---|---|---|
+> | 1 | Version is `0.1.0.beta6` | **`0.1.0.beta7`** | release bump |
+> | 2 | Tag `v0.1.0.beta6` | **`v0.1.0.beta7`** | release bump |
+> | 3 | 427 tag names on origin | **425** | beta1–beta5 tags were removed after that reading |
+> | 4 | Core suite — 4410 examples | **4399** | the restored original suite's own count |
+> | 7 | JavaScript suite — 846 tests | **823** | theme-toggle tests removed with the toggle |
+> | 9 | All 15 gates pass | **12 gates** | the per-screen migration-log gate was retired |
+> | 13–15 | install checks against the beta6 tag | **not re-run for beta7** | see below |
+>
+> **Rows 13–15 are the ones to be careful about.** They are install checks performed
+> against the *beta6 tag*, and beta7 changes the admin's stylesheets and build output
+> substantially (the Focus theme removed, the sidebar changed). A green beta6 install
+> is not evidence that a beta7 install works. **These three rows should be re-run
+> against `v0.1.0.beta7` before treating this document as a beta7 release gate.**
+> Nothing has indicated they would fail — the gem builds, the constant is single-source
+> and the suite is green — but an untested claim is not a verified one, and this table
+> exists precisely to keep that distinction.
+>
+> Row 22 (173 refs, 42 documents) was re-checked and **is still accurate**.
+>
+> The "four CI jobs" phrasing is also stale: the workflows are parked in `ci-disabled/`
+> and none has run (rows 23, 24, 30). Verification is local, via `script/gates`.
 
 **In one line:** the software is well tested locally and the delivery machinery has
 never executed once. Publication readiness depends on clearing a billing lock and

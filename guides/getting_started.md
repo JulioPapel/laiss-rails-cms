@@ -152,9 +152,8 @@ or with your own route constraint.
 The editor has three parts: the page tree / element list on the left, a **live
 preview** in the centre, and the **element editor** on the right.
 
-The sidebar collapses automatically on this screen so the canvas gets the width.
-The small chevron at the top of the rail brings it back, and the choice is
-remembered while you keep working.
+The sidebar collapses automatically on this screen so the canvas gets the width. The rail
+stays narrow for as long as you are on this screen; leaving the editor restores it.
 
 ## 8. Add an element
 

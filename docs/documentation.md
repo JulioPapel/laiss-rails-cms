@@ -14,11 +14,12 @@ Not "it looks right."
 | [`CONTRIBUTING.md`](../CONTRIBUTING.md) | Commands run; gate names read from `script/gates`. | 2026-11-05 |
 | [`SECURITY.md`](../SECURITY.md) | Checked that the core raises `NoCurrentUserFoundError` rather than falling open, and that authorisation is CanCan-based (`app/models/laiss_cms/permissions.rb`). | 2026-11-05 |
 | [`CODE_OF_CONDUCT.md`](../CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 text, standard. | 2026-11-05 |
-| [`docs/versioning.md`](versioning.md) | `LaissCms::VERSION` is the only source; gemspec and dashboard read from it; `gem build` succeeded and reported version `0.1.0.beta6`. | 2026-11-05 |
+| [`docs/versioning.md`](versioning.md) | `LaissCms::VERSION` is the only source; gemspec and dashboard read from it; `gem build` succeeded and reported version `0.1.0.beta7`. | 2026-11-05 |
 | [`docs/release-readiness.md`](release-readiness.md) | Every claim this project makes, marked VERIFIED with how, or UNVERIFIED with what would prove it. Regenerate the mechanical rows with `script/audit`. | 2026-11-05 |
 | [`docs/site-sync.md`](site-sync.md) | Rewritten: it documented a GitHub Actions dispatch that has been withdrawn. Now describes the Coolify deploy path and states plainly that a docs change is published by redeploying the site. | 2026-11-05 |
-| [`docs/design/reference-spec.md`](design/reference-spec.md) | Measurements taken with PIL from the supplied reference set; the method is stated in the file. | 2026-11-05 |
-| [`guides/getting_started.md`](../guides/getting_started.md) | Every command executed end to end. Claims about the seeder, the first-user role and the collapse toggle each checked against behaviour. | 2026-11-05 |
+| [`docs/design/reference-spec.md`](design/reference-spec.md) | Measurements taken with PIL from the supplied reference set; the method is stated in the file. Describes the owner's **target** design, not current behaviour. | 2026-11-05 |
+| [`docs/design/focus-migration-log.md`](design/focus-migration-log.md) | **Reverted, not guidance.** The record of an abandoned Focus-theme migration, kept as evidence and warning. Nothing in it describes the software at HEAD. | 2026-11-05 |
+| [`guides/getting_started.md`](../guides/getting_started.md) | Every command executed end to end. Claims about the seeder and the first-user role checked against behaviour. The sidebar-collapse claim was corrected: there is no expand toggle, the rail simply collapses on the editor and restores on leaving it. | 2026-11-05 |
 | [`guides/extensions.md`](../guides/extensions.md) | What ships is verified against the gemspecs. | 2026-11-05 |
 | [`guides/how_to_customize_tinymce.md`](../guides/how_to_customize_tinymce.md) | Rewritten from `lib/laiss_cms/tinymce.rb` and `bundles/tinymce.js` — the toolbar string, plugin list, `valid_elements` and formats were copied from the code, not retyped. | 2026-11-05 |
 
